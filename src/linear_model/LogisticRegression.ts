@@ -82,8 +82,8 @@ export class LogisticRegression implements ClassificationModel {
     }
 
     if (kernels) {
-      for (let iter = 0; iter < this.maxIter; iter += 1) {
-        const maxUpdate = kernels.logisticTrainEpoch(
+      if (kernels.logisticTrainEpochs) {
+        kernels.logisticTrainEpochs(
           flattenedX,
           yBuffer,
           nSamples,
@@ -94,10 +94,27 @@ export class LogisticRegression implements ClassificationModel {
           this.learningRate,
           this.l2,
           this.fitIntercept ? 1 : 0,
+          this.maxIter,
+          this.tolerance,
         );
+      } else {
+        for (let iter = 0; iter < this.maxIter; iter += 1) {
+          const maxUpdate = kernels.logisticTrainEpoch(
+            flattenedX,
+            yBuffer,
+            nSamples,
+            nFeatures,
+            coefficients,
+            intercept,
+            gradients,
+            this.learningRate,
+            this.l2,
+            this.fitIntercept ? 1 : 0,
+          );
 
-        if (maxUpdate < this.tolerance) {
-          break;
+          if (maxUpdate < this.tolerance) {
+            break;
+          }
         }
       }
 

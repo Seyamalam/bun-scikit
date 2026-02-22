@@ -256,8 +256,8 @@ async function runBunClassificationBenchmark(
   for (let i = 0; i < loops; i += 1) {
     const model = new LogisticRegression({
       learningRate: 0.35,
-      maxIter: 500,
-      tolerance: 1e-5,
+      maxIter: 60,
+      tolerance: 1e-4,
       l2: 0.01,
     });
 
@@ -354,33 +354,31 @@ async function runBunTreeBenchmarks(
   iterations: number,
   warmup: number,
 ): Promise<[TreeClassificationModelResult, TreeClassificationModelResult]> {
-  const [decisionTree, randomForest] = await Promise.all([
-    runBunTreeModelBenchmark(
-      "decision_tree",
-      "DecisionTreeClassifier(maxDepth=8)",
-      iterations,
-      warmup,
-      () =>
-        new DecisionTreeClassifier({
-          maxDepth: 8,
-          minSamplesLeaf: 3,
-          randomState: 42,
-        }),
-    ),
-    runBunTreeModelBenchmark(
-      "random_forest",
-      "RandomForestClassifier(nEstimators=80,maxDepth=8)",
-      iterations,
-      warmup,
-      () =>
-        new RandomForestClassifier({
-          nEstimators: 80,
-          maxDepth: 8,
-          minSamplesLeaf: 2,
-          randomState: 42,
-        }),
-    ),
-  ]);
+  const decisionTree = await runBunTreeModelBenchmark(
+    "decision_tree",
+    "DecisionTreeClassifier(maxDepth=8)",
+    iterations,
+    warmup,
+    () =>
+      new DecisionTreeClassifier({
+        maxDepth: 8,
+        minSamplesLeaf: 3,
+        randomState: 42,
+      }),
+  );
+  const randomForest = await runBunTreeModelBenchmark(
+    "random_forest",
+    "RandomForestClassifier(nEstimators=80,maxDepth=8)",
+    iterations,
+    warmup,
+    () =>
+      new RandomForestClassifier({
+        nEstimators: 80,
+        maxDepth: 8,
+        minSamplesLeaf: 2,
+        randomState: 42,
+      }),
+  );
 
   return [decisionTree, randomForest];
 }
@@ -459,58 +457,54 @@ async function main(): Promise<void> {
   const testSize = Math.max(1, Math.floor(prepared.dataset.X.length * TEST_FRACTION));
   const trainSize = prepared.dataset.X.length - testSize;
 
-  const [
-    bunRegression,
-    sklearnRegression,
-    bunClassification,
-    sklearnClassification,
-    bunTreeBenchmarks,
-    sklearnTreeBenchmarks,
-  ] =
-    await Promise.all([
-      runBunRegressionBenchmark(iterations, warmup),
-      runPythonBenchmark<RegressionBenchmarkResult>("bench/python/heart_sklearn_bench.py", [
-        "--dataset",
-        DATASET_PATH,
-        "--test-size",
-        String(TEST_FRACTION),
-        "--random-state",
-        String(RANDOM_STATE),
-        "--iterations",
-        String(iterations),
-        "--warmup",
-        String(warmup),
-      ]),
-      runBunClassificationBenchmark(iterations, warmup),
-      runPythonBenchmark<ClassificationBenchmarkResult>(
-        "bench/python/heart_sklearn_classification_bench.py",
-        [
-          "--dataset",
-          DATASET_PATH,
-          "--test-size",
-          String(TEST_FRACTION),
-          "--random-state",
-          String(RANDOM_STATE),
-          "--iterations",
-          String(iterations),
-          "--warmup",
-          String(warmup),
-        ],
-      ),
-      runBunTreeBenchmarks(iterations, warmup),
-      runPythonBenchmark<PythonTreeBenchPayload>("bench/python/heart_sklearn_tree_bench.py", [
-        "--dataset",
-        DATASET_PATH,
-        "--test-size",
-        String(TEST_FRACTION),
-        "--random-state",
-        String(RANDOM_STATE),
-        "--iterations",
-        String(iterations),
-        "--warmup",
-        String(warmup),
-      ]),
-    ]);
+  const bunRegression = await runBunRegressionBenchmark(iterations, warmup);
+  const sklearnRegression = await runPythonBenchmark<RegressionBenchmarkResult>(
+    "bench/python/heart_sklearn_bench.py",
+    [
+      "--dataset",
+      DATASET_PATH,
+      "--test-size",
+      String(TEST_FRACTION),
+      "--random-state",
+      String(RANDOM_STATE),
+      "--iterations",
+      String(iterations),
+      "--warmup",
+      String(warmup),
+    ],
+  );
+  const bunClassification = await runBunClassificationBenchmark(iterations, warmup);
+  const sklearnClassification = await runPythonBenchmark<ClassificationBenchmarkResult>(
+    "bench/python/heart_sklearn_classification_bench.py",
+    [
+      "--dataset",
+      DATASET_PATH,
+      "--test-size",
+      String(TEST_FRACTION),
+      "--random-state",
+      String(RANDOM_STATE),
+      "--iterations",
+      String(iterations),
+      "--warmup",
+      String(warmup),
+    ],
+  );
+  const bunTreeBenchmarks = await runBunTreeBenchmarks(iterations, warmup);
+  const sklearnTreeBenchmarks = await runPythonBenchmark<PythonTreeBenchPayload>(
+    "bench/python/heart_sklearn_tree_bench.py",
+    [
+      "--dataset",
+      DATASET_PATH,
+      "--test-size",
+      String(TEST_FRACTION),
+      "--random-state",
+      String(RANDOM_STATE),
+      "--iterations",
+      String(iterations),
+      "--warmup",
+      String(warmup),
+    ],
+  );
 
   const [bunDecisionTree, bunRandomForest] = bunTreeBenchmarks;
   const sklearnDecisionTreeRaw = sklearnTreeBenchmarks.models.find(

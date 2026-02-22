@@ -73,3 +73,43 @@ pub export fn logistic_train_epoch(
 
     return max_update;
 }
+
+pub export fn logistic_train_epochs(
+    x_ptr: [*]const f64,
+    y_ptr: [*]const f64,
+    n_samples: usize,
+    n_features: usize,
+    weights_ptr: [*]f64,
+    intercept_ptr: *f64,
+    gradients_ptr: [*]f64,
+    learning_rate: f64,
+    l2: f64,
+    fit_intercept: u8,
+    max_iters: usize,
+    tolerance: f64,
+) usize {
+    if (max_iters == 0 or n_samples == 0 or n_features == 0) {
+        return 0;
+    }
+
+    var iter: usize = 0;
+    while (iter < max_iters) : (iter += 1) {
+        const max_update = logistic_train_epoch(
+            x_ptr,
+            y_ptr,
+            n_samples,
+            n_features,
+            weights_ptr,
+            intercept_ptr,
+            gradients_ptr,
+            learning_rate,
+            l2,
+            fit_intercept,
+        );
+        if (max_update < tolerance) {
+            return iter + 1;
+        }
+    }
+
+    return max_iters;
+}

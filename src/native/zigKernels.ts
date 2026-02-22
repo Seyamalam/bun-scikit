@@ -15,14 +15,31 @@ type LogisticTrainEpochFn = (
   fitIntercept: number,
 ) => number;
 
+type LogisticTrainEpochsFn = (
+  x: Float64Array,
+  y: Float64Array,
+  nSamples: number,
+  nFeatures: number,
+  weights: Float64Array,
+  intercept: Float64Array,
+  gradients: Float64Array,
+  learningRate: number,
+  l2: number,
+  fitIntercept: number,
+  maxIter: number,
+  tolerance: number,
+) => bigint;
+
 interface ZigKernelLibrary {
   symbols: {
     logistic_train_epoch: LogisticTrainEpochFn;
+    logistic_train_epochs?: LogisticTrainEpochsFn;
   };
 }
 
 export interface ZigKernels {
   logisticTrainEpoch: LogisticTrainEpochFn;
+  logisticTrainEpochs: LogisticTrainEpochsFn | null;
   libraryPath: string;
 }
 
@@ -75,30 +92,76 @@ export function getZigKernels(): ZigKernels | null {
     }
 
     try {
-      const library = dlopen(libraryPath, {
-        logistic_train_epoch: {
-          args: [
-            FFIType.ptr,
-            FFIType.ptr,
-            "usize",
-            "usize",
-            FFIType.ptr,
-            FFIType.ptr,
-            FFIType.ptr,
-            FFIType.f64,
-            FFIType.f64,
-            FFIType.u8,
-          ],
-          returns: FFIType.f64,
-        },
-      }) as ZigKernelLibrary;
+      try {
+        const library = dlopen(libraryPath, {
+          logistic_train_epoch: {
+            args: [
+              FFIType.ptr,
+              FFIType.ptr,
+              "usize",
+              "usize",
+              FFIType.ptr,
+              FFIType.ptr,
+              FFIType.ptr,
+              FFIType.f64,
+              FFIType.f64,
+              FFIType.u8,
+            ],
+            returns: FFIType.f64,
+          },
+          logistic_train_epochs: {
+            args: [
+              FFIType.ptr,
+              FFIType.ptr,
+              "usize",
+              "usize",
+              FFIType.ptr,
+              FFIType.ptr,
+              FFIType.ptr,
+              FFIType.f64,
+              FFIType.f64,
+              FFIType.u8,
+              "usize",
+              FFIType.f64,
+            ],
+            returns: "usize",
+          },
+        }) as ZigKernelLibrary;
 
-      cachedKernels = {
-        logisticTrainEpoch: library.symbols.logistic_train_epoch,
-        libraryPath,
-      };
+        cachedKernels = {
+          logisticTrainEpoch: library.symbols.logistic_train_epoch,
+          logisticTrainEpochs: library.symbols.logistic_train_epochs ?? null,
+          libraryPath,
+        };
 
-      return cachedKernels;
+        return cachedKernels;
+      } catch {
+        const library = dlopen(libraryPath, {
+          logistic_train_epoch: {
+            args: [
+              FFIType.ptr,
+              FFIType.ptr,
+              "usize",
+              "usize",
+              FFIType.ptr,
+              FFIType.ptr,
+              FFIType.ptr,
+              FFIType.f64,
+              FFIType.f64,
+              FFIType.u8,
+            ],
+            returns: FFIType.f64,
+          },
+        }) as ZigKernelLibrary;
+
+        cachedKernels = {
+          logisticTrainEpoch: library.symbols.logistic_train_epoch,
+          logisticTrainEpochs: null,
+          libraryPath,
+        };
+
+        return cachedKernels;
+      }
     } catch {
       continue;
     }

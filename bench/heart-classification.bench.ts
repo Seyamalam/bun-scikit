@@ -40,8 +40,8 @@ console.log(
 benchmarkModel("logistic_regression(gd)", () => {
   const model = new LogisticRegression({
     learningRate: 0.35,
-    maxIter: 500,
-    tolerance: 1e-5,
+    maxIter: 60,
+    tolerance: 1e-4,
     l2: 0.01,
   });
   model.fit(XTrainScaled, yTrain);

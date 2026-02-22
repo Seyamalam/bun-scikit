@@ -33,6 +33,8 @@ interface SplitCandidate {
   rightIndices: number[];
 }
 
+const MAX_THRESHOLD_BINS = 128;
+
 function mulberry32(seed: number): () => number {
   let state = seed >>> 0;
   return () => {
@@ -61,8 +63,11 @@ export class DecisionTreeClassifier implements ClassificationModel {
   private readonly randomState?: number;
   private random: () => number = Math.random;
   private root: TreeNode | null = null;
-  private XTrain: Matrix | null = null;
-  private yTrain: Vector | null = null;
+  private flattenedXTrain: Float64Array | null = null;
+  private yBinaryTrain: Uint8Array | null = null;
+  private featureCount = 0;
+  private allFeatureIndices: number[] = [];
+  private featureSelectionMarks: Uint8Array | null = null;
 
   constructor(options: DecisionTreeClassifierOptions = {}) {
     this.maxDepth = options.maxDepth ?? 12;
@@ -75,14 +80,22 @@ export class DecisionTreeClassifier implements ClassificationModel {
   fit(
     X: Matrix,
     y: Vector,
-    sampleIndices?: number[],
+    sampleIndices?: ArrayLike<number>,
     skipValidation = false,
+    flattenedXTrain?: Float64Array,
+    yBinaryTrain?: Uint8Array,
   ): this {
     if (!skipValidation) {
       validateClassificationInputs(X, y);
     }
-    this.XTrain = X;
-    this.yTrain = y;
+    this.featureCount = X[0].length;
+    this.flattenedXTrain = flattenedXTrain ?? this.flattenTrainingMatrix(X);
+    this.yBinaryTrain = yBinaryTrain ?? this.buildBinaryTargets(y);
+    this.allFeatureIndices = new Array<number>(this.featureCount);
+    for (let i = 0; i < this.featureCount; i += 1) {
+      this.allFeatureIndices[i] = i;
+    }
+    this.featureSelectionMarks = new Uint8Array(this.featureCount);
     this.random = this.randomState === undefined ? Math.random : mulberry32(this.randomState);
 
     let rootIndices: number[];
@@ -96,9 +109,12 @@ export class DecisionTreeClassifier implements ClassificationModel {
           throw new Error(`sampleIndices contains invalid index: ${index}.`);
         }
       }
-      rootIndices = [...sampleIndices];
+      rootIndices = Array.from(sampleIndices);
     } else {
-      rootIndices = Array.from({ length: X.length }, (_, idx) => idx);
+      rootIndices = new Array<number>(X.length);
+      for (let idx = 0; idx < X.length; idx += 1) {
+        rootIndices[idx] = idx;
+      }
     }
 
     this.root = this.buildTree(rootIndices, 0);
@@ -106,16 +122,16 @@ export class DecisionTreeClassifier implements ClassificationModel {
   }
 
   predict(X: Matrix): Vector {
-    if (!this.root || !this.XTrain) {
+    if (!this.root || this.featureCount === 0) {
       throw new Error("DecisionTreeClassifier has not been fitted.");
     }
 
     assertConsistentRowSize(X);
     assertFiniteMatrix(X);
 
-    if (X[0].length !== this.XTrain[0].length) {
+    if (X[0].length !== this.featureCount) {
       throw new Error(
-        `Feature size mismatch. Expected ${this.XTrain[0].length}, got ${X[0].length}.`,
+        `Feature size mismatch. Expected ${this.featureCount}, got ${X[0].length}.`,
       );
     }
 
@@ -139,11 +155,11 @@ export class DecisionTreeClassifier implements ClassificationModel {
   }
 
   private buildTree(indices: number[], depth: number): TreeNode {
-    const y = this.yTrain!;
+    const y = this.yBinaryTrain!;
     const sampleCount = indices.length;
     let positiveCount = 0;
     for (let i = 0; i < sampleCount; i += 1) {
-      positiveCount += y[indices[i]] === 1 ? 1 : 0;
+      positiveCount += y[indices[i]];
     }
     const prediction: 0 | 1 = positiveCount * 2 >= sampleCount ? 1 : 0;
 
@@ -154,8 +170,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
       return { isLeaf: true, prediction };
     }
 
-    const featureCount = this.XTrain![0].length;
-    const candidateFeatures = this.selectFeatureIndices(featureCount);
+    const candidateFeatures = this.selectFeatureIndices(this.featureCount);
     const parentImpurity = giniImpurity(positiveCount, sampleCount);
 
     let bestFeature = -1;
@@ -203,33 +218,69 @@ export class DecisionTreeClassifier implements ClassificationModel {
 
   private selectFeatureIndices(featureCount: number): number[] {
     const k = this.resolveMaxFeatures(featureCount);
-    const features = Array.from({ length: featureCount }, (_, i) => i);
     if (k >= featureCount) {
-      return features;
+      return this.allFeatureIndices;
     }
 
-    for (let i = featureCount - 1; i > 0; i -= 1) {
-      const j = Math.floor(this.random() * (i + 1));
-      const tmp = features[i];
-      features[i] = features[j];
-      features[j] = tmp;
+    const marks = this.featureSelectionMarks!;
+    marks.fill(0);
+
+    const selected = new Array<number>(k);
+    let selectedCount = 0;
+    while (selectedCount < k) {
+      const candidate = Math.floor(this.random() * featureCount);
+      if (marks[candidate] !== 0) {
+        continue;
+      }
+      marks[candidate] = 1;
+      selected[selectedCount] = candidate;
+      selectedCount += 1;
     }
 
-    return features.slice(0, k);
+    return selected;
   }
 
   private findBestThreshold(indices: number[], featureIndex: number): SplitCandidate | null {
-    const X = this.XTrain!;
-    const y = this.yTrain!;
+    const x = this.flattenedXTrain!;
+    const y = this.yBinaryTrain!;
+    const stride = this.featureCount;
     const sampleCount = indices.length;
-
-    const sortedIndices = [...indices].sort(
-      (a, b) => X[a][featureIndex] - X[b][featureIndex],
-    );
-
+    let minValue = Number.POSITIVE_INFINITY;
+    let maxValue = Number.NEGATIVE_INFINITY;
     let totalPositive = 0;
-    for (let i = 0; i < sortedIndices.length; i += 1) {
-      totalPositive += y[sortedIndices[i]] === 1 ? 1 : 0;
+    for (let i = 0; i < sampleCount; i += 1) {
+      const sampleIndex = indices[i];
+      const value = x[sampleIndex * stride + featureIndex];
+      if (value < minValue) {
+        minValue = value;
+      }
+      if (value > maxValue) {
+        maxValue = value;
+      }
+      totalPositive += y[sampleIndex];
+    }
+
+    if (!Number.isFinite(minValue) || !Number.isFinite(maxValue) || minValue === maxValue) {
+      return null;
+    }
+
+    const dynamicBins = Math.floor(Math.sqrt(sampleCount));
+    const binCount = Math.max(16, Math.min(MAX_THRESHOLD_BINS, dynamicBins));
+    const binTotals = new Uint32Array(binCount);
+    const binPositives = new Uint32Array(binCount);
+    const range = maxValue - minValue;
+
+    for (let i = 0; i < sampleCount; i += 1) {
+      const sampleIndex = indices[i];
+      const value = x[sampleIndex * stride + featureIndex];
+      let bin = Math.floor(((value - minValue) / range) * binCount);
+      if (bin < 0) {
+        bin = 0;
+      } else if (bin >= binCount) {
+        bin = binCount - 1;
+      }
+      binTotals[bin] += 1;
+      binPositives[bin] += y[sampleIndex];
     }
 
     let leftCount = 0;
@@ -237,19 +288,12 @@ export class DecisionTreeClassifier implements ClassificationModel {
     let bestImpurity = Number.POSITIVE_INFINITY;
     let bestThreshold = 0;
 
-    for (let i = 1; i < sortedIndices.length; i += 1) {
-      const previousIndex = sortedIndices[i - 1];
-      leftCount += 1;
-      leftPositive += y[previousIndex] === 1 ? 1 : 0;
+    for (let bin = 0; bin < binCount - 1; bin += 1) {
+      leftCount += binTotals[bin];
+      leftPositive += binPositives[bin];
       const rightCount = sampleCount - leftCount;
 
       if (leftCount < this.minSamplesLeaf || rightCount < this.minSamplesLeaf) {
-        continue;
-      }
-
-      const leftValue = X[previousIndex][featureIndex];
-      const rightValue = X[sortedIndices[i]][featureIndex];
-      if (leftValue === rightValue) {
         continue;
       }
 
@@ -260,7 +304,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
 
       if (impurity < bestImpurity) {
         bestImpurity = impurity;
-        bestThreshold = (leftValue + rightValue) / 2;
+        bestThreshold = minValue + (range * (bin + 1)) / binCount;
       }
     }
 
@@ -270,9 +314,9 @@ export class DecisionTreeClassifier implements ClassificationModel {
 
     const leftIndices: number[] = [];
     const rightIndices: number[] = [];
-    for (let i = 0; i < indices.length; i += 1) {
+    for (let i = 0; i < sampleCount; i += 1) {
       const sampleIndex = indices[i];
-      if (X[sampleIndex][featureIndex] <= bestThreshold) {
+      if (x[sampleIndex * stride + featureIndex] <= bestThreshold) {
         leftIndices.push(sampleIndex);
       } else {
         rightIndices.push(sampleIndex);
@@ -292,5 +336,26 @@ export class DecisionTreeClassifier implements ClassificationModel {
       leftIndices,
       rightIndices,
     };
+  }
+
+  private flattenTrainingMatrix(X: Matrix): Float64Array {
+    const sampleCount = X.length;
+    const flattened = new Float64Array(sampleCount * this.featureCount);
+    for (let i = 0; i < sampleCount; i += 1) {
+      const row = X[i];
+      const rowOffset = i * this.featureCount;
+      for (let j = 0; j < this.featureCount; j += 1) {
+        flattened[rowOffset + j] = row[j];
+      }
+    }
+    return flattened;
+  }
+
+  private buildBinaryTargets(y: Vector): Uint8Array {
+    const encoded = new Uint8Array(y.length);
+    for (let i = 0; i < y.length; i += 1) {
+      encoded[i] = y[i] === 1 ? 1 : 0;
+    }
+    return encoded;
   }
 }

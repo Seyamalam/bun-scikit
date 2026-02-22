@@ -1,15 +1,6 @@
 import type { Matrix, RegressionModel, Vector } from "../types";
 import { r2Score } from "../metrics/regression";
-import {
-  addInterceptColumn,
-  dot,
-  inverseMatrix,
-  mean,
-  multiplyMatrices,
-  multiplyMatrixVector,
-  solveSymmetricPositiveDefinite,
-  transpose,
-} from "../utils/linalg";
+import { dot, mean } from "../utils/linalg";
 import {
   assertConsistentRowSize,
   assertFiniteMatrix,
@@ -80,35 +71,120 @@ export class LinearRegression implements RegressionModel {
   }
 
   private fitNormalEquation(X: Matrix, y: Vector): void {
-    const XDesign = this.fitIntercept ? addInterceptColumn(X) : X;
-    const XT = transpose(XDesign);
-    const XTX = multiplyMatrices(XT, XDesign);
+    const sampleCount = X.length;
+    const featureCount = X[0].length;
+    const dim = this.fitIntercept ? featureCount + 1 : featureCount;
+    const gram = new Float64Array(dim * dim);
+    const rhs = new Float64Array(dim);
+    const fitIntercept = this.fitIntercept;
+    const offset = fitIntercept ? 1 : 0;
 
-    // Small diagonal regularization stabilizes inversion for near-singular matrices.
-    const EPSILON = 1e-8;
-    for (let i = 0; i < XTX.length; i += 1) {
-      const isInterceptTerm = this.fitIntercept && i === 0;
-      if (!isInterceptTerm) {
-        XTX[i][i] += EPSILON;
+    for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex += 1) {
+      const row = X[sampleIndex];
+      const target = y[sampleIndex];
+
+      for (let i = 0; i < dim; i += 1) {
+        const xi = fitIntercept && i === 0 ? 1 : row[i - offset];
+        rhs[i] += xi * target;
+
+        const rowOffset = i * dim;
+        for (let j = 0; j <= i; j += 1) {
+          const xj = fitIntercept && j === 0 ? 1 : row[j - offset];
+          gram[rowOffset + j] += xi * xj;
+        }
       }
     }
 
-    const XTy = multiplyMatrixVector(XT, y);
-    let beta: Vector;
-    try {
-      beta = solveSymmetricPositiveDefinite(XTX, XTy);
-    } catch {
-      beta = multiplyMatrixVector(inverseMatrix(XTX), XTy);
+    for (let i = 0; i < dim; i += 1) {
+      for (let j = 0; j < i; j += 1) {
+        gram[j * dim + i] = gram[i * dim + j];
+      }
     }
 
-    if (this.fitIntercept) {
+    const baseGram = gram.slice();
+    const baseRegularization = 1e-8;
+    const maxAttempts = 4;
+    let beta: Float64Array | null = null;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const gramAttempt = baseGram.slice();
+      const regularization = baseRegularization * 10 ** attempt;
+      for (let i = 0; i < dim; i += 1) {
+        const isInterceptTerm = fitIntercept && i === 0;
+        if (!isInterceptTerm) {
+          gramAttempt[i * dim + i] += regularization;
+        }
+      }
+
+      beta = this.solveSymmetricPositiveDefiniteDense(gramAttempt, rhs, dim);
+      if (beta) {
+        break;
+      }
+    }
+
+    if (!beta) {
+      throw new Error(
+        "LinearRegression normal solver failed: matrix is not positive definite after regularization.",
+      );
+    }
+
+    if (fitIntercept) {
       this.intercept_ = beta[0];
-      this.coef_ = beta.slice(1);
-      return;
+      this.coef_ = Array.from(beta.subarray(1));
+    } else {
+      this.intercept_ = 0;
+      this.coef_ = Array.from(beta);
+    }
+  }
+
+  private solveSymmetricPositiveDefiniteDense(
+    gram: Float64Array,
+    rhs: Float64Array,
+    dim: number,
+  ): Float64Array | null {
+    const lower = new Float64Array(dim * dim);
+    const EPSILON = 1e-12;
+
+    for (let i = 0; i < dim; i += 1) {
+      const rowOffsetI = i * dim;
+      for (let j = 0; j <= i; j += 1) {
+        const rowOffsetJ = j * dim;
+        let sum = gram[rowOffsetI + j];
+        for (let k = 0; k < j; k += 1) {
+          sum -= lower[rowOffsetI + k] * lower[rowOffsetJ + k];
+        }
+
+        if (i === j) {
+          if (sum <= EPSILON) {
+            return null;
+          }
+          lower[rowOffsetI + j] = Math.sqrt(sum);
+        } else {
+          lower[rowOffsetI + j] = sum / lower[rowOffsetJ + j];
+        }
+      }
     }
 
-    this.intercept_ = 0;
-    this.coef_ = beta;
+    const forward = new Float64Array(dim);
+    for (let i = 0; i < dim; i += 1) {
+      const rowOffset = i * dim;
+      let sum = rhs[i];
+      for (let k = 0; k < i; k += 1) {
+        sum -= lower[rowOffset + k] * forward[k];
+      }
+      forward[i] = sum / lower[rowOffset + i];
+    }
+
+    const solution = new Float64Array(dim);
+    for (let i = dim - 1; i >= 0; i -= 1) {
+      let sum = forward[i];
+      for (let k = i + 1; k < dim; k += 1) {
+        sum -= lower[k * dim + i] * solution[k];
+      }
+      solution[i] = sum / lower[i * dim + i];
+    }
+
+    return solution;
   }
 
   private fitGradientDescent(X: Matrix, y: Vector): void {

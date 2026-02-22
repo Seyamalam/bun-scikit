@@ -52,11 +52,14 @@ export class RandomForestClassifier implements ClassificationModel {
     validateClassificationInputs(X, y);
 
     const sampleCount = X.length;
+    const featureCount = X[0].length;
     const random = this.randomState === undefined ? Math.random : mulberry32(this.randomState);
-    this.trees = [];
+    const flattenedX = this.flattenTrainingMatrix(X, sampleCount, featureCount);
+    const yBinary = this.buildBinaryTargets(y);
+    this.trees = new Array(this.nEstimators);
 
     for (let estimatorIndex = 0; estimatorIndex < this.nEstimators; estimatorIndex += 1) {
-      const sampleIndices = new Array<number>(sampleCount);
+      const sampleIndices = new Uint32Array(sampleCount);
       if (this.bootstrap) {
         for (let i = 0; i < sampleCount; i += 1) {
           sampleIndices[i] = Math.floor(random() * sampleCount);
@@ -75,8 +78,8 @@ export class RandomForestClassifier implements ClassificationModel {
         randomState:
           this.randomState === undefined ? undefined : this.randomState + estimatorIndex + 1,
       });
-      tree.fit(X, y, sampleIndices, true);
-      this.trees.push(tree);
+      tree.fit(X, y, sampleIndices, true, flattenedX, yBinary);
+      this.trees[estimatorIndex] = tree;
     }
 
     return this;
@@ -105,5 +108,29 @@ export class RandomForestClassifier implements ClassificationModel {
   score(X: Matrix, y: Vector): number {
     assertFiniteVector(y);
     return accuracyScore(y, this.predict(X));
+  }
+
+  private flattenTrainingMatrix(
+    X: Matrix,
+    sampleCount: number,
+    featureCount: number,
+  ): Float64Array {
+    const flattened = new Float64Array(sampleCount * featureCount);
+    for (let i = 0; i < sampleCount; i += 1) {
+      const row = X[i];
+      const rowOffset = i * featureCount;
+      for (let j = 0; j < featureCount; j += 1) {
+        flattened[rowOffset + j] = row[j];
+      }
+    }
+    return flattened;
+  }
+
+  private buildBinaryTargets(y: Vector): Uint8Array {
+    const encoded = new Uint8Array(y.length);
+    for (let i = 0; i < y.length; i += 1) {
+      encoded[i] = y[i] === 1 ? 1 : 0;
+    }
+    return encoded;
   }
 }
