@@ -1,0 +1,41 @@
+name: Benchmark Snapshot
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * 1"
+
+permissions:
+  contents: write
+
+jobs:
+  update-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Bun dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Python benchmark dependencies
+        run: python -m pip install -r bench/python/requirements.txt
+
+      - name: Regenerate benchmark snapshot and README table
+        run: bun run bench:snapshot
+
+      - name: Commit snapshot updates
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(bench): update CI benchmark snapshot"
+          file_pattern: "bench/results/heart-ci-latest.json bench/results/heart-ci-latest.md README.md"

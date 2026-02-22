@@ -26,3 +26,40 @@ jobs:
 
       - name: Run typecheck
         run: bun run typecheck
+
+      - name: Verify README benchmark section
+        run: bun run bench:readme:check
+
+  benchmarks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Bun dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Install Python benchmark dependencies
+        run: python -m pip install -r bench/python/requirements.txt
+
+      - name: Run Bun vs scikit-learn benchmark
+        run: bun run bench:ci
+
+      - name: Validate benchmark metrics
+        run: bun run bench:health
+
+      - name: Upload benchmark artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: heart-benchmark-results
+          path: |
+            bench/results/heart-ci-current.json
+            bench/results/heart-ci-current.md

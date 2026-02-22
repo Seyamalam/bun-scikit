@@ -1,0 +1,56 @@
+{
+  "generatedAt": "2026-02-22T10:31:55.653Z",
+  "dataset": {
+    "path": "test_data/heart.csv",
+    "samples": 1025,
+    "features": 13,
+    "trainSize": 820,
+    "testSize": 205,
+    "randomState": 42,
+    "testFraction": 0.2
+  },
+  "results": [
+    {
+      "implementation": "bun-scikit",
+      "model": "StandardScaler + LinearRegression(normal)",
+      "iterations": 40,
+      "fitMsMedian": 1.0020000000000024,
+      "predictMsMedian": 0.01539999999999253,
+      "mse": 0.11754528352716122,
+      "r2": 0.5295389961686718,
+      "environment": {
+        "bun": "1.3.9",
+        "runtime": "bun"
+      }
+    },
+    {
+      "implementation": "python-scikit-learn",
+      "model": "StandardScaler + LinearRegression",
+      "iterations": 40,
+      "fitMsMedian": 2.6625500031514093,
+      "predictMsMedian": 0.07780001033097506,
+      "mse": 0.11754528352709762,
+      "r2": 0.5295389961689257,
+      "dataset": {
+        "path": "test_data/heart.csv",
+        "samples": 1025,
+        "features": 13,
+        "trainSize": 820,
+        "testSize": 205,
+        "randomState": 42,
+        "testFraction": 0.2
+      },
+      "environment": {
+        "python": "3.12.4",
+        "numpy": "1.26.4",
+        "scikitLearn": "1.5.2"
+      }
+    }
+  ],
+  "comparison": {
+    "fitSpeedupVsSklearn": 2.6572355320872285,
+    "predictSpeedupVsSklearn": 5.051948722793038,
+    "mseDeltaVsSklearn": 6.360190152321366e-14,
+    "r2DeltaVsSklearn": -2.539080057317733e-13
+  }
+}

@@ -1,0 +1,38 @@
+name: Bug report
+description: Report a reproducible bug in bun-scikit
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: "Thanks for reporting. Please include a minimal reproduction."
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe expected vs actual behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Provide code, input data, and exact command(s).
+      placeholder: bun run test
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: bun-scikit version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: bun
+    attributes:
+      label: Bun version
+      placeholder: 1.3.9
+    validations:
+      required: true

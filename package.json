@@ -2,21 +2,48 @@
   "name": "bun-scikit",
   "version": "0.1.0",
   "description": "A scikit-learn-inspired machine learning library for Bun/TypeScript.",
+  "license": "MIT",
   "module": "index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Seyamalam/bun-scikit.git"
+  },
+  "homepage": "https://github.com/Seyamalam/bun-scikit#readme",
+  "bugs": {
+    "url": "https://github.com/Seyamalam/bun-scikit/issues"
+  },
+  "keywords": [
+    "machine-learning",
+    "scikit-learn",
+    "bun",
+    "typescript",
+    "linear-regression",
+    "preprocessing"
+  ],
   "exports": {
     ".": "./index.ts"
   },
   "files": [
     "index.ts",
-    "src"
+    "src",
+    "README.md",
+    "LICENSE"
   ],
   "type": "module",
+  "engines": {
+    "bun": ">=1.3.9"
+  },
   "scripts": {
     "test": "bun test",
     "typecheck": "bunx tsc --noEmit",
     "bench": "bun run bench/heart.bench.ts",
     "bench:heart": "bun run bench/heart.bench.ts",
-    "bench:synthetic": "bun run bench/linear-regression.bench.ts"
+    "bench:synthetic": "bun run bench/linear-regression.bench.ts",
+    "bench:ci": "bun run bench/run-ci-benchmarks.ts --output bench/results/heart-ci-current.json",
+    "bench:snapshot": "bun run bench/run-ci-benchmarks.ts --output bench/results/heart-ci-latest.json && bun run bench:sync-readme",
+    "bench:sync-readme": "bun run scripts/sync-benchmark-readme.ts",
+    "bench:readme:check": "bun run scripts/sync-benchmark-readme.ts --check",
+    "bench:health": "bun run scripts/check-benchmark-health.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
