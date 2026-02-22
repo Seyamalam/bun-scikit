@@ -6,6 +6,7 @@ import {
   validateClassificationInputs,
 } from "../utils/validation";
 import { accuracyScore } from "../metrics/classification";
+import { getZigKernels } from "../native/zigKernels";
 
 export type MaxFeaturesOption = "sqrt" | "log2" | number | null;
 
@@ -15,6 +16,7 @@ export interface DecisionTreeClassifierOptions {
   minSamplesLeaf?: number;
   maxFeatures?: MaxFeaturesOption;
   randomState?: number;
+  backend?: "auto" | "js" | "zig";
 }
 
 interface TreeNode {
@@ -56,11 +58,15 @@ function giniImpurity(positiveCount: number, sampleCount: number): number {
 
 export class DecisionTreeClassifier implements ClassificationModel {
   classes_: Vector = [0, 1];
+  fitBackend_: "js" | "zig" = "js";
+  fitBackendLibrary_: string | null = null;
   private readonly maxDepth: number;
   private readonly minSamplesSplit: number;
   private readonly minSamplesLeaf: number;
   private readonly maxFeatures: MaxFeaturesOption;
   private readonly randomState?: number;
+  private readonly backend: "auto" | "js" | "zig";
+  private nativeHandle: bigint | null = null;
   private random: () => number = Math.random;
   private root: TreeNode | null = null;
   private flattenedXTrain: Float64Array | null = null;
@@ -77,6 +83,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
     this.minSamplesLeaf = options.minSamplesLeaf ?? 1;
     this.maxFeatures = options.maxFeatures ?? null;
     this.randomState = options.randomState;
+    this.backend = options.backend ?? "js";
   }
 
   fit(
@@ -93,6 +100,65 @@ export class DecisionTreeClassifier implements ClassificationModel {
     this.featureCount = X[0].length;
     this.flattenedXTrain = flattenedXTrain ?? this.flattenTrainingMatrix(X);
     this.yBinaryTrain = yBinaryTrain ?? this.buildBinaryTargets(y);
+    const normalizedSampleIndices = this.normalizeSampleIndices(sampleIndices, X.length);
+
+    const kernels = this.backend !== "js" ? getZigKernels() : null;
+    if (this.backend === "zig" && !kernels) {
+      throw new Error(
+        "DecisionTreeClassifier backend 'zig' requested but native kernels were not found. Build them with `bun run native:build`.",
+      );
+    }
+
+    if (
+      kernels?.decisionTreeModelCreate &&
+      kernels.decisionTreeModelDestroy &&
+      kernels.decisionTreeModelFit
+    ) {
+      const sampleBuffer = normalizedSampleIndices ?? new Uint32Array(0);
+      const maxFeaturesNative = this.resolveNativeMaxFeatures(this.featureCount);
+      this.releaseNativeHandle();
+      const handle = kernels.decisionTreeModelCreate(
+        this.maxDepth,
+        this.minSamplesSplit,
+        this.minSamplesLeaf,
+        maxFeaturesNative.mode,
+        maxFeaturesNative.value,
+        this.randomState ?? 0,
+        this.randomState === undefined ? 0 : 1,
+        this.featureCount,
+      );
+
+      if (handle === 0n) {
+        throw new Error("Failed to create native decision tree model handle.");
+      }
+
+      try {
+        const status = kernels.decisionTreeModelFit(
+          handle,
+          this.flattenedXTrain,
+          this.yBinaryTrain,
+          X.length,
+          this.featureCount,
+          sampleBuffer,
+          sampleBuffer.length,
+        );
+        if (status !== 1) {
+          throw new Error("Native decision tree fit failed.");
+        }
+        this.nativeHandle = handle;
+        this.root = null;
+        this.fitBackend_ = "zig";
+        this.fitBackendLibrary_ = kernels.libraryPath;
+        return this;
+      } catch (error) {
+        kernels.decisionTreeModelDestroy(handle);
+        if (this.backend === "zig") {
+          throw error;
+        }
+      }
+    }
+
+    this.releaseNativeHandle();
     this.allFeatureIndices = new Array<number>(this.featureCount);
     for (let i = 0; i < this.featureCount; i += 1) {
       this.allFeatureIndices[i] = i;
@@ -101,17 +167,8 @@ export class DecisionTreeClassifier implements ClassificationModel {
     this.random = this.randomState === undefined ? Math.random : mulberry32(this.randomState);
 
     let rootIndices: number[];
-    if (sampleIndices) {
-      if (sampleIndices.length === 0) {
-        throw new Error("sampleIndices must not be empty.");
-      }
-      for (let i = 0; i < sampleIndices.length; i += 1) {
-        const index = sampleIndices[i];
-        if (!Number.isInteger(index) || index < 0 || index >= X.length) {
-          throw new Error(`sampleIndices contains invalid index: ${index}.`);
-        }
-      }
-      rootIndices = Array.from(sampleIndices);
+    if (normalizedSampleIndices) {
+      rootIndices = Array.from(normalizedSampleIndices);
     } else {
       rootIndices = new Array<number>(X.length);
       for (let idx = 0; idx < X.length; idx += 1) {
@@ -120,11 +177,13 @@ export class DecisionTreeClassifier implements ClassificationModel {
     }
 
     this.root = this.buildTree(rootIndices, 0);
+    this.fitBackend_ = "js";
+    this.fitBackendLibrary_ = null;
     return this;
   }
 
   predict(X: Matrix): Vector {
-    if (!this.root || this.featureCount === 0) {
+    if ((!this.root && this.nativeHandle === null) || this.featureCount === 0) {
       throw new Error("DecisionTreeClassifier has not been fitted.");
     }
 
@@ -135,6 +194,25 @@ export class DecisionTreeClassifier implements ClassificationModel {
       throw new Error(
         `Feature size mismatch. Expected ${this.featureCount}, got ${X[0].length}.`,
       );
+    }
+
+    if (this.nativeHandle !== null) {
+      const kernels = getZigKernels();
+      if (kernels?.decisionTreeModelPredict) {
+        const flattenedX = this.flattenTrainingMatrix(X);
+        const outLabels = new Uint8Array(X.length);
+        const status = kernels.decisionTreeModelPredict(
+          this.nativeHandle,
+          flattenedX,
+          X.length,
+          this.featureCount,
+          outLabels,
+        );
+        if (status !== 1) {
+          throw new Error("Native decision tree predict failed.");
+        }
+        return Array.from(outLabels, (value) => (value === 1 ? 1 : 0));
+      }
     }
 
     return X.map((sample) => this.predictOne(sample, this.root!));
@@ -365,5 +443,57 @@ export class DecisionTreeClassifier implements ClassificationModel {
       encoded[i] = y[i] === 1 ? 1 : 0;
     }
     return encoded;
+  }
+
+  private resolveNativeMaxFeatures(featureCount: number): { mode: number; value: number } {
+    if (this.maxFeatures === null || this.maxFeatures === undefined) {
+      return { mode: 0, value: 0 };
+    }
+    if (this.maxFeatures === "sqrt") {
+      return { mode: 1, value: 0 };
+    }
+    if (this.maxFeatures === "log2") {
+      return { mode: 2, value: 0 };
+    }
+    return {
+      mode: 3,
+      value: Math.max(1, Math.min(featureCount, Math.floor(this.maxFeatures))),
+    };
+  }
+
+  private normalizeSampleIndices(
+    sampleIndices: ArrayLike<number> | undefined,
+    sampleCount: number,
+  ): Uint32Array | null {
+    if (!sampleIndices) {
+      return null;
+    }
+
+    if (sampleIndices.length === 0) {
+      throw new Error("sampleIndices must not be empty.");
+    }
+
+    const normalized = new Uint32Array(sampleIndices.length);
+    for (let i = 0; i < sampleIndices.length; i += 1) {
+      const index = sampleIndices[i];
+      if (!Number.isInteger(index) || index < 0 || index >= sampleCount) {
+        throw new Error(`sampleIndices contains invalid index: ${index}.`);
+      }
+      normalized[i] = index;
+    }
+
+    return normalized;
+  }
+
+  private releaseNativeHandle(): void {
+    if (this.nativeHandle === null) {
+      return;
+    }
+
+    const kernels = getZigKernels();
+    if (kernels?.decisionTreeModelDestroy) {
+      kernels.decisionTreeModelDestroy(this.nativeHandle);
+    }
+    this.nativeHandle = null;
   }
 }

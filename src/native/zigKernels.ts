@@ -49,6 +49,34 @@ type LogisticModelPredictFn = (
 type LogisticModelCopyCoefficientsFn = (handle: NativeHandle, out: Float64Array) => number;
 type LogisticModelGetInterceptFn = (handle: NativeHandle) => number;
 
+type DecisionTreeModelCreateFn = (
+  maxDepth: number,
+  minSamplesSplit: number,
+  minSamplesLeaf: number,
+  maxFeaturesMode: number,
+  maxFeaturesValue: number,
+  randomState: number,
+  useRandomState: number,
+  nFeatures: number,
+) => NativeHandle;
+type DecisionTreeModelDestroyFn = (handle: NativeHandle) => void;
+type DecisionTreeModelFitFn = (
+  handle: NativeHandle,
+  x: Float64Array,
+  y: Uint8Array,
+  nSamples: number,
+  nFeatures: number,
+  sampleIndices: Uint32Array,
+  sampleCount: number,
+) => number;
+type DecisionTreeModelPredictFn = (
+  handle: NativeHandle,
+  x: Float64Array,
+  nSamples: number,
+  nFeatures: number,
+  outLabels: Uint8Array,
+) => number;
+
 type LogisticTrainEpochFn = (
   x: Float64Array,
   y: Float64Array,
@@ -92,6 +120,10 @@ interface ZigKernelLibrary {
     logistic_model_predict?: LogisticModelPredictFn;
     logistic_model_copy_coefficients?: LogisticModelCopyCoefficientsFn;
     logistic_model_get_intercept?: LogisticModelGetInterceptFn;
+    decision_tree_model_create?: DecisionTreeModelCreateFn;
+    decision_tree_model_destroy?: DecisionTreeModelDestroyFn;
+    decision_tree_model_fit?: DecisionTreeModelFitFn;
+    decision_tree_model_predict?: DecisionTreeModelPredictFn;
     logistic_train_epoch?: LogisticTrainEpochFn;
     logistic_train_epochs?: LogisticTrainEpochsFn;
   };
@@ -111,6 +143,10 @@ export interface ZigKernels {
   logisticModelPredict: LogisticModelPredictFn | null;
   logisticModelCopyCoefficients: LogisticModelCopyCoefficientsFn | null;
   logisticModelGetIntercept: LogisticModelGetInterceptFn | null;
+  decisionTreeModelCreate: DecisionTreeModelCreateFn | null;
+  decisionTreeModelDestroy: DecisionTreeModelDestroyFn | null;
+  decisionTreeModelFit: DecisionTreeModelFitFn | null;
+  decisionTreeModelPredict: DecisionTreeModelPredictFn | null;
   logisticTrainEpoch: LogisticTrainEpochFn | null;
   logisticTrainEpochs: LogisticTrainEpochsFn | null;
   libraryPath: string;
@@ -228,6 +264,30 @@ export function getZigKernels(): ZigKernels | null {
             args: ["usize"],
             returns: FFIType.f64,
           },
+          decision_tree_model_create: {
+            args: ["usize", "usize", "usize", FFIType.u8, "usize", FFIType.u32, FFIType.u8, "usize"],
+            returns: "usize",
+          },
+          decision_tree_model_destroy: {
+            args: ["usize"],
+            returns: FFIType.void,
+          },
+          decision_tree_model_fit: {
+            args: [
+              "usize",
+              FFIType.ptr,
+              FFIType.ptr,
+              "usize",
+              "usize",
+              FFIType.ptr,
+              "usize",
+            ],
+            returns: FFIType.u8,
+          },
+          decision_tree_model_predict: {
+            args: ["usize", FFIType.ptr, "usize", "usize", FFIType.ptr],
+            returns: FFIType.u8,
+          },
           logistic_train_epoch: {
             args: [
               FFIType.ptr,
@@ -278,6 +338,10 @@ export function getZigKernels(): ZigKernels | null {
           logisticModelCopyCoefficients:
             library.symbols.logistic_model_copy_coefficients ?? null,
           logisticModelGetIntercept: library.symbols.logistic_model_get_intercept ?? null,
+          decisionTreeModelCreate: library.symbols.decision_tree_model_create ?? null,
+          decisionTreeModelDestroy: library.symbols.decision_tree_model_destroy ?? null,
+          decisionTreeModelFit: library.symbols.decision_tree_model_fit ?? null,
+          decisionTreeModelPredict: library.symbols.decision_tree_model_predict ?? null,
           logisticTrainEpoch: library.symbols.logistic_train_epoch ?? null,
           logisticTrainEpochs: library.symbols.logistic_train_epochs ?? null,
           libraryPath,
@@ -335,6 +399,10 @@ export function getZigKernels(): ZigKernels | null {
             logisticModelPredict: null,
             logisticModelCopyCoefficients: null,
             logisticModelGetIntercept: null,
+            decisionTreeModelCreate: null,
+            decisionTreeModelDestroy: null,
+            decisionTreeModelFit: null,
+            decisionTreeModelPredict: null,
             logisticTrainEpoch: library.symbols.logistic_train_epoch ?? null,
             logisticTrainEpochs: library.symbols.logistic_train_epochs ?? null,
             libraryPath,
@@ -374,6 +442,10 @@ export function getZigKernels(): ZigKernels | null {
             logisticModelPredict: null,
             logisticModelCopyCoefficients: null,
             logisticModelGetIntercept: null,
+            decisionTreeModelCreate: null,
+            decisionTreeModelDestroy: null,
+            decisionTreeModelFit: null,
+            decisionTreeModelPredict: null,
             logisticTrainEpoch: library.symbols.logistic_train_epoch ?? null,
             logisticTrainEpochs: null,
             libraryPath,
