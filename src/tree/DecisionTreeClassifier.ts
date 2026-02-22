@@ -280,7 +280,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
     }
 
     const dynamicBins = Math.floor(Math.sqrt(sampleCount));
-    const binCount = Math.max(4, Math.min(MAX_THRESHOLD_BINS, dynamicBins));
+    const binCount = Math.max(16, Math.min(MAX_THRESHOLD_BINS, dynamicBins));
     const binTotals = this.binTotals;
     const binPositives = this.binPositives;
     binTotals.fill(0, 0, binCount);
