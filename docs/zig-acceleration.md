@@ -3,7 +3,8 @@
 `bun-scikit` supports an optional Zig backend for compute-heavy training loops.
 Current coverage:
 
-- `LogisticRegression.fit` epoch kernel
+- `LinearRegression` (`solver: "normal"`) native model handle (`fit` + `predict`)
+- `LogisticRegression` native model handle (`fit` + `predict` / `predictProba`)
 
 ## Build Native Kernels
 
@@ -20,9 +21,14 @@ This generates:
 ## Use In Code
 
 ```ts
-import { LogisticRegression } from "bun-scikit";
+import { LinearRegression, LogisticRegression } from "bun-scikit";
 
-const model = new LogisticRegression({
+const linear = new LinearRegression({
+  solver: "normal",
+  backend: "auto", // "auto" | "js" | "zig"
+});
+
+const logistic = new LogisticRegression({
   backend: "auto", // "auto" | "js" | "zig"
 });
 ```

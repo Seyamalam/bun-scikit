@@ -2,6 +2,53 @@ import { dlopen, FFIType, suffix } from "bun:ffi";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
 
+type NativeHandle = bigint;
+
+type LinearModelCreateFn = (nFeatures: number, fitIntercept: number) => NativeHandle;
+type LinearModelDestroyFn = (handle: NativeHandle) => void;
+type LinearModelFitFn = (
+  handle: NativeHandle,
+  x: Float64Array,
+  y: Float64Array,
+  nSamples: number,
+  l2: number,
+) => number;
+type LinearModelPredictFn = (
+  handle: NativeHandle,
+  x: Float64Array,
+  nSamples: number,
+  out: Float64Array,
+) => number;
+type LinearModelCopyCoefficientsFn = (handle: NativeHandle, out: Float64Array) => number;
+type LinearModelGetInterceptFn = (handle: NativeHandle) => number;
+
+type LogisticModelCreateFn = (nFeatures: number, fitIntercept: number) => NativeHandle;
+type LogisticModelDestroyFn = (handle: NativeHandle) => void;
+type LogisticModelFitFn = (
+  handle: NativeHandle,
+  x: Float64Array,
+  y: Float64Array,
+  nSamples: number,
+  learningRate: number,
+  l2: number,
+  maxIter: number,
+  tolerance: number,
+) => bigint;
+type LogisticModelPredictProbaFn = (
+  handle: NativeHandle,
+  x: Float64Array,
+  nSamples: number,
+  outPositive: Float64Array,
+) => number;
+type LogisticModelPredictFn = (
+  handle: NativeHandle,
+  x: Float64Array,
+  nSamples: number,
+  outLabels: Uint8Array,
+) => number;
+type LogisticModelCopyCoefficientsFn = (handle: NativeHandle, out: Float64Array) => number;
+type LogisticModelGetInterceptFn = (handle: NativeHandle) => number;
+
 type LogisticTrainEpochFn = (
   x: Float64Array,
   y: Float64Array,
@@ -32,13 +79,39 @@ type LogisticTrainEpochsFn = (
 
 interface ZigKernelLibrary {
   symbols: {
-    logistic_train_epoch: LogisticTrainEpochFn;
+    linear_model_create?: LinearModelCreateFn;
+    linear_model_destroy?: LinearModelDestroyFn;
+    linear_model_fit?: LinearModelFitFn;
+    linear_model_predict?: LinearModelPredictFn;
+    linear_model_copy_coefficients?: LinearModelCopyCoefficientsFn;
+    linear_model_get_intercept?: LinearModelGetInterceptFn;
+    logistic_model_create?: LogisticModelCreateFn;
+    logistic_model_destroy?: LogisticModelDestroyFn;
+    logistic_model_fit?: LogisticModelFitFn;
+    logistic_model_predict_proba?: LogisticModelPredictProbaFn;
+    logistic_model_predict?: LogisticModelPredictFn;
+    logistic_model_copy_coefficients?: LogisticModelCopyCoefficientsFn;
+    logistic_model_get_intercept?: LogisticModelGetInterceptFn;
+    logistic_train_epoch?: LogisticTrainEpochFn;
     logistic_train_epochs?: LogisticTrainEpochsFn;
   };
 }
 
 export interface ZigKernels {
-  logisticTrainEpoch: LogisticTrainEpochFn;
+  linearModelCreate: LinearModelCreateFn | null;
+  linearModelDestroy: LinearModelDestroyFn | null;
+  linearModelFit: LinearModelFitFn | null;
+  linearModelPredict: LinearModelPredictFn | null;
+  linearModelCopyCoefficients: LinearModelCopyCoefficientsFn | null;
+  linearModelGetIntercept: LinearModelGetInterceptFn | null;
+  logisticModelCreate: LogisticModelCreateFn | null;
+  logisticModelDestroy: LogisticModelDestroyFn | null;
+  logisticModelFit: LogisticModelFitFn | null;
+  logisticModelPredictProba: LogisticModelPredictProbaFn | null;
+  logisticModelPredict: LogisticModelPredictFn | null;
+  logisticModelCopyCoefficients: LogisticModelCopyCoefficientsFn | null;
+  logisticModelGetIntercept: LogisticModelGetInterceptFn | null;
+  logisticTrainEpoch: LogisticTrainEpochFn | null;
   logisticTrainEpochs: LogisticTrainEpochsFn | null;
   libraryPath: string;
 }
@@ -94,6 +167,67 @@ export function getZigKernels(): ZigKernels | null {
     try {
       try {
         const library = dlopen(libraryPath, {
+          linear_model_create: {
+            args: ["usize", FFIType.u8],
+            returns: "usize",
+          },
+          linear_model_destroy: {
+            args: ["usize"],
+            returns: FFIType.void,
+          },
+          linear_model_fit: {
+            args: ["usize", FFIType.ptr, FFIType.ptr, "usize", FFIType.f64],
+            returns: FFIType.u8,
+          },
+          linear_model_predict: {
+            args: ["usize", FFIType.ptr, "usize", FFIType.ptr],
+            returns: FFIType.u8,
+          },
+          linear_model_copy_coefficients: {
+            args: ["usize", FFIType.ptr],
+            returns: FFIType.u8,
+          },
+          linear_model_get_intercept: {
+            args: ["usize"],
+            returns: FFIType.f64,
+          },
+          logistic_model_create: {
+            args: ["usize", FFIType.u8],
+            returns: "usize",
+          },
+          logistic_model_destroy: {
+            args: ["usize"],
+            returns: FFIType.void,
+          },
+          logistic_model_fit: {
+            args: [
+              "usize",
+              FFIType.ptr,
+              FFIType.ptr,
+              "usize",
+              FFIType.f64,
+              FFIType.f64,
+              "usize",
+              FFIType.f64,
+            ],
+            returns: "usize",
+          },
+          logistic_model_predict_proba: {
+            args: ["usize", FFIType.ptr, "usize", FFIType.ptr],
+            returns: FFIType.u8,
+          },
+          logistic_model_predict: {
+            args: ["usize", FFIType.ptr, "usize", FFIType.ptr],
+            returns: FFIType.u8,
+          },
+          logistic_model_copy_coefficients: {
+            args: ["usize", FFIType.ptr],
+            returns: FFIType.u8,
+          },
+          logistic_model_get_intercept: {
+            args: ["usize"],
+            returns: FFIType.f64,
+          },
           logistic_train_epoch: {
             args: [
               FFIType.ptr,
@@ -129,38 +263,124 @@ export function getZigKernels(): ZigKernels | null {
         }) as ZigKernelLibrary;
 
         cachedKernels = {
-          logisticTrainEpoch: library.symbols.logistic_train_epoch,
+          linearModelCreate: library.symbols.linear_model_create ?? null,
+          linearModelDestroy: library.symbols.linear_model_destroy ?? null,
+          linearModelFit: library.symbols.linear_model_fit ?? null,
+          linearModelPredict: library.symbols.linear_model_predict ?? null,
+          linearModelCopyCoefficients:
+            library.symbols.linear_model_copy_coefficients ?? null,
+          linearModelGetIntercept: library.symbols.linear_model_get_intercept ?? null,
+          logisticModelCreate: library.symbols.logistic_model_create ?? null,
+          logisticModelDestroy: library.symbols.logistic_model_destroy ?? null,
+          logisticModelFit: library.symbols.logistic_model_fit ?? null,
+          logisticModelPredictProba: library.symbols.logistic_model_predict_proba ?? null,
+          logisticModelPredict: library.symbols.logistic_model_predict ?? null,
+          logisticModelCopyCoefficients:
+            library.symbols.logistic_model_copy_coefficients ?? null,
+          logisticModelGetIntercept: library.symbols.logistic_model_get_intercept ?? null,
+          logisticTrainEpoch: library.symbols.logistic_train_epoch ?? null,
           logisticTrainEpochs: library.symbols.logistic_train_epochs ?? null,
           libraryPath,
         };
 
         return cachedKernels;
       } catch {
-        const library = dlopen(libraryPath, {
-          logistic_train_epoch: {
-            args: [
-              FFIType.ptr,
-              FFIType.ptr,
-              "usize",
-              "usize",
-              FFIType.ptr,
-              FFIType.ptr,
-              FFIType.ptr,
-              FFIType.f64,
-              FFIType.f64,
-              FFIType.u8,
-            ],
-            returns: FFIType.f64,
-          },
-        }) as ZigKernelLibrary;
+        try {
+          const library = dlopen(libraryPath, {
+            logistic_train_epoch: {
+              args: [
+                FFIType.ptr,
+                FFIType.ptr,
+                "usize",
+                "usize",
+                FFIType.ptr,
+                FFIType.ptr,
+                FFIType.ptr,
+                FFIType.f64,
+                FFIType.f64,
+                FFIType.u8,
+              ],
+              returns: FFIType.f64,
+            },
+            logistic_train_epochs: {
+              args: [
+                FFIType.ptr,
+                FFIType.ptr,
+                "usize",
+                "usize",
+                FFIType.ptr,
+                FFIType.ptr,
+                FFIType.ptr,
+                FFIType.f64,
+                FFIType.f64,
+                FFIType.u8,
+                "usize",
+                FFIType.f64,
+              ],
+              returns: "usize",
+            },
+          }) as ZigKernelLibrary;
 
-        cachedKernels = {
-          logisticTrainEpoch: library.symbols.logistic_train_epoch,
-          logisticTrainEpochs: null,
-          libraryPath,
-        };
+          cachedKernels = {
+            linearModelCreate: null,
+            linearModelDestroy: null,
+            linearModelFit: null,
+            linearModelPredict: null,
+            linearModelCopyCoefficients: null,
+            linearModelGetIntercept: null,
+            logisticModelCreate: null,
+            logisticModelDestroy: null,
+            logisticModelFit: null,
+            logisticModelPredictProba: null,
+            logisticModelPredict: null,
+            logisticModelCopyCoefficients: null,
+            logisticModelGetIntercept: null,
+            logisticTrainEpoch: library.symbols.logistic_train_epoch ?? null,
+            logisticTrainEpochs: library.symbols.logistic_train_epochs ?? null,
+            libraryPath,
+          };
 
-        return cachedKernels;
+          return cachedKernels;
+        } catch {
+          const library = dlopen(libraryPath, {
+            logistic_train_epoch: {
+              args: [
+                FFIType.ptr,
+                FFIType.ptr,
+                "usize",
+                "usize",
+                FFIType.ptr,
+                FFIType.ptr,
+                FFIType.ptr,
+                FFIType.f64,
+                FFIType.f64,
+                FFIType.u8,
+              ],
+              returns: FFIType.f64,
+            },
+          }) as ZigKernelLibrary;
+
+          cachedKernels = {
+            linearModelCreate: null,
+            linearModelDestroy: null,
+            linearModelFit: null,
+            linearModelPredict: null,
+            linearModelCopyCoefficients: null,
+            linearModelGetIntercept: null,
+            logisticModelCreate: null,
+            logisticModelDestroy: null,
+            logisticModelFit: null,
+            logisticModelPredictProba: null,
+            logisticModelPredict: null,
+            logisticModelCopyCoefficients: null,
+            logisticModelGetIntercept: null,
+            logisticTrainEpoch: library.symbols.logistic_train_epoch ?? null,
+            logisticTrainEpochs: null,
+            libraryPath,
+          };
+
+          return cachedKernels;
+        }
       }
     } catch {
       continue;

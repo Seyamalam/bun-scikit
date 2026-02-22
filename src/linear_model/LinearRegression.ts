@@ -1,6 +1,7 @@
 import type { Matrix, RegressionModel, Vector } from "../types";
 import { r2Score } from "../metrics/regression";
 import { dot, mean } from "../utils/linalg";
+import { getZigKernels } from "../native/zigKernels";
 import {
   assertConsistentRowSize,
   assertFiniteMatrix,
@@ -14,17 +15,22 @@ export interface LinearRegressionOptions {
   learningRate?: number;
   maxIter?: number;
   tolerance?: number;
+  backend?: "auto" | "js" | "zig";
 }
 
 export class LinearRegression implements RegressionModel {
   coef_: Vector = [];
   intercept_ = 0;
+  fitBackend_: "js" | "zig" = "js";
+  fitBackendLibrary_: string | null = null;
 
   private readonly fitIntercept: boolean;
   private readonly solver: "normal" | "gd";
   private readonly learningRate: number;
   private readonly maxIter: number;
   private readonly tolerance: number;
+  private readonly backend: "auto" | "js" | "zig";
+  private nativeHandle: bigint | null = null;
   private isFitted = false;
 
   constructor(options: LinearRegressionOptions = {}) {
@@ -33,15 +39,43 @@ export class LinearRegression implements RegressionModel {
     this.learningRate = options.learningRate ?? 0.01;
     this.maxIter = options.maxIter ?? 10_000;
     this.tolerance = options.tolerance ?? 1e-8;
+    this.backend = options.backend ?? "auto";
   }
 
   fit(X: Matrix, y: Vector): this {
     validateRegressionInputs(X, y);
 
     if (this.solver === "normal") {
-      this.fitNormalEquation(X, y);
+      const kernels = this.backend !== "js" ? getZigKernels() : null;
+      if (this.backend === "zig" && !kernels) {
+        throw new Error(
+          "LinearRegression backend 'zig' requested but native kernels were not found. Build them with `bun run native:build`.",
+        );
+      }
+
+      if (
+        kernels?.linearModelCreate &&
+        kernels.linearModelDestroy &&
+        kernels.linearModelFit &&
+        kernels.linearModelCopyCoefficients &&
+        kernels.linearModelGetIntercept
+      ) {
+        try {
+          this.fitNormalEquationNative(X, y);
+        } catch (error) {
+          if (this.backend === "zig") {
+            throw error;
+          }
+          this.fitNormalEquation(X, y);
+        }
+      } else {
+        this.fitNormalEquation(X, y);
+      }
     } else {
+      this.releaseNativeHandle();
       this.fitGradientDescent(X, y);
+      this.fitBackend_ = "js";
+      this.fitBackendLibrary_ = null;
     }
 
     this.isFitted = true;
@@ -62,6 +96,24 @@ export class LinearRegression implements RegressionModel {
       );
     }
 
+    if (this.nativeHandle !== null) {
+      const kernels = getZigKernels();
+      if (kernels?.linearModelPredict) {
+        const flattenedX = this.flattenMatrix(X);
+        const predictions = new Float64Array(X.length);
+        const status = kernels.linearModelPredict(
+          this.nativeHandle,
+          flattenedX,
+          X.length,
+          predictions,
+        );
+        if (status !== 1) {
+          throw new Error("Native linear model predict failed.");
+        }
+        return Array.from(predictions);
+      }
+    }
+
     return X.map((row) => this.intercept_ + dot(row, this.coef_));
   }
 
@@ -70,7 +122,55 @@ export class LinearRegression implements RegressionModel {
     return r2Score(y, this.predict(X));
   }
 
+  private fitNormalEquationNative(X: Matrix, y: Vector): void {
+    const kernels = getZigKernels();
+    if (
+      !kernels?.linearModelCreate ||
+      !kernels.linearModelDestroy ||
+      !kernels.linearModelFit ||
+      !kernels.linearModelCopyCoefficients ||
+      !kernels.linearModelGetIntercept
+    ) {
+      throw new Error("Native linear model symbols are not available.");
+    }
+
+    const nSamples = X.length;
+    const nFeatures = X[0].length;
+    const flattenedX = this.flattenMatrix(X);
+    const yBuffer = this.toFloat64Vector(y);
+    this.releaseNativeHandle();
+
+    const handle = kernels.linearModelCreate(nFeatures, this.fitIntercept ? 1 : 0);
+    if (handle === 0n) {
+      throw new Error("Failed to create native linear model handle.");
+    }
+
+    try {
+      const fitStatus = kernels.linearModelFit(handle, flattenedX, yBuffer, nSamples, 1e-8);
+      if (fitStatus !== 1) {
+        throw new Error("Native linear model fit failed.");
+      }
+
+      const coefficients = new Float64Array(nFeatures);
+      const copied = kernels.linearModelCopyCoefficients(handle, coefficients);
+      if (copied !== 1) {
+        throw new Error("Failed to copy native linear coefficients.");
+      }
+
+      this.nativeHandle = handle;
+      this.coef_ = Array.from(coefficients);
+      this.intercept_ = kernels.linearModelGetIntercept(handle);
+      this.fitBackend_ = "zig";
+      this.fitBackendLibrary_ = kernels.libraryPath;
+    } catch (error) {
+      kernels.linearModelDestroy(handle);
+      throw error;
+    }
+  }
+
   private fitNormalEquation(X: Matrix, y: Vector): void {
+    this.releaseNativeHandle();
+
     const sampleCount = X.length;
     const featureCount = X[0].length;
     const dim = this.fitIntercept ? featureCount + 1 : featureCount;
@@ -135,6 +235,9 @@ export class LinearRegression implements RegressionModel {
       this.intercept_ = 0;
       this.coef_ = Array.from(beta);
     }
+
+    this.fitBackend_ = "js";
+    this.fitBackendLibrary_ = null;
   }
 
   private solveSymmetricPositiveDefiniteDense(
@@ -228,5 +331,39 @@ export class LinearRegression implements RegressionModel {
         this.intercept_ -= this.learningRate * scale * interceptGradient;
       }
     }
+  }
+
+  private flattenMatrix(X: Matrix): Float64Array {
+    const rowCount = X.length;
+    const featureCount = X[0].length;
+    const flattenedX = new Float64Array(rowCount * featureCount);
+    for (let i = 0; i < rowCount; i += 1) {
+      const row = X[i];
+      const rowOffset = i * featureCount;
+      for (let j = 0; j < featureCount; j += 1) {
+        flattenedX[rowOffset + j] = row[j];
+      }
+    }
+    return flattenedX;
+  }
+
+  private toFloat64Vector(y: Vector): Float64Array {
+    const yBuffer = new Float64Array(y.length);
+    for (let i = 0; i < y.length; i += 1) {
+      yBuffer[i] = y[i];
+    }
+    return yBuffer;
+  }
+
+  private releaseNativeHandle(): void {
+    if (this.nativeHandle === null) {
+      return;
+    }
+
+    const kernels = getZigKernels();
+    if (kernels?.linearModelDestroy) {
+      kernels.linearModelDestroy(this.nativeHandle);
+    }
+    this.nativeHandle = null;
   }
 }

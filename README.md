@@ -9,7 +9,7 @@
 
 - `StandardScaler`
 - `LinearRegression` (`normal` and `gd` solvers)
-- `LogisticRegression` (binary classification, optional Zig fit backend)
+- `LogisticRegression` (binary classification, optional Zig backend)
 - `KNeighborsClassifier`
 - `DecisionTreeClassifier`
 - `RandomForestClassifier`
@@ -22,16 +22,20 @@
 
 ## Native Acceleration (Optional)
 
-`LogisticRegression` supports a native Zig backend for faster fit epochs.
+`LinearRegression` (`solver: "normal"`) and `LogisticRegression` support a native Zig backend.
 
 ```bash
 bun run native:build
 ```
 
 ```ts
-const model = new LogisticRegression({ backend: "auto" });
-model.fit(XTrain, yTrain);
-console.log(model.fitBackend_, model.fitBackendLibrary_);
+const linear = new LinearRegression({ solver: "normal", backend: "auto" });
+const logistic = new LogisticRegression({ backend: "auto" });
+
+linear.fit(XTrain, yTrain);
+logistic.fit(XTrain, yTrain);
+console.log(linear.fitBackend_, linear.fitBackendLibrary_);
+console.log(logistic.fitBackend_, logistic.fitBackendLibrary_);
 ```
 
 Backends:
