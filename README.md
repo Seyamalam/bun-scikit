@@ -9,6 +9,8 @@
 - `trainTestSplit`
 - Regression metrics: `meanSquaredError`, `meanAbsoluteError`, `r2Score`
 
+`test_data/heart.csv` is included for real-data testing and benchmarking.
+
 ## Install
 
 ```bash
@@ -53,4 +55,5 @@ console.log("MSE:", meanSquaredError(yTest, preds));
 bun run test
 bun run typecheck
 bun run bench
+bun run bench:synthetic
 ```

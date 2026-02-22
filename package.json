@@ -14,7 +14,9 @@
   "scripts": {
     "test": "bun test",
     "typecheck": "bunx tsc --noEmit",
-    "bench": "bun run bench/linear-regression.bench.ts"
+    "bench": "bun run bench/heart.bench.ts",
+    "bench:heart": "bun run bench/heart.bench.ts",
+    "bench:synthetic": "bun run bench/linear-regression.bench.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
