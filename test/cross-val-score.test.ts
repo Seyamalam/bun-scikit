@@ -3,6 +3,7 @@ import {
   LinearRegression,
   LogisticRegression,
   Pipeline,
+  RepeatedStratifiedKFold,
   StandardScaler,
   crossValScore,
 } from "../src";
@@ -75,4 +76,44 @@ test("crossValScore defaults to estimator.score when scoring is omitted", () => 
 
   const scores = crossValScore(() => new ScoreOnlyEstimator(), X, y, { cv: 3 });
   expect(scores).toEqual([0.1234, 0.1234, 0.1234]);
+});
+
+test("crossValScore accepts repeated stratified splitter objects", () => {
+  const X = [
+    [-3], [-2], [-1], [-0.5], [0.5], [1], [2], [3],
+    [-2.5], [-1.5], [1.5], [2.5],
+  ];
+  const y = [0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1];
+
+  const cv = new RepeatedStratifiedKFold({
+    nSplits: 3,
+    nRepeats: 2,
+    randomState: 21,
+  });
+  const scores = crossValScore(
+    () =>
+      new Pipeline([
+        ["scaler", new StandardScaler()],
+        [
+          "classifier",
+          new LogisticRegression({
+            solver: "gd",
+            learningRate: 0.8,
+            maxIter: 20,
+            tolerance: 1e-4,
+            l2: 0.01,
+          }),
+        ],
+      ]),
+    X,
+    y,
+    { cv, scoring: "accuracy" },
+  );
+
+  expect(scores.length).toBe(6);
+  const meanScore = scores.reduce((sum, score) => sum + score, 0) / scores.length;
+  for (const score of scores) {
+    expect(score).toBeGreaterThanOrEqual(0.75);
+  }
+  expect(meanScore).toBeGreaterThanOrEqual(0.9);
 });
