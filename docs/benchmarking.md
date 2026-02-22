@@ -17,6 +17,8 @@
   - `bun run bench`
 - Generate current CI-style snapshot:
   - `bun run bench:ci`
+- Generate CI-style snapshot with native Zig kernels:
+  - `bun run bench:ci:native`
 - Generate latest snapshot and sync README benchmark table:
   - `bun run bench:snapshot`
 - Append latest snapshot summary to history:
@@ -30,6 +32,8 @@
 - Build benchmark runner with Bun bytecode + minify (startup optimization):
   - `bun run build:bench:bytecode`
   - `bun run build:bench:compiled`
+- Build native Zig kernels used by accelerated fit paths:
+  - `bun run native:build`
 
 ## Python Dependencies
 
@@ -42,6 +46,7 @@ python -m pip install -r bench/python/requirements.txt
 ## CI Workflows
 
 - `CI` workflow runs tests, typecheck, and benchmark comparison on pushes/PRs.
+  Benchmark job builds Zig kernels before benchmark execution.
 - `Benchmark Snapshot` workflow (manual/scheduled) regenerates:
   - `bench/results/heart-ci-latest.json`
   - `bench/results/heart-ci-latest.md`

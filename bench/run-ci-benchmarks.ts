@@ -249,6 +249,8 @@ async function runBunClassificationBenchmark(
   const fitTimes: number[] = [];
   const predictTimes: number[] = [];
   let predictionsForMetrics: number[] | null = null;
+  let backendLabel: "js" | "zig" = "js";
+  let backendLibrary: string | null = null;
 
   const loops = warmup + iterations;
   for (let i = 0; i < loops; i += 1) {
@@ -266,6 +268,8 @@ async function runBunClassificationBenchmark(
     const predictStart = performance.now();
     const predictions = model.predict(XTestScaled);
     const predictMs = performance.now() - predictStart;
+    backendLabel = model.fitBackend_;
+    backendLibrary = model.fitBackendLibrary_;
 
     if (i >= warmup) {
       fitTimes.push(fitMs);
@@ -280,7 +284,7 @@ async function runBunClassificationBenchmark(
 
   return {
     implementation: "bun-scikit",
-    model: "StandardScaler + LogisticRegression(gd)",
+    model: `StandardScaler + LogisticRegression(gd,${backendLabel})`,
     iterations,
     fitMsMedian: median(fitTimes),
     predictMsMedian: median(predictTimes),
@@ -289,6 +293,8 @@ async function runBunClassificationBenchmark(
     environment: {
       bun: Bun.version,
       runtime: "bun",
+      fitBackend: backendLabel,
+      fitBackendLibrary: backendLibrary ?? "none",
     },
   };
 }

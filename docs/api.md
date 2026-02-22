@@ -53,6 +53,7 @@ Learned attributes:
 - `maxIter?: number`
 - `tolerance?: number`
 - `l2?: number`
+- `backend?: "auto" | "js" | "zig"`
 
 ### `LogisticRegression`
 
@@ -68,6 +69,8 @@ Learned attributes:
 - `coef_: number[]`
 - `intercept_: number`
 - `classes_: number[]`
+- `fitBackend_: "js" | "zig"`
+- `fitBackendLibrary_: string | null`
 
 ## Tree Models
 

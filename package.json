@@ -31,6 +31,7 @@
   "files": [
     "index.ts",
     "src",
+    "zig",
     "README.md",
     "LICENSE"
   ],
@@ -47,11 +48,13 @@
     "bench:heart:tree": "bun run bench/heart-tree-classification.bench.ts",
     "bench:synthetic": "bun run bench/linear-regression.bench.ts",
     "bench:ci": "bun run bench/run-ci-benchmarks.ts --output bench/results/heart-ci-current.json",
+    "bench:ci:native": "bun run native:build && bun run bench:ci",
     "bench:snapshot": "bun run bench/run-ci-benchmarks.ts --output bench/results/heart-ci-latest.json && bun run bench:sync-readme && bun run bench:history:update",
     "bench:sync-readme": "bun run scripts/sync-benchmark-readme.ts",
     "bench:readme:check": "bun run scripts/sync-benchmark-readme.ts --check",
     "bench:health": "bun run scripts/check-benchmark-health.ts",
     "bench:history:update": "bun run scripts/update-benchmark-history.ts",
+    "native:build": "bun run scripts/build-zig-kernels.ts",
     "docs:api:generate": "typedoc --entryPointStrategy resolve --entryPoints src/index.ts --out docs/api-reference --readme none",
     "docs:coverage:check": "bun run scripts/check-api-docs-coverage.ts",
     "build:bench:bytecode": "bun build ./bench/run-ci-benchmarks.ts --target=bun --bytecode --minify --outdir=./dist/bench",

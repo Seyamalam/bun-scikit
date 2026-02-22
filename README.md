@@ -9,7 +9,7 @@
 
 - `StandardScaler`
 - `LinearRegression` (`normal` and `gd` solvers)
-- `LogisticRegression` (binary classification)
+- `LogisticRegression` (binary classification, optional Zig fit backend)
 - `KNeighborsClassifier`
 - `DecisionTreeClassifier`
 - `RandomForestClassifier`
@@ -19,6 +19,26 @@
 - Dataset-driven benchmark and CI comparison against Python `scikit-learn`
 
 `test_data/heart.csv` is used for integration testing and benchmark comparison.
+
+## Native Acceleration (Optional)
+
+`LogisticRegression` supports a native Zig backend for faster fit epochs.
+
+```bash
+bun run native:build
+```
+
+```ts
+const model = new LogisticRegression({ backend: "auto" });
+model.fit(XTrain, yTrain);
+console.log(model.fitBackend_, model.fitBackendLibrary_);
+```
+
+Backends:
+
+- `auto` (default): use Zig if found, otherwise JS fallback
+- `js`: force JavaScript/TypeScript path
+- `zig`: require native kernel (throws if missing)
 
 ## Install
 
@@ -119,6 +139,7 @@ Snapshot generated at: 2026-02-22T12:17:31.022Z
 - Getting started: `docs/getting-started.md`
 - API reference: `docs/api.md`
 - Benchmarking flow: `docs/benchmarking.md`
+- Zig acceleration: `docs/zig-acceleration.md`
 
 ## Maintainer Files
 
@@ -140,5 +161,7 @@ bun run bench
 bun run bench:heart:classification
 bun run bench:heart:tree
 bun run bench:ci
+bun run bench:ci:native
 bun run bench:snapshot
+bun run native:build
 ```

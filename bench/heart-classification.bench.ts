@@ -45,6 +45,7 @@ benchmarkModel("logistic_regression(gd)", () => {
     l2: 0.01,
   });
   model.fit(XTrainScaled, yTrain);
+  console.log(`  -> fit backend=${model.fitBackend_}`);
   return model.predict(XTestScaled);
 });
 
