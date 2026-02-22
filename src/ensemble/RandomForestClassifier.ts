@@ -56,12 +56,16 @@ export class RandomForestClassifier implements ClassificationModel {
     this.trees = [];
 
     for (let estimatorIndex = 0; estimatorIndex < this.nEstimators; estimatorIndex += 1) {
-      const sampleIndices = this.bootstrap
-        ? Array.from({ length: sampleCount }, () => Math.floor(random() * sampleCount))
-        : Array.from({ length: sampleCount }, (_, idx) => idx);
-
-      const XSample = sampleIndices.map((i) => X[i]);
-      const ySample = sampleIndices.map((i) => y[i]);
+      const sampleIndices = new Array<number>(sampleCount);
+      if (this.bootstrap) {
+        for (let i = 0; i < sampleCount; i += 1) {
+          sampleIndices[i] = Math.floor(random() * sampleCount);
+        }
+      } else {
+        for (let i = 0; i < sampleCount; i += 1) {
+          sampleIndices[i] = i;
+        }
+      }
 
       const tree = new DecisionTreeClassifier({
         maxDepth: this.maxDepth,
@@ -71,7 +75,7 @@ export class RandomForestClassifier implements ClassificationModel {
         randomState:
           this.randomState === undefined ? undefined : this.randomState + estimatorIndex + 1,
       });
-      tree.fit(XSample, ySample);
+      tree.fit(X, y, sampleIndices, true);
       this.trees.push(tree);
     }
 

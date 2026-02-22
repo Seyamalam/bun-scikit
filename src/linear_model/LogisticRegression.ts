@@ -52,53 +52,51 @@ export class LogisticRegression implements ClassificationModel {
     const nFeatures = X[0].length;
     this.coef_ = new Array(nFeatures).fill(0);
     this.intercept_ = 0;
-
-    let previousLoss = Number.POSITIVE_INFINITY;
-    const EPSILON = 1e-12;
+    const gradients = new Array(nFeatures).fill(0);
 
     for (let iter = 0; iter < this.maxIter; iter += 1) {
       let interceptGradient = 0;
-      const gradients = new Array(nFeatures).fill(0);
-      let loss = 0;
+      for (let j = 0; j < nFeatures; j += 1) {
+        gradients[j] = 0;
+      }
 
       for (let i = 0; i < nSamples; i += 1) {
-        const z = this.intercept_ + dot(X[i], this.coef_);
+        const row = X[i];
+        const z = this.intercept_ + dot(row, this.coef_);
         const prediction = sigmoid(z);
         const target = y[i];
         const error = prediction - target;
-
-        loss +=
-          -target * Math.log(prediction + EPSILON) -
-          (1 - target) * Math.log(1 - prediction + EPSILON);
         interceptGradient += error;
 
         for (let j = 0; j < nFeatures; j += 1) {
-          gradients[j] += error * X[i][j];
+          gradients[j] += error * row[j];
         }
       }
-
-      let l2Penalty = 0;
-      if (this.l2 > 0) {
-        for (let j = 0; j < nFeatures; j += 1) {
-          l2Penalty += this.coef_[j] * this.coef_[j];
-        }
-      }
-
-      const objective = loss / nSamples + (this.l2 * l2Penalty) / (2 * nSamples);
-      if (Math.abs(previousLoss - objective) < this.tolerance) {
-        this.isFitted = true;
-        return this;
-      }
-      previousLoss = objective;
 
       const scale = 1 / nSamples;
+      let maxUpdate = 0;
       for (let j = 0; j < nFeatures; j += 1) {
         const l2Term = this.l2 > 0 ? this.l2 * this.coef_[j] : 0;
-        this.coef_[j] -= this.learningRate * (scale * gradients[j] + scale * l2Term);
+        const delta = this.learningRate * (scale * gradients[j] + scale * l2Term);
+        this.coef_[j] -= delta;
+        const absDelta = Math.abs(delta);
+        if (absDelta > maxUpdate) {
+          maxUpdate = absDelta;
+        }
       }
 
       if (this.fitIntercept) {
-        this.intercept_ -= this.learningRate * scale * interceptGradient;
+        const interceptDelta = this.learningRate * scale * interceptGradient;
+        this.intercept_ -= interceptDelta;
+        const absInterceptDelta = Math.abs(interceptDelta);
+        if (absInterceptDelta > maxUpdate) {
+          maxUpdate = absInterceptDelta;
+        }
+      }
+
+      if (maxUpdate < this.tolerance) {
+        this.isFitted = true;
+        return this;
       }
     }
 

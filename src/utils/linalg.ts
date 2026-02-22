@@ -133,6 +133,57 @@ export function inverseMatrix(A: Matrix): Matrix {
   return augmented.map((row) => row.slice(n));
 }
 
+export function solveSymmetricPositiveDefinite(A: Matrix, b: Vector): Vector {
+  const n = A.length;
+  if (n === 0 || A[0].length !== n) {
+    throw new Error("A must be a non-empty square matrix.");
+  }
+  if (b.length !== n) {
+    throw new Error(`b length must match matrix size ${n}. Got ${b.length}.`);
+  }
+
+  const L: Matrix = Array.from({ length: n }, () => new Array(n).fill(0));
+  const EPSILON = 1e-12;
+
+  for (let i = 0; i < n; i += 1) {
+    for (let j = 0; j <= i; j += 1) {
+      let sum = A[i][j];
+      for (let k = 0; k < j; k += 1) {
+        sum -= L[i][k] * L[j][k];
+      }
+
+      if (i === j) {
+        if (sum <= EPSILON) {
+          throw new Error("Matrix is not positive definite.");
+        }
+        L[i][j] = Math.sqrt(sum);
+      } else {
+        L[i][j] = sum / L[j][j];
+      }
+    }
+  }
+
+  const y = new Array(n).fill(0);
+  for (let i = 0; i < n; i += 1) {
+    let sum = b[i];
+    for (let k = 0; k < i; k += 1) {
+      sum -= L[i][k] * y[k];
+    }
+    y[i] = sum / L[i][i];
+  }
+
+  const x = new Array(n).fill(0);
+  for (let i = n - 1; i >= 0; i -= 1) {
+    let sum = y[i];
+    for (let k = i + 1; k < n; k += 1) {
+      sum -= L[k][i] * x[k];
+    }
+    x[i] = sum / L[i][i];
+  }
+
+  return x;
+}
+
 export function dot(a: Vector, b: Vector): number {
   if (a.length !== b.length) {
     throw new Error(`Vector sizes do not match: ${a.length} vs ${b.length}.`);

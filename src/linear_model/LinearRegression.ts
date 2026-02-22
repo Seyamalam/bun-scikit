@@ -7,6 +7,7 @@ import {
   mean,
   multiplyMatrices,
   multiplyMatrixVector,
+  solveSymmetricPositiveDefinite,
   transpose,
 } from "../utils/linalg";
 import {
@@ -93,7 +94,12 @@ export class LinearRegression implements RegressionModel {
     }
 
     const XTy = multiplyMatrixVector(XT, y);
-    const beta = multiplyMatrixVector(inverseMatrix(XTX), XTy);
+    let beta: Vector;
+    try {
+      beta = solveSymmetricPositiveDefinite(XTX, XTy);
+    } catch {
+      beta = multiplyMatrixVector(inverseMatrix(XTX), XTy);
+    }
 
     if (this.fitIntercept) {
       this.intercept_ = beta[0];

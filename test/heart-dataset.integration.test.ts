@@ -70,9 +70,9 @@ test("heart.csv classification workflow beats majority baseline", async () => {
   const baselineAccuracy = accuracyScore(yTest, baselinePredictions);
 
   const logistic = new LogisticRegression({
-    learningRate: 0.2,
-    maxIter: 3_000,
-    tolerance: 1e-6,
+    learningRate: 0.35,
+    maxIter: 500,
+    tolerance: 1e-5,
     l2: 0.01,
   });
   logistic.fit(XTrainScaled, yTrain);

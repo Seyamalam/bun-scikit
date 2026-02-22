@@ -5,4 +5,3 @@ coverage/
 /.venv/
 bench/results/heart-ci-current.json
 bench/results/heart-ci-current.md
-docs/api-reference/

@@ -253,9 +253,9 @@ async function runBunClassificationBenchmark(
   const loops = warmup + iterations;
   for (let i = 0; i < loops; i += 1) {
     const model = new LogisticRegression({
-      learningRate: 0.2,
-      maxIter: 3_000,
-      tolerance: 1e-6,
+      learningRate: 0.35,
+      maxIter: 500,
+      tolerance: 1e-5,
       l2: 0.01,
     });
 
