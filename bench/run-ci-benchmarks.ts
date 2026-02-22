@@ -251,12 +251,14 @@ async function runBunClassificationBenchmark(
   let predictionsForMetrics: number[] | null = null;
   let backendLabel: "js" | "zig" = "js";
   let backendLibrary: string | null = null;
+  const solverLabel: "gd" | "lbfgs" = "gd";
 
   const loops = warmup + iterations;
   for (let i = 0; i < loops; i += 1) {
     const model = new LogisticRegression({
-      learningRate: 0.35,
-      maxIter: 60,
+      solver: solverLabel,
+      learningRate: 0.8,
+      maxIter: 20,
       tolerance: 1e-4,
       l2: 0.01,
     });
@@ -284,7 +286,7 @@ async function runBunClassificationBenchmark(
 
   return {
     implementation: "bun-scikit",
-    model: `StandardScaler + LogisticRegression(gd,${backendLabel})`,
+    model: `StandardScaler + LogisticRegression(${solverLabel},${backendLabel})`,
     iterations,
     fitMsMedian: median(fitTimes),
     predictMsMedian: median(predictTimes),
@@ -458,6 +460,9 @@ async function main(): Promise<void> {
   const trainSize = prepared.dataset.X.length - testSize;
 
   const bunRegression = await runBunRegressionBenchmark(iterations, warmup);
+  const bunClassification = await runBunClassificationBenchmark(iterations, warmup);
+  const bunTreeBenchmarks = await runBunTreeBenchmarks(iterations, warmup);
+
   const sklearnRegression = await runPythonBenchmark<RegressionBenchmarkResult>(
     "bench/python/heart_sklearn_bench.py",
     [
@@ -473,7 +478,6 @@ async function main(): Promise<void> {
       String(warmup),
     ],
   );
-  const bunClassification = await runBunClassificationBenchmark(iterations, warmup);
   const sklearnClassification = await runPythonBenchmark<ClassificationBenchmarkResult>(
     "bench/python/heart_sklearn_classification_bench.py",
     [
@@ -489,7 +493,6 @@ async function main(): Promise<void> {
       String(warmup),
     ],
   );
-  const bunTreeBenchmarks = await runBunTreeBenchmarks(iterations, warmup);
   const sklearnTreeBenchmarks = await runPythonBenchmark<PythonTreeBenchPayload>(
     "bench/python/heart_sklearn_tree_bench.py",
     [

@@ -30,7 +30,6 @@ export class LinearRegression implements RegressionModel {
   private readonly maxIter: number;
   private readonly tolerance: number;
   private readonly backend: "auto" | "js" | "zig";
-  private nativeHandle: bigint | null = null;
   private isFitted = false;
 
   constructor(options: LinearRegressionOptions = {}) {
@@ -72,7 +71,6 @@ export class LinearRegression implements RegressionModel {
         this.fitNormalEquation(X, y);
       }
     } else {
-      this.releaseNativeHandle();
       this.fitGradientDescent(X, y);
       this.fitBackend_ = "js";
       this.fitBackendLibrary_ = null;
@@ -94,24 +92,6 @@ export class LinearRegression implements RegressionModel {
       throw new Error(
         `Feature size mismatch. Expected ${this.coef_.length}, got ${X[0].length}.`,
       );
-    }
-
-    if (this.nativeHandle !== null) {
-      const kernels = getZigKernels();
-      if (kernels?.linearModelPredict) {
-        const flattenedX = this.flattenMatrix(X);
-        const predictions = new Float64Array(X.length);
-        const status = kernels.linearModelPredict(
-          this.nativeHandle,
-          flattenedX,
-          X.length,
-          predictions,
-        );
-        if (status !== 1) {
-          throw new Error("Native linear model predict failed.");
-        }
-        return Array.from(predictions);
-      }
     }
 
     return X.map((row) => this.intercept_ + dot(row, this.coef_));
@@ -138,8 +118,6 @@ export class LinearRegression implements RegressionModel {
     const nFeatures = X[0].length;
     const flattenedX = this.flattenMatrix(X);
     const yBuffer = this.toFloat64Vector(y);
-    this.releaseNativeHandle();
-
     const handle = kernels.linearModelCreate(nFeatures, this.fitIntercept ? 1 : 0);
     if (handle === 0n) {
       throw new Error("Failed to create native linear model handle.");
@@ -157,7 +135,6 @@ export class LinearRegression implements RegressionModel {
         throw new Error("Failed to copy native linear coefficients.");
       }
 
-      this.nativeHandle = handle;
       this.coef_ = Array.from(coefficients);
       this.intercept_ = kernels.linearModelGetIntercept(handle);
       this.fitBackend_ = "zig";
@@ -166,11 +143,10 @@ export class LinearRegression implements RegressionModel {
       kernels.linearModelDestroy(handle);
       throw error;
     }
+    kernels.linearModelDestroy(handle);
   }
 
   private fitNormalEquation(X: Matrix, y: Vector): void {
-    this.releaseNativeHandle();
-
     const sampleCount = X.length;
     const featureCount = X[0].length;
     const dim = this.fitIntercept ? featureCount + 1 : featureCount;
@@ -355,15 +331,4 @@ export class LinearRegression implements RegressionModel {
     return yBuffer;
   }
 
-  private releaseNativeHandle(): void {
-    if (this.nativeHandle === null) {
-      return;
-    }
-
-    const kernels = getZigKernels();
-    if (kernels?.linearModelDestroy) {
-      kernels.linearModelDestroy(this.nativeHandle);
-    }
-    this.nativeHandle = null;
-  }
 }

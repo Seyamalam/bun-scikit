@@ -59,3 +59,26 @@ test("LogisticRegression zig backend behavior is deterministic", () => {
   expect(model.fitBackend_).toBe("zig");
   expect(model.predict([[-1], [6]])).toEqual([0, 1]);
 });
+
+test("LogisticRegression zig lbfgs solver behavior is deterministic", () => {
+  const X = [[0], [1], [2], [3], [4], [5]];
+  const y = [0, 0, 0, 1, 1, 1];
+
+  const kernels = getZigKernels();
+  const model = new LogisticRegression({
+    backend: "zig",
+    solver: "lbfgs",
+    maxIter: 50,
+    tolerance: 1e-6,
+    l2: 0.01,
+  });
+
+  if (!kernels) {
+    expect(() => model.fit(X, y)).toThrow(/backend 'zig' requested/i);
+    return;
+  }
+
+  model.fit(X, y);
+  expect(model.fitBackend_).toBe("zig");
+  expect(model.predict([[-1], [6]])).toEqual([0, 1]);
+});

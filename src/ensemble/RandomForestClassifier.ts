@@ -11,7 +11,6 @@ export interface RandomForestClassifierOptions {
   maxFeatures?: MaxFeaturesOption;
   bootstrap?: boolean;
   randomState?: number;
-  backend?: "auto" | "js" | "zig";
 }
 
 function mulberry32(seed: number): () => number {
@@ -33,7 +32,6 @@ export class RandomForestClassifier implements ClassificationModel {
   private readonly maxFeatures: MaxFeaturesOption;
   private readonly bootstrap: boolean;
   private readonly randomState?: number;
-  private readonly backend: "auto" | "js" | "zig";
   private trees: DecisionTreeClassifier[] = [];
 
   constructor(options: RandomForestClassifierOptions = {}) {
@@ -44,7 +42,6 @@ export class RandomForestClassifier implements ClassificationModel {
     this.maxFeatures = options.maxFeatures ?? "sqrt";
     this.bootstrap = options.bootstrap ?? true;
     this.randomState = options.randomState;
-    this.backend = options.backend ?? "js";
 
     if (!Number.isInteger(this.nEstimators) || this.nEstimators < 1) {
       throw new Error(`nEstimators must be a positive integer. Got ${this.nEstimators}.`);
@@ -78,7 +75,6 @@ export class RandomForestClassifier implements ClassificationModel {
         minSamplesSplit: this.minSamplesSplit,
         minSamplesLeaf: this.minSamplesLeaf,
         maxFeatures: this.maxFeatures,
-        backend: this.backend,
         randomState:
           this.randomState === undefined ? undefined : this.randomState + estimatorIndex + 1,
       });

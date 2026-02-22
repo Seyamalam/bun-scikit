@@ -34,6 +34,16 @@ type LogisticModelFitFn = (
   maxIter: number,
   tolerance: number,
 ) => bigint;
+type LogisticModelFitLbfgsFn = (
+  handle: NativeHandle,
+  x: Float64Array,
+  y: Float64Array,
+  nSamples: number,
+  maxIter: number,
+  tolerance: number,
+  l2: number,
+  memory: number,
+) => bigint;
 type LogisticModelPredictProbaFn = (
   handle: NativeHandle,
   x: Float64Array,
@@ -116,6 +126,7 @@ interface ZigKernelLibrary {
     logistic_model_create?: LogisticModelCreateFn;
     logistic_model_destroy?: LogisticModelDestroyFn;
     logistic_model_fit?: LogisticModelFitFn;
+    logistic_model_fit_lbfgs?: LogisticModelFitLbfgsFn;
     logistic_model_predict_proba?: LogisticModelPredictProbaFn;
     logistic_model_predict?: LogisticModelPredictFn;
     logistic_model_copy_coefficients?: LogisticModelCopyCoefficientsFn;
@@ -139,6 +150,7 @@ export interface ZigKernels {
   logisticModelCreate: LogisticModelCreateFn | null;
   logisticModelDestroy: LogisticModelDestroyFn | null;
   logisticModelFit: LogisticModelFitFn | null;
+  logisticModelFitLbfgs: LogisticModelFitLbfgsFn | null;
   logisticModelPredictProba: LogisticModelPredictProbaFn | null;
   logisticModelPredict: LogisticModelPredictFn | null;
   logisticModelCopyCoefficients: LogisticModelCopyCoefficientsFn | null;
@@ -248,6 +260,19 @@ export function getZigKernels(): ZigKernels | null {
             ],
             returns: "usize",
           },
+          logistic_model_fit_lbfgs: {
+            args: [
+              "usize",
+              FFIType.ptr,
+              FFIType.ptr,
+              "usize",
+              "usize",
+              FFIType.f64,
+              FFIType.f64,
+              "usize",
+            ],
+            returns: "usize",
+          },
           logistic_model_predict_proba: {
             args: ["usize", FFIType.ptr, "usize", FFIType.ptr],
             returns: FFIType.u8,
@@ -263,30 +288,6 @@ export function getZigKernels(): ZigKernels | null {
           logistic_model_get_intercept: {
             args: ["usize"],
             returns: FFIType.f64,
-          },
-          decision_tree_model_create: {
-            args: ["usize", "usize", "usize", FFIType.u8, "usize", FFIType.u32, FFIType.u8, "usize"],
-            returns: "usize",
-          },
-          decision_tree_model_destroy: {
-            args: ["usize"],
-            returns: FFIType.void,
-          },
-          decision_tree_model_fit: {
-            args: [
-              "usize",
-              FFIType.ptr,
-              FFIType.ptr,
-              "usize",
-              "usize",
-              FFIType.ptr,
-              "usize",
-            ],
-            returns: FFIType.u8,
-          },
-          decision_tree_model_predict: {
-            args: ["usize", FFIType.ptr, "usize", "usize", FFIType.ptr],
-            returns: FFIType.u8,
           },
           logistic_train_epoch: {
             args: [
@@ -333,6 +334,7 @@ export function getZigKernels(): ZigKernels | null {
           logisticModelCreate: library.symbols.logistic_model_create ?? null,
           logisticModelDestroy: library.symbols.logistic_model_destroy ?? null,
           logisticModelFit: library.symbols.logistic_model_fit ?? null,
+          logisticModelFitLbfgs: library.symbols.logistic_model_fit_lbfgs ?? null,
           logisticModelPredictProba: library.symbols.logistic_model_predict_proba ?? null,
           logisticModelPredict: library.symbols.logistic_model_predict ?? null,
           logisticModelCopyCoefficients:
@@ -395,6 +397,7 @@ export function getZigKernels(): ZigKernels | null {
             logisticModelCreate: null,
             logisticModelDestroy: null,
             logisticModelFit: null,
+            logisticModelFitLbfgs: null,
             logisticModelPredictProba: null,
             logisticModelPredict: null,
             logisticModelCopyCoefficients: null,
@@ -438,6 +441,7 @@ export function getZigKernels(): ZigKernels | null {
             logisticModelCreate: null,
             logisticModelDestroy: null,
             logisticModelFit: null,
+            logisticModelFitLbfgs: null,
             logisticModelPredictProba: null,
             logisticModelPredict: null,
             logisticModelCopyCoefficients: null,

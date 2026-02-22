@@ -11,10 +11,12 @@ import { getZigKernels } from "../native/zigKernels";
 
 export interface LogisticRegressionOptions {
   fitIntercept?: boolean;
+  solver?: "gd" | "lbfgs";
   learningRate?: number;
   maxIter?: number;
   tolerance?: number;
   l2?: number;
+  lbfgsMemory?: number;
   backend?: "auto" | "js" | "zig";
 }
 
@@ -35,20 +37,23 @@ export class LogisticRegression implements ClassificationModel {
   fitBackendLibrary_: string | null = null;
 
   private readonly fitIntercept: boolean;
+  private readonly solver: "gd" | "lbfgs";
   private readonly learningRate: number;
   private readonly maxIter: number;
   private readonly tolerance: number;
   private readonly l2: number;
+  private readonly lbfgsMemory: number;
   private readonly backend: "auto" | "js" | "zig";
-  private nativeHandle: bigint | null = null;
   private isFitted = false;
 
   constructor(options: LogisticRegressionOptions = {}) {
     this.fitIntercept = options.fitIntercept ?? true;
+    this.solver = options.solver ?? "gd";
     this.learningRate = options.learningRate ?? 0.1;
     this.maxIter = options.maxIter ?? 20_000;
     this.tolerance = options.tolerance ?? 1e-8;
     this.l2 = options.l2 ?? 0;
+    this.lbfgsMemory = options.lbfgsMemory ?? 7;
     this.backend = options.backend ?? "auto";
   }
 
@@ -73,27 +78,48 @@ export class LogisticRegression implements ClassificationModel {
     if (
       kernels?.logisticModelCreate &&
       kernels.logisticModelDestroy &&
-      kernels.logisticModelFit &&
       kernels.logisticModelCopyCoefficients &&
       kernels.logisticModelGetIntercept
     ) {
-      this.releaseNativeHandle();
+      const fitNative =
+        this.solver === "lbfgs" ? kernels.logisticModelFitLbfgs : kernels.logisticModelFit;
+      if (!fitNative && this.backend === "zig") {
+        throw new Error(
+          `LogisticRegression solver '${this.solver}' requested with backend 'zig' but native kernel is unavailable.`,
+        );
+      }
+
       const handle = kernels.logisticModelCreate(nFeatures, this.fitIntercept ? 1 : 0);
       if (handle === 0n) {
         throw new Error("Failed to create native logistic model handle.");
       }
 
       try {
-        const epochsRan = kernels.logisticModelFit(
-          handle,
-          flattenedX,
-          yBuffer,
-          nSamples,
-          this.learningRate,
-          this.l2,
-          this.maxIter,
-          this.tolerance,
-        );
+        if (!fitNative) {
+          throw new Error("Native solver function is unavailable.");
+        }
+        const epochsRan =
+          this.solver === "lbfgs"
+            ? kernels.logisticModelFitLbfgs!(
+                handle,
+                flattenedX,
+                yBuffer,
+                nSamples,
+                this.maxIter,
+                this.tolerance,
+                this.l2,
+                this.lbfgsMemory,
+              )
+            : kernels.logisticModelFit!(
+                handle,
+                flattenedX,
+                yBuffer,
+                nSamples,
+                this.learningRate,
+                this.l2,
+                this.maxIter,
+                this.tolerance,
+              );
         if (epochsRan === 0n && this.maxIter > 0) {
           throw new Error("Native logistic model fit failed.");
         }
@@ -103,20 +129,26 @@ export class LogisticRegression implements ClassificationModel {
           throw new Error("Failed to copy native logistic coefficients.");
         }
 
-        this.nativeHandle = handle;
         this.fitBackend_ = "zig";
         this.fitBackendLibrary_ = kernels.libraryPath;
         this.coef_ = Array.from(coefficients);
         this.intercept_ = kernels.logisticModelGetIntercept(handle);
         this.isFitted = true;
+        kernels.logisticModelDestroy(handle);
         return this;
       } catch (error) {
         kernels.logisticModelDestroy(handle);
-        throw error;
+        if (this.backend === "zig") {
+          throw error;
+        }
       }
     }
 
-    this.releaseNativeHandle();
+    if (this.solver === "lbfgs" && this.backend === "zig") {
+      throw new Error(
+        "LogisticRegression solver 'lbfgs' requires native model-handle kernels. Build with `bun run native:build`.",
+      );
+    }
 
     if (kernels?.logisticTrainEpoch) {
       if (kernels.logisticTrainEpochs) {
@@ -233,30 +265,6 @@ export class LogisticRegression implements ClassificationModel {
       );
     }
 
-    if (this.nativeHandle !== null) {
-      const kernels = getZigKernels();
-      if (kernels?.logisticModelPredictProba) {
-        const flattenedX = this.flattenMatrix(X);
-        const outPositive = new Float64Array(X.length);
-        const status = kernels.logisticModelPredictProba(
-          this.nativeHandle,
-          flattenedX,
-          X.length,
-          outPositive,
-        );
-        if (status !== 1) {
-          throw new Error("Native logistic predict_proba failed.");
-        }
-
-        const probabilities: Matrix = new Array(X.length);
-        for (let i = 0; i < X.length; i += 1) {
-          const positive = outPositive[i];
-          probabilities[i] = [1 - positive, positive];
-        }
-        return probabilities;
-      }
-    }
-
     return X.map((row) => {
       const positive = sigmoid(this.intercept_ + dot(row, this.coef_));
       return [1 - positive, positive];
@@ -275,24 +283,6 @@ export class LogisticRegression implements ClassificationModel {
       throw new Error(
         `Feature size mismatch. Expected ${this.coef_.length}, got ${X[0].length}.`,
       );
-    }
-
-    if (this.nativeHandle !== null) {
-      const kernels = getZigKernels();
-      if (kernels?.logisticModelPredict) {
-        const flattenedX = this.flattenMatrix(X);
-        const outLabels = new Uint8Array(X.length);
-        const status = kernels.logisticModelPredict(
-          this.nativeHandle,
-          flattenedX,
-          X.length,
-          outLabels,
-        );
-        if (status !== 1) {
-          throw new Error("Native logistic predict failed.");
-        }
-        return Array.from(outLabels, (value) => (value === 1 ? 1 : 0));
-      }
     }
 
     return this.predictProba(X).map((pair) => (pair[1] >= 0.5 ? 1 : 0));
@@ -325,15 +315,4 @@ export class LogisticRegression implements ClassificationModel {
     return yBuffer;
   }
 
-  private releaseNativeHandle(): void {
-    if (this.nativeHandle === null) {
-      return;
-    }
-
-    const kernels = getZigKernels();
-    if (kernels?.logisticModelDestroy) {
-      kernels.logisticModelDestroy(this.nativeHandle);
-    }
-    this.nativeHandle = null;
-  }
 }

@@ -39,8 +39,9 @@ console.log(
 
 benchmarkModel("logistic_regression(gd)", () => {
   const model = new LogisticRegression({
-    learningRate: 0.35,
-    maxIter: 60,
+    solver: "gd",
+    learningRate: 0.8,
+    maxIter: 20,
     tolerance: 1e-4,
     l2: 0.01,
   });
