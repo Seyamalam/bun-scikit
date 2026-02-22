@@ -2,6 +2,8 @@ export * from "./types";
 
 export * from "./preprocessing/StandardScaler";
 export * from "./preprocessing/MinMaxScaler";
+export * from "./preprocessing/RobustScaler";
+export * from "./preprocessing/PolynomialFeatures";
 export * from "./linear_model/LinearRegression";
 export * from "./linear_model/LogisticRegression";
 export * from "./neighbors/KNeighborsClassifier";
@@ -14,6 +16,7 @@ export * from "./model_selection/StratifiedShuffleSplit";
 export * from "./model_selection/RepeatedKFold";
 export * from "./model_selection/RepeatedStratifiedKFold";
 export * from "./model_selection/crossValScore";
+export * from "./model_selection/GridSearchCV";
 export * from "./pipeline/Pipeline";
 export * from "./metrics/regression";
 export * from "./metrics/classification";
