@@ -68,6 +68,8 @@ export class DecisionTreeClassifier implements ClassificationModel {
   private featureCount = 0;
   private allFeatureIndices: number[] = [];
   private featureSelectionMarks: Uint8Array | null = null;
+  private binTotals: Uint32Array = new Uint32Array(MAX_THRESHOLD_BINS);
+  private binPositives: Uint32Array = new Uint32Array(MAX_THRESHOLD_BINS);
 
   constructor(options: DecisionTreeClassifierOptions = {}) {
     this.maxDepth = options.maxDepth ?? 12;
@@ -266,8 +268,10 @@ export class DecisionTreeClassifier implements ClassificationModel {
 
     const dynamicBins = Math.floor(Math.sqrt(sampleCount));
     const binCount = Math.max(16, Math.min(MAX_THRESHOLD_BINS, dynamicBins));
-    const binTotals = new Uint32Array(binCount);
-    const binPositives = new Uint32Array(binCount);
+    const binTotals = this.binTotals;
+    const binPositives = this.binPositives;
+    binTotals.fill(0, 0, binCount);
+    binPositives.fill(0, 0, binCount);
     const range = maxValue - minValue;
 
     for (let i = 0; i < sampleCount; i += 1) {
@@ -312,20 +316,24 @@ export class DecisionTreeClassifier implements ClassificationModel {
       return null;
     }
 
-    const leftIndices: number[] = [];
-    const rightIndices: number[] = [];
+    const leftIndices = new Array<number>(sampleCount);
+    const rightIndices = new Array<number>(sampleCount);
+    let leftPartitionCount = 0;
+    let rightPartitionCount = 0;
     for (let i = 0; i < sampleCount; i += 1) {
       const sampleIndex = indices[i];
       if (x[sampleIndex * stride + featureIndex] <= bestThreshold) {
-        leftIndices.push(sampleIndex);
+        leftIndices[leftPartitionCount] = sampleIndex;
+        leftPartitionCount += 1;
       } else {
-        rightIndices.push(sampleIndex);
+        rightIndices[rightPartitionCount] = sampleIndex;
+        rightPartitionCount += 1;
       }
     }
 
     if (
-      leftIndices.length < this.minSamplesLeaf ||
-      rightIndices.length < this.minSamplesLeaf
+      leftPartitionCount < this.minSamplesLeaf ||
+      rightPartitionCount < this.minSamplesLeaf
     ) {
       return null;
     }
@@ -333,8 +341,8 @@ export class DecisionTreeClassifier implements ClassificationModel {
     return {
       threshold: bestThreshold,
       impurity: bestImpurity,
-      leftIndices,
-      rightIndices,
+      leftIndices: leftIndices.slice(0, leftPartitionCount),
+      rightIndices: rightIndices.slice(0, rightPartitionCount),
     };
   }
 
