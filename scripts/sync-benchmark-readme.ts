@@ -69,6 +69,10 @@ function renderBenchmarkSection(snapshot: BenchmarkSnapshot): string {
   ].join("\n");
 }
 
+function normalizeLineEndings(content: string): string {
+  return content.replace(/\r\n/g, "\n");
+}
+
 const inputPath = resolve(parseArgValue("--input") ?? DEFAULT_SNAPSHOT_PATH);
 const checkMode = Bun.argv.includes("--check");
 
@@ -94,7 +98,7 @@ const nextReadme =
   readme.slice(existingSectionEnd);
 
 if (checkMode) {
-  if (nextReadme !== readme) {
+  if (normalizeLineEndings(nextReadme) !== normalizeLineEndings(readme)) {
     console.error(
       `README benchmark section is out of date. Run: bun run bench:sync-readme`,
     );
