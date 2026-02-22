@@ -14,7 +14,10 @@ Thanks for contributing to `bun-scikit`.
 
 - Run tests: `bun run test`
 - Typecheck: `bun run typecheck`
+- Generate API docs: `bun run docs:api:generate`
+- Check API docs coverage: `bun run docs:coverage:check`
 - Heart benchmark (human-readable): `bun run bench`
+- Heart classification benchmark (human-readable): `bun run bench:heart:classification`
 - Generate CI benchmark snapshot locally: `bun run bench:snapshot`
 
 ## Pull Request Expectations
@@ -24,6 +27,7 @@ Thanks for contributing to `bun-scikit`.
 3. Run locally before opening PR:
    - `bun run test`
    - `bun run typecheck`
+   - `bun run docs:coverage:check`
    - `bun run bench:readme:check` (if benchmark files were changed)
 4. Update docs when public APIs or workflows change.
 5. Add changelog entries under `## [Unreleased]` in `CHANGELOG.md`.

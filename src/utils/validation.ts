@@ -58,3 +58,21 @@ export function validateRegressionInputs(X: Matrix, y: Vector): void {
   assertVectorLength(y, X.length);
   assertFiniteVector(y);
 }
+
+export function assertBinaryVector(y: Vector, label = "y"): void {
+  for (let i = 0; i < y.length; i += 1) {
+    const value = y[i];
+    if (!(value === 0 || value === 1)) {
+      throw new Error(`${label} must be binary (0 or 1). Found ${value} at index ${i}.`);
+    }
+  }
+}
+
+export function validateClassificationInputs(X: Matrix, y: Vector): void {
+  assertNonEmptyMatrix(X);
+  assertConsistentRowSize(X);
+  assertFiniteMatrix(X);
+  assertVectorLength(y, X.length);
+  assertFiniteVector(y);
+  assertBinaryVector(y);
+}

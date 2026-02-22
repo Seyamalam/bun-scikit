@@ -1,13 +1,21 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-interface BenchmarkResult {
+interface SharedBenchmarkResult {
   implementation: string;
   model: string;
   fitMsMedian: number;
   predictMsMedian: number;
+}
+
+interface RegressionBenchmarkResult extends SharedBenchmarkResult {
   mse: number;
   r2: number;
+}
+
+interface ClassificationBenchmarkResult extends SharedBenchmarkResult {
+  accuracy: number;
+  f1: number;
 }
 
 interface BenchmarkSnapshot {
@@ -16,17 +24,27 @@ interface BenchmarkSnapshot {
     path: string;
     samples: number;
     features: number;
-    trainSize: number;
-    testSize: number;
-    randomState: number;
     testFraction: number;
   };
-  results: [BenchmarkResult, BenchmarkResult];
-  comparison: {
-    fitSpeedupVsSklearn: number;
-    predictSpeedupVsSklearn: number;
-    mseDeltaVsSklearn: number;
-    r2DeltaVsSklearn: number;
+  suites: {
+    regression: {
+      results: [RegressionBenchmarkResult, RegressionBenchmarkResult];
+      comparison: {
+        fitSpeedupVsSklearn: number;
+        predictSpeedupVsSklearn: number;
+        mseDeltaVsSklearn: number;
+        r2DeltaVsSklearn: number;
+      };
+    };
+    classification: {
+      results: [ClassificationBenchmarkResult, ClassificationBenchmarkResult];
+      comparison: {
+        fitSpeedupVsSklearn: number;
+        predictSpeedupVsSklearn: number;
+        accuracyDeltaVsSklearn: number;
+        f1DeltaVsSklearn: number;
+      };
+    };
   };
 }
 
@@ -43,34 +61,48 @@ function parseArgValue(flag: string): string | null {
   return Bun.argv[index + 1];
 }
 
-function renderRows(results: BenchmarkResult[]): string[] {
-  return results.map((result) => {
-    return `| ${result.implementation} | ${result.model} | ${result.fitMsMedian.toFixed(4)} | ${result.predictMsMedian.toFixed(4)} | ${result.mse.toFixed(6)} | ${result.r2.toFixed(6)} |`;
-  });
+function normalizeLineEndings(content: string): string {
+  return content.replace(/\r\n/g, "\n");
 }
 
 function renderBenchmarkSection(snapshot: BenchmarkSnapshot): string {
+  const regression = snapshot.suites.regression;
+  const classification = snapshot.suites.classification;
+  const [bunReg, sklearnReg] = regression.results;
+  const [bunCls, sklearnCls] = classification.results;
+
   return [
     START_MARKER,
-    `Benchmark snapshot source: \`bench/results/heart-ci-latest.json\` (generated in CI workflow \`Benchmark Snapshot\`).`,
+    "Benchmark snapshot source: `bench/results/heart-ci-latest.json` (generated in CI workflow `Benchmark Snapshot`).",
     `Dataset: \`${snapshot.dataset.path}\` (${snapshot.dataset.samples} samples, ${snapshot.dataset.features} features, test fraction ${snapshot.dataset.testFraction}).`,
+    "",
+    "### Regression",
     "",
     "| Implementation | Model | Fit median (ms) | Predict median (ms) | MSE | R2 |",
     "|---|---|---:|---:|---:|---:|",
-    ...renderRows(snapshot.results),
+    `| ${bunReg.implementation} | ${bunReg.model} | ${bunReg.fitMsMedian.toFixed(4)} | ${bunReg.predictMsMedian.toFixed(4)} | ${bunReg.mse.toFixed(6)} | ${bunReg.r2.toFixed(6)} |`,
+    `| ${sklearnReg.implementation} | ${sklearnReg.model} | ${sklearnReg.fitMsMedian.toFixed(4)} | ${sklearnReg.predictMsMedian.toFixed(4)} | ${sklearnReg.mse.toFixed(6)} | ${sklearnReg.r2.toFixed(6)} |`,
     "",
-    `Bun fit speedup vs scikit-learn: ${snapshot.comparison.fitSpeedupVsSklearn.toFixed(3)}x`,
-    `Bun predict speedup vs scikit-learn: ${snapshot.comparison.predictSpeedupVsSklearn.toFixed(3)}x`,
-    `MSE delta (bun - sklearn): ${snapshot.comparison.mseDeltaVsSklearn.toExponential(3)}`,
-    `R2 delta (bun - sklearn): ${snapshot.comparison.r2DeltaVsSklearn.toExponential(3)}`,
+    `Bun fit speedup vs scikit-learn: ${regression.comparison.fitSpeedupVsSklearn.toFixed(3)}x`,
+    `Bun predict speedup vs scikit-learn: ${regression.comparison.predictSpeedupVsSklearn.toFixed(3)}x`,
+    `MSE delta (bun - sklearn): ${regression.comparison.mseDeltaVsSklearn.toExponential(3)}`,
+    `R2 delta (bun - sklearn): ${regression.comparison.r2DeltaVsSklearn.toExponential(3)}`,
+    "",
+    "### Classification",
+    "",
+    "| Implementation | Model | Fit median (ms) | Predict median (ms) | Accuracy | F1 |",
+    "|---|---|---:|---:|---:|---:|",
+    `| ${bunCls.implementation} | ${bunCls.model} | ${bunCls.fitMsMedian.toFixed(4)} | ${bunCls.predictMsMedian.toFixed(4)} | ${bunCls.accuracy.toFixed(6)} | ${bunCls.f1.toFixed(6)} |`,
+    `| ${sklearnCls.implementation} | ${sklearnCls.model} | ${sklearnCls.fitMsMedian.toFixed(4)} | ${sklearnCls.predictMsMedian.toFixed(4)} | ${sklearnCls.accuracy.toFixed(6)} | ${sklearnCls.f1.toFixed(6)} |`,
+    "",
+    `Bun fit speedup vs scikit-learn: ${classification.comparison.fitSpeedupVsSklearn.toFixed(3)}x`,
+    `Bun predict speedup vs scikit-learn: ${classification.comparison.predictSpeedupVsSklearn.toFixed(3)}x`,
+    `Accuracy delta (bun - sklearn): ${classification.comparison.accuracyDeltaVsSklearn.toExponential(3)}`,
+    `F1 delta (bun - sklearn): ${classification.comparison.f1DeltaVsSklearn.toExponential(3)}`,
     "",
     `Snapshot generated at: ${snapshot.generatedAt}`,
     END_MARKER,
   ].join("\n");
-}
-
-function normalizeLineEndings(content: string): string {
-  return content.replace(/\r\n/g, "\n");
 }
 
 const inputPath = resolve(parseArgValue("--input") ?? DEFAULT_SNAPSHOT_PATH);
@@ -80,7 +112,6 @@ const [readme, snapshotRaw] = await Promise.all([
   readFile(README_PATH, "utf-8"),
   readFile(inputPath, "utf-8"),
 ]);
-
 const snapshot = JSON.parse(snapshotRaw) as BenchmarkSnapshot;
 
 const startIndex = readme.indexOf(START_MARKER);
@@ -100,7 +131,7 @@ const nextReadme =
 if (checkMode) {
   if (normalizeLineEndings(nextReadme) !== normalizeLineEndings(readme)) {
     console.error(
-      `README benchmark section is out of date. Run: bun run bench:sync-readme`,
+      "README benchmark section is out of date. Run: bun run bench:sync-readme",
     );
     process.exit(1);
   }

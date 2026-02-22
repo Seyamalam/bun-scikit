@@ -3,7 +3,9 @@
 `bun-scikit` benchmarks compare Bun and Python scikit-learn on the same dataset:
 
 - Dataset: `test_data/heart.csv`
-- Pipeline: `StandardScaler + LinearRegression`
+- Pipelines:
+  - Regression: `StandardScaler + LinearRegression`
+  - Classification: `StandardScaler + LogisticRegression`
 - Split: deterministic, `randomState=42`, test fraction `0.2`
 
 ## Commands
@@ -14,6 +16,10 @@
   - `bun run bench:ci`
 - Generate latest snapshot and sync README benchmark table:
   - `bun run bench:snapshot`
+- Append latest snapshot summary to history:
+  - `bun run bench:history:update`
+- Run local classification benchmark:
+  - `bun run bench:heart:classification`
 - Verify README benchmark section is synced:
   - `bun run bench:readme:check`
 
@@ -30,6 +36,8 @@ python -m pip install -r bench/python/requirements.txt
 - `CI` workflow runs tests, typecheck, and benchmark comparison on pushes/PRs.
 - `Benchmark Snapshot` workflow (manual/scheduled) regenerates:
   - `bench/results/heart-ci-latest.json`
+  - `bench/results/heart-ci-latest.md`
+  - `bench/results/history/heart-ci-history.jsonl`
   - README benchmark table section
 
 This keeps the README benchmark table sourced from CI-run benchmark commands.

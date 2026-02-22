@@ -18,6 +18,9 @@
     "bun",
     "typescript",
     "linear-regression",
+    "logistic-regression",
+    "knn",
+    "classification",
     "preprocessing"
   ],
   "exports": {
@@ -38,15 +41,20 @@
     "typecheck": "bunx tsc --noEmit",
     "bench": "bun run bench/heart.bench.ts",
     "bench:heart": "bun run bench/heart.bench.ts",
+    "bench:heart:classification": "bun run bench/heart-classification.bench.ts",
     "bench:synthetic": "bun run bench/linear-regression.bench.ts",
     "bench:ci": "bun run bench/run-ci-benchmarks.ts --output bench/results/heart-ci-current.json",
-    "bench:snapshot": "bun run bench/run-ci-benchmarks.ts --output bench/results/heart-ci-latest.json && bun run bench:sync-readme",
+    "bench:snapshot": "bun run bench/run-ci-benchmarks.ts --output bench/results/heart-ci-latest.json && bun run bench:sync-readme && bun run bench:history:update",
     "bench:sync-readme": "bun run scripts/sync-benchmark-readme.ts",
     "bench:readme:check": "bun run scripts/sync-benchmark-readme.ts --check",
-    "bench:health": "bun run scripts/check-benchmark-health.ts"
+    "bench:health": "bun run scripts/check-benchmark-health.ts",
+    "bench:history:update": "bun run scripts/update-benchmark-history.ts",
+    "docs:api:generate": "typedoc --entryPointStrategy resolve --entryPoints src/index.ts --out docs/api-reference --readme none",
+    "docs:coverage:check": "bun run scripts/check-api-docs-coverage.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "typedoc": "^0.28.14",
     "typescript": "^5.9.2"
   }
 }

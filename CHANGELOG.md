@@ -9,8 +9,12 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 - Maintainer documentation baseline (`CONTRIBUTING`, `SECURITY`, `CODE_OF_CONDUCT`, `LICENSE`).
-- Benchmark automation for Bun vs Python scikit-learn on `test_data/heart.csv`.
-- CI benchmark workflows and README benchmark table sync/check tooling.
+- `LogisticRegression` and `KNeighborsClassifier`.
+- Classification metrics: `accuracyScore`, `precisionScore`, `recallScore`, `f1Score`.
+- Heart dataset classification integration and model tests.
+- Benchmark automation for Bun vs Python scikit-learn on `test_data/heart.csv` for regression and classification.
+- CI benchmark workflows with snapshot history tracking and README benchmark sync/check tooling.
+- API docs quality gates via Typedoc generation and exported-symbol coverage checks.
 
 ## [0.1.0] - 2026-02-22
 

@@ -1,6 +1,10 @@
 import { expect, test } from "bun:test";
 import {
+  accuracyScore,
+  f1Score,
+  KNeighborsClassifier,
   LinearRegression,
+  LogisticRegression,
   StandardScaler,
   meanSquaredError,
   trainTestSplit,
@@ -44,4 +48,42 @@ test("heart.csv workflow: split, scale, fit, and beat a baseline predictor", asy
 
   expect(Number.isFinite(modelMse)).toBe(true);
   expect(modelMse).toBeLessThan(baselineMse);
+});
+
+test("heart.csv classification workflow beats majority baseline", async () => {
+  const { X, y } = await loadHeartDataset();
+  const { XTrain, XTest, yTrain, yTest } = trainTestSplit(X, y, {
+    testSize: 0.2,
+    randomState: 42,
+    shuffle: true,
+  });
+
+  const scaler = new StandardScaler();
+  const XTrainScaled = scaler.fitTransform(XTrain);
+  const XTestScaled = scaler.transform(XTest);
+
+  const positiveCount = yTrain.reduce((count, label) => count + (label === 1 ? 1 : 0), 0);
+  const majorityLabel = positiveCount * 2 >= yTrain.length ? 1 : 0;
+  const baselinePredictions = new Array(yTest.length).fill(majorityLabel);
+  const baselineAccuracy = accuracyScore(yTest, baselinePredictions);
+
+  const logistic = new LogisticRegression({
+    learningRate: 0.2,
+    maxIter: 3_000,
+    tolerance: 1e-6,
+    l2: 0.01,
+  });
+  logistic.fit(XTrainScaled, yTrain);
+  const logisticPredictions = logistic.predict(XTestScaled);
+  const logisticAccuracy = accuracyScore(yTest, logisticPredictions);
+  const logisticF1 = f1Score(yTest, logisticPredictions);
+
+  const knn = new KNeighborsClassifier({ nNeighbors: 7 });
+  knn.fit(XTrainScaled, yTrain);
+  const knnPredictions = knn.predict(XTestScaled);
+  const knnAccuracy = accuracyScore(yTest, knnPredictions);
+
+  expect(logisticAccuracy).toBeGreaterThan(baselineAccuracy);
+  expect(logisticF1).toBeGreaterThan(0.75);
+  expect(knnAccuracy).toBeGreaterThan(baselineAccuracy);
 });
