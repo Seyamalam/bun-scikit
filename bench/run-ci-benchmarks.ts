@@ -435,49 +435,35 @@ function renderMarkdownTable(snapshot: BenchmarkSnapshot): string {
   ].join("\n");
 }
 
-const outputPath = resolve(parseArgValue("--output") ?? DEFAULT_OUTPUT_PATH);
-const outputMarkdownPath = outputPath.replace(/\.json$/i, ".md");
-const iterations = Number(process.env.BENCH_ITERATIONS ?? 40);
-const warmup = Number(process.env.BENCH_WARMUP ?? 5);
+async function main(): Promise<void> {
+  const outputPath = resolve(parseArgValue("--output") ?? DEFAULT_OUTPUT_PATH);
+  const outputMarkdownPath = outputPath.replace(/\.json$/i, ".md");
+  const iterations = Number(process.env.BENCH_ITERATIONS ?? 40);
+  const warmup = Number(process.env.BENCH_WARMUP ?? 5);
 
-if (!Number.isInteger(iterations) || iterations < 1) {
-  throw new Error(`BENCH_ITERATIONS must be a positive integer. Got: ${iterations}`);
-}
+  if (!Number.isInteger(iterations) || iterations < 1) {
+    throw new Error(`BENCH_ITERATIONS must be a positive integer. Got: ${iterations}`);
+  }
 
-if (!Number.isInteger(warmup) || warmup < 0) {
-  throw new Error(`BENCH_WARMUP must be a non-negative integer. Got: ${warmup}`);
-}
+  if (!Number.isInteger(warmup) || warmup < 0) {
+    throw new Error(`BENCH_WARMUP must be a non-negative integer. Got: ${warmup}`);
+  }
 
-const prepared = await prepareHeartSplit();
-const testSize = Math.max(1, Math.floor(prepared.dataset.X.length * TEST_FRACTION));
-const trainSize = prepared.dataset.X.length - testSize;
+  const prepared = await prepareHeartSplit();
+  const testSize = Math.max(1, Math.floor(prepared.dataset.X.length * TEST_FRACTION));
+  const trainSize = prepared.dataset.X.length - testSize;
 
-const [
-  bunRegression,
-  sklearnRegression,
-  bunClassification,
-  sklearnClassification,
-  bunTreeBenchmarks,
-  sklearnTreeBenchmarks,
-] =
-  await Promise.all([
-    runBunRegressionBenchmark(iterations, warmup),
-    runPythonBenchmark<RegressionBenchmarkResult>("bench/python/heart_sklearn_bench.py", [
-      "--dataset",
-      DATASET_PATH,
-      "--test-size",
-      String(TEST_FRACTION),
-      "--random-state",
-      String(RANDOM_STATE),
-      "--iterations",
-      String(iterations),
-      "--warmup",
-      String(warmup),
-    ]),
-    runBunClassificationBenchmark(iterations, warmup),
-    runPythonBenchmark<ClassificationBenchmarkResult>(
-      "bench/python/heart_sklearn_classification_bench.py",
-      [
+  const [
+    bunRegression,
+    sklearnRegression,
+    bunClassification,
+    sklearnClassification,
+    bunTreeBenchmarks,
+    sklearnTreeBenchmarks,
+  ] =
+    await Promise.all([
+      runBunRegressionBenchmark(iterations, warmup),
+      runPythonBenchmark<RegressionBenchmarkResult>("bench/python/heart_sklearn_bench.py", [
         "--dataset",
         DATASET_PATH,
         "--test-size",
@@ -488,146 +474,168 @@ const [
         String(iterations),
         "--warmup",
         String(warmup),
-      ],
-    ),
-    runBunTreeBenchmarks(iterations, warmup),
-    runPythonBenchmark<PythonTreeBenchPayload>("bench/python/heart_sklearn_tree_bench.py", [
-      "--dataset",
-      DATASET_PATH,
-      "--test-size",
-      String(TEST_FRACTION),
-      "--random-state",
-      String(RANDOM_STATE),
-      "--iterations",
-      String(iterations),
-      "--warmup",
-      String(warmup),
-    ]),
-  ]);
+      ]),
+      runBunClassificationBenchmark(iterations, warmup),
+      runPythonBenchmark<ClassificationBenchmarkResult>(
+        "bench/python/heart_sklearn_classification_bench.py",
+        [
+          "--dataset",
+          DATASET_PATH,
+          "--test-size",
+          String(TEST_FRACTION),
+          "--random-state",
+          String(RANDOM_STATE),
+          "--iterations",
+          String(iterations),
+          "--warmup",
+          String(warmup),
+        ],
+      ),
+      runBunTreeBenchmarks(iterations, warmup),
+      runPythonBenchmark<PythonTreeBenchPayload>("bench/python/heart_sklearn_tree_bench.py", [
+        "--dataset",
+        DATASET_PATH,
+        "--test-size",
+        String(TEST_FRACTION),
+        "--random-state",
+        String(RANDOM_STATE),
+        "--iterations",
+        String(iterations),
+        "--warmup",
+        String(warmup),
+      ]),
+    ]);
 
-const [bunDecisionTree, bunRandomForest] = bunTreeBenchmarks;
-const sklearnDecisionTreeRaw = sklearnTreeBenchmarks.models.find(
-  (model) => model.key === "decision_tree",
-);
-const sklearnRandomForestRaw = sklearnTreeBenchmarks.models.find(
-  (model) => model.key === "random_forest",
-);
+  const [bunDecisionTree, bunRandomForest] = bunTreeBenchmarks;
+  const sklearnDecisionTreeRaw = sklearnTreeBenchmarks.models.find(
+    (model) => model.key === "decision_tree",
+  );
+  const sklearnRandomForestRaw = sklearnTreeBenchmarks.models.find(
+    (model) => model.key === "random_forest",
+  );
 
-if (!sklearnDecisionTreeRaw || !sklearnRandomForestRaw) {
-  throw new Error("Python tree benchmark output is missing expected models.");
+  if (!sklearnDecisionTreeRaw || !sklearnRandomForestRaw) {
+    throw new Error("Python tree benchmark output is missing expected models.");
+  }
+
+  const sklearnDecisionTree: TreeClassificationModelResult = {
+    key: "decision_tree",
+    implementation: sklearnTreeBenchmarks.implementation,
+    model: sklearnDecisionTreeRaw.model,
+    iterations: sklearnTreeBenchmarks.iterations,
+    fitMsMedian: sklearnDecisionTreeRaw.fitMsMedian,
+    predictMsMedian: sklearnDecisionTreeRaw.predictMsMedian,
+    accuracy: sklearnDecisionTreeRaw.accuracy,
+    f1: sklearnDecisionTreeRaw.f1,
+    environment: sklearnTreeBenchmarks.environment,
+  };
+
+  const sklearnRandomForest: TreeClassificationModelResult = {
+    key: "random_forest",
+    implementation: sklearnTreeBenchmarks.implementation,
+    model: sklearnRandomForestRaw.model,
+    iterations: sklearnTreeBenchmarks.iterations,
+    fitMsMedian: sklearnRandomForestRaw.fitMsMedian,
+    predictMsMedian: sklearnRandomForestRaw.predictMsMedian,
+    accuracy: sklearnRandomForestRaw.accuracy,
+    f1: sklearnRandomForestRaw.f1,
+    environment: sklearnTreeBenchmarks.environment,
+  };
+
+  const snapshot: BenchmarkSnapshot = {
+    generatedAt: new Date().toISOString(),
+    benchmarkConfig: {
+      iterations,
+      warmup,
+    },
+    dataset: {
+      path: DATASET_PATH,
+      samples: prepared.dataset.X.length,
+      features: prepared.dataset.featureNames.length,
+      trainSize,
+      testSize,
+      randomState: RANDOM_STATE,
+      testFraction: TEST_FRACTION,
+    },
+    suites: {
+      regression: {
+        task: "regression",
+        results: [bunRegression, sklearnRegression],
+        comparison: {
+          fitSpeedupVsSklearn: sklearnRegression.fitMsMedian / bunRegression.fitMsMedian,
+          predictSpeedupVsSklearn:
+            sklearnRegression.predictMsMedian / bunRegression.predictMsMedian,
+          mseDeltaVsSklearn: bunRegression.mse - sklearnRegression.mse,
+          r2DeltaVsSklearn: bunRegression.r2 - sklearnRegression.r2,
+        },
+      },
+      classification: {
+        task: "classification",
+        results: [bunClassification, sklearnClassification],
+        comparison: {
+          fitSpeedupVsSklearn:
+            sklearnClassification.fitMsMedian / bunClassification.fitMsMedian,
+          predictSpeedupVsSklearn:
+            sklearnClassification.predictMsMedian / bunClassification.predictMsMedian,
+          accuracyDeltaVsSklearn:
+            bunClassification.accuracy - sklearnClassification.accuracy,
+          f1DeltaVsSklearn: bunClassification.f1 - sklearnClassification.f1,
+        },
+      },
+      treeClassification: {
+        task: "classification-tree",
+        models: [
+          {
+            key: "decision_tree",
+            bun: bunDecisionTree,
+            sklearn: sklearnDecisionTree,
+            comparison: {
+              fitSpeedupVsSklearn:
+                sklearnDecisionTree.fitMsMedian / bunDecisionTree.fitMsMedian,
+              predictSpeedupVsSklearn:
+                sklearnDecisionTree.predictMsMedian / bunDecisionTree.predictMsMedian,
+              accuracyDeltaVsSklearn: bunDecisionTree.accuracy - sklearnDecisionTree.accuracy,
+              f1DeltaVsSklearn: bunDecisionTree.f1 - sklearnDecisionTree.f1,
+            },
+          },
+          {
+            key: "random_forest",
+            bun: bunRandomForest,
+            sklearn: sklearnRandomForest,
+            comparison: {
+              fitSpeedupVsSklearn:
+                sklearnRandomForest.fitMsMedian / bunRandomForest.fitMsMedian,
+              predictSpeedupVsSklearn:
+                sklearnRandomForest.predictMsMedian / bunRandomForest.predictMsMedian,
+              accuracyDeltaVsSklearn:
+                bunRandomForest.accuracy - sklearnRandomForest.accuracy,
+              f1DeltaVsSklearn: bunRandomForest.f1 - sklearnRandomForest.f1,
+            },
+          },
+        ],
+      },
+    },
+  };
+
+  await mkdir(dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf-8");
+  await writeFile(outputMarkdownPath, `${renderMarkdownTable(snapshot)}\n`, "utf-8");
+
+  console.log(`Wrote benchmark snapshot: ${outputPath}`);
+  console.log(`Wrote benchmark table: ${outputMarkdownPath}`);
+  console.log(`Regression Bun fit median: ${formatMs(bunRegression.fitMsMedian)}`);
+  console.log(`Regression sklearn fit median: ${formatMs(sklearnRegression.fitMsMedian)}`);
+  console.log(`Classification Bun fit median: ${formatMs(bunClassification.fitMsMedian)}`);
+  console.log(
+    `Classification sklearn fit median: ${formatMs(sklearnClassification.fitMsMedian)}`,
+  );
+  console.log(`DecisionTree Bun fit median: ${formatMs(bunDecisionTree.fitMsMedian)}`);
+  console.log(`DecisionTree sklearn fit median: ${formatMs(sklearnDecisionTree.fitMsMedian)}`);
+  console.log(`RandomForest Bun fit median: ${formatMs(bunRandomForest.fitMsMedian)}`);
+  console.log(`RandomForest sklearn fit median: ${formatMs(sklearnRandomForest.fitMsMedian)}`);
 }
 
-const sklearnDecisionTree: TreeClassificationModelResult = {
-  key: "decision_tree",
-  implementation: sklearnTreeBenchmarks.implementation,
-  model: sklearnDecisionTreeRaw.model,
-  iterations: sklearnTreeBenchmarks.iterations,
-  fitMsMedian: sklearnDecisionTreeRaw.fitMsMedian,
-  predictMsMedian: sklearnDecisionTreeRaw.predictMsMedian,
-  accuracy: sklearnDecisionTreeRaw.accuracy,
-  f1: sklearnDecisionTreeRaw.f1,
-  environment: sklearnTreeBenchmarks.environment,
-};
-
-const sklearnRandomForest: TreeClassificationModelResult = {
-  key: "random_forest",
-  implementation: sklearnTreeBenchmarks.implementation,
-  model: sklearnRandomForestRaw.model,
-  iterations: sklearnTreeBenchmarks.iterations,
-  fitMsMedian: sklearnRandomForestRaw.fitMsMedian,
-  predictMsMedian: sklearnRandomForestRaw.predictMsMedian,
-  accuracy: sklearnRandomForestRaw.accuracy,
-  f1: sklearnRandomForestRaw.f1,
-  environment: sklearnTreeBenchmarks.environment,
-};
-
-const snapshot: BenchmarkSnapshot = {
-  generatedAt: new Date().toISOString(),
-  benchmarkConfig: {
-    iterations,
-    warmup,
-  },
-  dataset: {
-    path: DATASET_PATH,
-    samples: prepared.dataset.X.length,
-    features: prepared.dataset.featureNames.length,
-    trainSize,
-    testSize,
-    randomState: RANDOM_STATE,
-    testFraction: TEST_FRACTION,
-  },
-  suites: {
-    regression: {
-      task: "regression",
-      results: [bunRegression, sklearnRegression],
-      comparison: {
-        fitSpeedupVsSklearn: sklearnRegression.fitMsMedian / bunRegression.fitMsMedian,
-        predictSpeedupVsSklearn:
-          sklearnRegression.predictMsMedian / bunRegression.predictMsMedian,
-        mseDeltaVsSklearn: bunRegression.mse - sklearnRegression.mse,
-        r2DeltaVsSklearn: bunRegression.r2 - sklearnRegression.r2,
-      },
-    },
-    classification: {
-      task: "classification",
-      results: [bunClassification, sklearnClassification],
-      comparison: {
-        fitSpeedupVsSklearn:
-          sklearnClassification.fitMsMedian / bunClassification.fitMsMedian,
-        predictSpeedupVsSklearn:
-          sklearnClassification.predictMsMedian / bunClassification.predictMsMedian,
-        accuracyDeltaVsSklearn:
-          bunClassification.accuracy - sklearnClassification.accuracy,
-        f1DeltaVsSklearn: bunClassification.f1 - sklearnClassification.f1,
-      },
-    },
-    treeClassification: {
-      task: "classification-tree",
-      models: [
-        {
-          key: "decision_tree",
-          bun: bunDecisionTree,
-          sklearn: sklearnDecisionTree,
-          comparison: {
-            fitSpeedupVsSklearn:
-              sklearnDecisionTree.fitMsMedian / bunDecisionTree.fitMsMedian,
-            predictSpeedupVsSklearn:
-              sklearnDecisionTree.predictMsMedian / bunDecisionTree.predictMsMedian,
-            accuracyDeltaVsSklearn: bunDecisionTree.accuracy - sklearnDecisionTree.accuracy,
-            f1DeltaVsSklearn: bunDecisionTree.f1 - sklearnDecisionTree.f1,
-          },
-        },
-        {
-          key: "random_forest",
-          bun: bunRandomForest,
-          sklearn: sklearnRandomForest,
-          comparison: {
-            fitSpeedupVsSklearn:
-              sklearnRandomForest.fitMsMedian / bunRandomForest.fitMsMedian,
-            predictSpeedupVsSklearn:
-              sklearnRandomForest.predictMsMedian / bunRandomForest.predictMsMedian,
-            accuracyDeltaVsSklearn: bunRandomForest.accuracy - sklearnRandomForest.accuracy,
-            f1DeltaVsSklearn: bunRandomForest.f1 - sklearnRandomForest.f1,
-          },
-        },
-      ],
-    },
-  },
-};
-
-await mkdir(dirname(outputPath), { recursive: true });
-await writeFile(outputPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf-8");
-await writeFile(outputMarkdownPath, `${renderMarkdownTable(snapshot)}\n`, "utf-8");
-
-console.log(`Wrote benchmark snapshot: ${outputPath}`);
-console.log(`Wrote benchmark table: ${outputMarkdownPath}`);
-console.log(`Regression Bun fit median: ${formatMs(bunRegression.fitMsMedian)}`);
-console.log(`Regression sklearn fit median: ${formatMs(sklearnRegression.fitMsMedian)}`);
-console.log(`Classification Bun fit median: ${formatMs(bunClassification.fitMsMedian)}`);
-console.log(
-  `Classification sklearn fit median: ${formatMs(sklearnClassification.fitMsMedian)}`,
-);
-console.log(`DecisionTree Bun fit median: ${formatMs(bunDecisionTree.fitMsMedian)}`);
-console.log(`DecisionTree sklearn fit median: ${formatMs(sklearnDecisionTree.fitMsMedian)}`);
-console.log(`RandomForest Bun fit median: ${formatMs(bunRandomForest.fitMsMedian)}`);
-console.log(`RandomForest sklearn fit median: ${formatMs(sklearnRandomForest.fitMsMedian)}`);
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

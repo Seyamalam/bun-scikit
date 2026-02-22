@@ -27,6 +27,9 @@
   - `bun run bench:heart:tree`
 - Verify README benchmark section is synced:
   - `bun run bench:readme:check`
+- Build benchmark runner with Bun bytecode + minify (startup optimization):
+  - `bun run build:bench:bytecode`
+  - `bun run build:bench:compiled`
 
 ## Python Dependencies
 
@@ -46,3 +49,10 @@ python -m pip install -r bench/python/requirements.txt
   - README benchmark table section
 
 This keeps the README benchmark table sourced from CI-run benchmark commands.
+
+## Bytecode Note
+
+`--bytecode` and `--minify` primarily reduce startup/parsing overhead. They are
+useful for CLI responsiveness, but they do not materially speed up the model
+training loops themselves. Fit-time improvements mostly come from algorithm and
+data-structure optimizations.

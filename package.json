@@ -53,7 +53,9 @@
     "bench:health": "bun run scripts/check-benchmark-health.ts",
     "bench:history:update": "bun run scripts/update-benchmark-history.ts",
     "docs:api:generate": "typedoc --entryPointStrategy resolve --entryPoints src/index.ts --out docs/api-reference --readme none",
-    "docs:coverage:check": "bun run scripts/check-api-docs-coverage.ts"
+    "docs:coverage:check": "bun run scripts/check-api-docs-coverage.ts",
+    "build:bench:bytecode": "bun build ./bench/run-ci-benchmarks.ts --target=bun --bytecode --minify --outdir=./dist/bench",
+    "build:bench:compiled": "bun build ./bench/run-ci-benchmarks.ts --target=bun --compile --bytecode --minify --outfile=./dist/bench/bench-ci"
   },
   "devDependencies": {
     "@types/bun": "latest",
