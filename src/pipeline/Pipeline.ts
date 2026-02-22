@@ -1,5 +1,5 @@
 import type { Matrix, Vector } from "../types";
-import { assertConsistentRowSize, assertFiniteMatrix, assertNonEmptyMatrix } from "../utils/validation";
+import { assertConsistentRowSize, assertNonEmptyMatrix } from "../utils/validation";
 
 type StepValue = Record<string, unknown>;
 
@@ -83,7 +83,6 @@ export class Pipeline {
   fit(X: Matrix, y?: Vector): this {
     assertNonEmptyMatrix(X);
     assertConsistentRowSize(X);
-    assertFiniteMatrix(X);
 
     let transformedX = X;
     const lastIndex = this.runtimeSteps.length - 1;
@@ -146,7 +145,6 @@ export class Pipeline {
   private transformThroughIntermediates(X: Matrix): Matrix {
     assertNonEmptyMatrix(X);
     assertConsistentRowSize(X);
-    assertFiniteMatrix(X);
 
     let transformedX = X;
     const lastIndex = this.runtimeSteps.length - 1;
