@@ -18,6 +18,7 @@ Thanks for contributing to `bun-scikit`.
 - Check API docs coverage: `bun run docs:coverage:check`
 - Heart benchmark (human-readable): `bun run bench`
 - Heart classification benchmark (human-readable): `bun run bench:heart:classification`
+- Heart tree benchmark (human-readable): `bun run bench:heart:tree`
 - Generate CI benchmark snapshot locally: `bun run bench:snapshot`
 
 ## Pull Request Expectations

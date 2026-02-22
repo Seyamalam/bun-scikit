@@ -1,9 +1,13 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import {
+  DecisionTreeClassifier,
   LinearRegression,
   LogisticRegression,
+  type Matrix,
+  RandomForestClassifier,
   StandardScaler,
+  type Vector,
   accuracyScore,
   f1Score,
   meanSquaredError,
@@ -31,6 +35,12 @@ interface ClassificationBenchmarkResult extends SharedBenchmarkResult {
   f1: number;
 }
 
+type TreeModelKey = "decision_tree" | "random_forest";
+
+interface TreeClassificationModelResult extends ClassificationBenchmarkResult {
+  key: TreeModelKey;
+}
+
 interface RegressionSuite {
   task: "regression";
   results: [RegressionBenchmarkResult, RegressionBenchmarkResult];
@@ -53,6 +63,37 @@ interface ClassificationSuite {
   };
 }
 
+interface TreeModelComparison {
+  key: TreeModelKey;
+  bun: TreeClassificationModelResult;
+  sklearn: TreeClassificationModelResult;
+  comparison: {
+    fitSpeedupVsSklearn: number;
+    predictSpeedupVsSklearn: number;
+    accuracyDeltaVsSklearn: number;
+    f1DeltaVsSklearn: number;
+  };
+}
+
+interface TreeClassificationSuite {
+  task: "classification-tree";
+  models: [TreeModelComparison, TreeModelComparison];
+}
+
+interface PythonTreeBenchPayload {
+  implementation: string;
+  iterations: number;
+  environment: Record<string, string | number>;
+  models: Array<{
+    key: TreeModelKey;
+    model: string;
+    fitMsMedian: number;
+    predictMsMedian: number;
+    accuracy: number;
+    f1: number;
+  }>;
+}
+
 interface BenchmarkSnapshot {
   generatedAt: string;
   benchmarkConfig: {
@@ -71,6 +112,7 @@ interface BenchmarkSnapshot {
   suites: {
     regression: RegressionSuite;
     classification: ClassificationSuite;
+    treeClassification: TreeClassificationSuite;
   };
 }
 
@@ -251,11 +293,99 @@ async function runBunClassificationBenchmark(
   };
 }
 
+async function runBunTreeModelBenchmark(
+  key: TreeModelKey,
+  modelLabel: string,
+  iterations: number,
+  warmup: number,
+  modelFactory: () => { fit(X: Matrix, y: Vector): unknown; predict(X: Matrix): Vector },
+): Promise<TreeClassificationModelResult> {
+  const { split, XTrainScaled, XTestScaled } = await prepareHeartSplit();
+  const fitTimes: number[] = [];
+  const predictTimes: number[] = [];
+  let predictionsForMetrics: number[] | null = null;
+
+  const loops = warmup + iterations;
+  for (let i = 0; i < loops; i += 1) {
+    const model = modelFactory();
+
+    const fitStart = performance.now();
+    model.fit(XTrainScaled, split.yTrain);
+    const fitMs = performance.now() - fitStart;
+
+    const predictStart = performance.now();
+    const predictions = model.predict(XTestScaled);
+    const predictMs = performance.now() - predictStart;
+
+    if (i >= warmup) {
+      fitTimes.push(fitMs);
+      predictTimes.push(predictMs);
+      predictionsForMetrics = predictions;
+    }
+  }
+
+  if (!predictionsForMetrics) {
+    throw new Error(`No Bun tree benchmark iterations were recorded for ${key}.`);
+  }
+
+  return {
+    key,
+    implementation: "bun-scikit",
+    model: modelLabel,
+    iterations,
+    fitMsMedian: median(fitTimes),
+    predictMsMedian: median(predictTimes),
+    accuracy: accuracyScore(split.yTest, predictionsForMetrics),
+    f1: f1Score(split.yTest, predictionsForMetrics),
+    environment: {
+      bun: Bun.version,
+      runtime: "bun",
+    },
+  };
+}
+
+async function runBunTreeBenchmarks(
+  iterations: number,
+  warmup: number,
+): Promise<[TreeClassificationModelResult, TreeClassificationModelResult]> {
+  const [decisionTree, randomForest] = await Promise.all([
+    runBunTreeModelBenchmark(
+      "decision_tree",
+      "DecisionTreeClassifier(maxDepth=8)",
+      iterations,
+      warmup,
+      () =>
+        new DecisionTreeClassifier({
+          maxDepth: 8,
+          minSamplesLeaf: 3,
+          randomState: 42,
+        }),
+    ),
+    runBunTreeModelBenchmark(
+      "random_forest",
+      "RandomForestClassifier(nEstimators=80,maxDepth=8)",
+      iterations,
+      warmup,
+      () =>
+        new RandomForestClassifier({
+          nEstimators: 80,
+          maxDepth: 8,
+          minSamplesLeaf: 2,
+          randomState: 42,
+        }),
+    ),
+  ]);
+
+  return [decisionTree, randomForest];
+}
+
 function renderMarkdownTable(snapshot: BenchmarkSnapshot): string {
   const regression = snapshot.suites.regression;
   const classification = snapshot.suites.classification;
+  const treeClassification = snapshot.suites.treeClassification;
   const [bunReg, sklearnReg] = regression.results;
   const [bunCls, sklearnCls] = classification.results;
+  const [decisionTree, randomForest] = treeClassification.models;
 
   return [
     "## Regression (Heart Dataset)",
@@ -282,6 +412,25 @@ function renderMarkdownTable(snapshot: BenchmarkSnapshot): string {
     `Accuracy delta (bun - sklearn): ${classification.comparison.accuracyDeltaVsSklearn.toExponential(3)}`,
     `F1 delta (bun - sklearn): ${classification.comparison.f1DeltaVsSklearn.toExponential(3)}`,
     "",
+    "## Tree Classification (Heart Dataset)",
+    "",
+    "| Model | Implementation | Fit median (ms) | Predict median (ms) | Accuracy | F1 |",
+    "|---|---|---:|---:|---:|---:|",
+    `| ${decisionTree.bun.model} | ${decisionTree.bun.implementation} | ${decisionTree.bun.fitMsMedian.toFixed(4)} | ${decisionTree.bun.predictMsMedian.toFixed(4)} | ${decisionTree.bun.accuracy.toFixed(6)} | ${decisionTree.bun.f1.toFixed(6)} |`,
+    `| ${decisionTree.sklearn.model} | ${decisionTree.sklearn.implementation} | ${decisionTree.sklearn.fitMsMedian.toFixed(4)} | ${decisionTree.sklearn.predictMsMedian.toFixed(4)} | ${decisionTree.sklearn.accuracy.toFixed(6)} | ${decisionTree.sklearn.f1.toFixed(6)} |`,
+    `| ${randomForest.bun.model} | ${randomForest.bun.implementation} | ${randomForest.bun.fitMsMedian.toFixed(4)} | ${randomForest.bun.predictMsMedian.toFixed(4)} | ${randomForest.bun.accuracy.toFixed(6)} | ${randomForest.bun.f1.toFixed(6)} |`,
+    `| ${randomForest.sklearn.model} | ${randomForest.sklearn.implementation} | ${randomForest.sklearn.fitMsMedian.toFixed(4)} | ${randomForest.sklearn.predictMsMedian.toFixed(4)} | ${randomForest.sklearn.accuracy.toFixed(6)} | ${randomForest.sklearn.f1.toFixed(6)} |`,
+    "",
+    `DecisionTree fit speedup vs scikit-learn: ${decisionTree.comparison.fitSpeedupVsSklearn.toFixed(3)}x`,
+    `DecisionTree predict speedup vs scikit-learn: ${decisionTree.comparison.predictSpeedupVsSklearn.toFixed(3)}x`,
+    `DecisionTree accuracy delta (bun - sklearn): ${decisionTree.comparison.accuracyDeltaVsSklearn.toExponential(3)}`,
+    `DecisionTree f1 delta (bun - sklearn): ${decisionTree.comparison.f1DeltaVsSklearn.toExponential(3)}`,
+    "",
+    `RandomForest fit speedup vs scikit-learn: ${randomForest.comparison.fitSpeedupVsSklearn.toFixed(3)}x`,
+    `RandomForest predict speedup vs scikit-learn: ${randomForest.comparison.predictSpeedupVsSklearn.toFixed(3)}x`,
+    `RandomForest accuracy delta (bun - sklearn): ${randomForest.comparison.accuracyDeltaVsSklearn.toExponential(3)}`,
+    `RandomForest f1 delta (bun - sklearn): ${randomForest.comparison.f1DeltaVsSklearn.toExponential(3)}`,
+    "",
     `Snapshot generated at: ${snapshot.generatedAt}`,
   ].join("\n");
 }
@@ -303,7 +452,14 @@ const prepared = await prepareHeartSplit();
 const testSize = Math.max(1, Math.floor(prepared.dataset.X.length * TEST_FRACTION));
 const trainSize = prepared.dataset.X.length - testSize;
 
-const [bunRegression, sklearnRegression, bunClassification, sklearnClassification] =
+const [
+  bunRegression,
+  sklearnRegression,
+  bunClassification,
+  sklearnClassification,
+  bunTreeBenchmarks,
+  sklearnTreeBenchmarks,
+] =
   await Promise.all([
     runBunRegressionBenchmark(iterations, warmup),
     runPythonBenchmark<RegressionBenchmarkResult>("bench/python/heart_sklearn_bench.py", [
@@ -334,7 +490,56 @@ const [bunRegression, sklearnRegression, bunClassification, sklearnClassificatio
         String(warmup),
       ],
     ),
+    runBunTreeBenchmarks(iterations, warmup),
+    runPythonBenchmark<PythonTreeBenchPayload>("bench/python/heart_sklearn_tree_bench.py", [
+      "--dataset",
+      DATASET_PATH,
+      "--test-size",
+      String(TEST_FRACTION),
+      "--random-state",
+      String(RANDOM_STATE),
+      "--iterations",
+      String(iterations),
+      "--warmup",
+      String(warmup),
+    ]),
   ]);
+
+const [bunDecisionTree, bunRandomForest] = bunTreeBenchmarks;
+const sklearnDecisionTreeRaw = sklearnTreeBenchmarks.models.find(
+  (model) => model.key === "decision_tree",
+);
+const sklearnRandomForestRaw = sklearnTreeBenchmarks.models.find(
+  (model) => model.key === "random_forest",
+);
+
+if (!sklearnDecisionTreeRaw || !sklearnRandomForestRaw) {
+  throw new Error("Python tree benchmark output is missing expected models.");
+}
+
+const sklearnDecisionTree: TreeClassificationModelResult = {
+  key: "decision_tree",
+  implementation: sklearnTreeBenchmarks.implementation,
+  model: sklearnDecisionTreeRaw.model,
+  iterations: sklearnTreeBenchmarks.iterations,
+  fitMsMedian: sklearnDecisionTreeRaw.fitMsMedian,
+  predictMsMedian: sklearnDecisionTreeRaw.predictMsMedian,
+  accuracy: sklearnDecisionTreeRaw.accuracy,
+  f1: sklearnDecisionTreeRaw.f1,
+  environment: sklearnTreeBenchmarks.environment,
+};
+
+const sklearnRandomForest: TreeClassificationModelResult = {
+  key: "random_forest",
+  implementation: sklearnTreeBenchmarks.implementation,
+  model: sklearnRandomForestRaw.model,
+  iterations: sklearnTreeBenchmarks.iterations,
+  fitMsMedian: sklearnRandomForestRaw.fitMsMedian,
+  predictMsMedian: sklearnRandomForestRaw.predictMsMedian,
+  accuracy: sklearnRandomForestRaw.accuracy,
+  f1: sklearnRandomForestRaw.f1,
+  environment: sklearnTreeBenchmarks.environment,
+};
 
 const snapshot: BenchmarkSnapshot = {
   generatedAt: new Date().toISOString(),
@@ -376,6 +581,37 @@ const snapshot: BenchmarkSnapshot = {
         f1DeltaVsSklearn: bunClassification.f1 - sklearnClassification.f1,
       },
     },
+    treeClassification: {
+      task: "classification-tree",
+      models: [
+        {
+          key: "decision_tree",
+          bun: bunDecisionTree,
+          sklearn: sklearnDecisionTree,
+          comparison: {
+            fitSpeedupVsSklearn:
+              sklearnDecisionTree.fitMsMedian / bunDecisionTree.fitMsMedian,
+            predictSpeedupVsSklearn:
+              sklearnDecisionTree.predictMsMedian / bunDecisionTree.predictMsMedian,
+            accuracyDeltaVsSklearn: bunDecisionTree.accuracy - sklearnDecisionTree.accuracy,
+            f1DeltaVsSklearn: bunDecisionTree.f1 - sklearnDecisionTree.f1,
+          },
+        },
+        {
+          key: "random_forest",
+          bun: bunRandomForest,
+          sklearn: sklearnRandomForest,
+          comparison: {
+            fitSpeedupVsSklearn:
+              sklearnRandomForest.fitMsMedian / bunRandomForest.fitMsMedian,
+            predictSpeedupVsSklearn:
+              sklearnRandomForest.predictMsMedian / bunRandomForest.predictMsMedian,
+            accuracyDeltaVsSklearn: bunRandomForest.accuracy - sklearnRandomForest.accuracy,
+            f1DeltaVsSklearn: bunRandomForest.f1 - sklearnRandomForest.f1,
+          },
+        },
+      ],
+    },
   },
 };
 
@@ -391,3 +627,7 @@ console.log(`Classification Bun fit median: ${formatMs(bunClassification.fitMsMe
 console.log(
   `Classification sklearn fit median: ${formatMs(sklearnClassification.fitMsMedian)}`,
 );
+console.log(`DecisionTree Bun fit median: ${formatMs(bunDecisionTree.fitMsMedian)}`);
+console.log(`DecisionTree sklearn fit median: ${formatMs(sklearnDecisionTree.fitMsMedian)}`);
+console.log(`RandomForest Bun fit median: ${formatMs(bunRandomForest.fitMsMedian)}`);
+console.log(`RandomForest sklearn fit median: ${formatMs(sklearnRandomForest.fitMsMedian)}`);

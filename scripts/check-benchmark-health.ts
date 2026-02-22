@@ -17,6 +17,15 @@ interface ClassificationBenchmarkResult extends SharedBenchmarkResult {
   f1: number;
 }
 
+interface TreeModelComparison {
+  bun: ClassificationBenchmarkResult;
+  sklearn: ClassificationBenchmarkResult;
+  comparison: {
+    accuracyDeltaVsSklearn: number;
+    f1DeltaVsSklearn: number;
+  };
+}
+
 interface BenchmarkSnapshot {
   suites: {
     regression: {
@@ -33,6 +42,9 @@ interface BenchmarkSnapshot {
         f1DeltaVsSklearn: number;
       };
     };
+    treeClassification: {
+      models: [TreeModelComparison, TreeModelComparison];
+    };
   };
 }
 
@@ -46,8 +58,18 @@ const snapshot = JSON.parse(await readFile(inputPath, "utf-8")) as BenchmarkSnap
 
 const [bunRegression, sklearnRegression] = snapshot.suites.regression.results;
 const [bunClassification, sklearnClassification] = snapshot.suites.classification.results;
+const [decisionTree, randomForest] = snapshot.suites.treeClassification.models;
 
-for (const result of [bunRegression, sklearnRegression, bunClassification, sklearnClassification]) {
+for (const result of [
+  bunRegression,
+  sklearnRegression,
+  bunClassification,
+  sklearnClassification,
+  decisionTree.bun,
+  decisionTree.sklearn,
+  randomForest.bun,
+  randomForest.sklearn,
+]) {
   if (!(result.fitMsMedian > 0 && result.predictMsMedian > 0)) {
     throw new Error(`Benchmark timings must be positive for ${result.implementation}.`);
   }
@@ -93,6 +115,26 @@ if (Math.abs(snapshot.suites.classification.comparison.f1DeltaVsSklearn) > 0.05)
   throw new Error(
     `Classification F1 delta too large: ${snapshot.suites.classification.comparison.f1DeltaVsSklearn}.`,
   );
+}
+
+if (Math.abs(decisionTree.comparison.accuracyDeltaVsSklearn) > 0.08) {
+  throw new Error(
+    `DecisionTree accuracy delta too large: ${decisionTree.comparison.accuracyDeltaVsSklearn}.`,
+  );
+}
+
+if (Math.abs(decisionTree.comparison.f1DeltaVsSklearn) > 0.08) {
+  throw new Error(`DecisionTree F1 delta too large: ${decisionTree.comparison.f1DeltaVsSklearn}.`);
+}
+
+if (Math.abs(randomForest.comparison.accuracyDeltaVsSklearn) > 0.08) {
+  throw new Error(
+    `RandomForest accuracy delta too large: ${randomForest.comparison.accuracyDeltaVsSklearn}.`,
+  );
+}
+
+if (Math.abs(randomForest.comparison.f1DeltaVsSklearn) > 0.08) {
+  throw new Error(`RandomForest F1 delta too large: ${randomForest.comparison.f1DeltaVsSklearn}.`);
 }
 
 console.log("Benchmark comparison health checks passed.");

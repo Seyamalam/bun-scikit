@@ -69,6 +69,56 @@ Learned attributes:
 - `intercept_: number`
 - `classes_: number[]`
 
+## Tree Models
+
+### `MaxFeaturesOption`
+
+- `"sqrt" | "log2" | number | null`
+
+### `DecisionTreeClassifierOptions`
+
+- `maxDepth?: number`
+- `minSamplesSplit?: number`
+- `minSamplesLeaf?: number`
+- `maxFeatures?: MaxFeaturesOption`
+- `randomState?: number`
+
+### `DecisionTreeClassifier`
+
+Methods:
+
+- `fit(X: number[][], y: number[]): this`
+- `predict(X: number[][]): number[]`
+- `score(X: number[][], y: number[]): number`
+
+Learned attributes:
+
+- `classes_: number[]`
+
+## Ensemble Models
+
+### `RandomForestClassifierOptions`
+
+- `nEstimators?: number`
+- `maxDepth?: number`
+- `minSamplesSplit?: number`
+- `minSamplesLeaf?: number`
+- `maxFeatures?: MaxFeaturesOption`
+- `bootstrap?: boolean`
+- `randomState?: number`
+
+### `RandomForestClassifier`
+
+Methods:
+
+- `fit(X: number[][], y: number[]): this`
+- `predict(X: number[][]): number[]`
+- `score(X: number[][], y: number[]): number`
+
+Learned attributes:
+
+- `classes_: number[]`
+
 ## Neighbors
 
 ### `KNeighborsClassifierOptions`

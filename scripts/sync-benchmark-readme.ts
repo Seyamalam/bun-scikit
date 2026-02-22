@@ -18,6 +18,20 @@ interface ClassificationBenchmarkResult extends SharedBenchmarkResult {
   f1: number;
 }
 
+type TreeModelKey = "decision_tree" | "random_forest";
+
+interface TreeModelComparison {
+  key: TreeModelKey;
+  bun: ClassificationBenchmarkResult;
+  sklearn: ClassificationBenchmarkResult;
+  comparison: {
+    fitSpeedupVsSklearn: number;
+    predictSpeedupVsSklearn: number;
+    accuracyDeltaVsSklearn: number;
+    f1DeltaVsSklearn: number;
+  };
+}
+
 interface BenchmarkSnapshot {
   generatedAt: string;
   dataset: {
@@ -45,6 +59,9 @@ interface BenchmarkSnapshot {
         f1DeltaVsSklearn: number;
       };
     };
+    treeClassification: {
+      models: [TreeModelComparison, TreeModelComparison];
+    };
   };
 }
 
@@ -68,8 +85,10 @@ function normalizeLineEndings(content: string): string {
 function renderBenchmarkSection(snapshot: BenchmarkSnapshot): string {
   const regression = snapshot.suites.regression;
   const classification = snapshot.suites.classification;
+  const treeClassification = snapshot.suites.treeClassification;
   const [bunReg, sklearnReg] = regression.results;
   const [bunCls, sklearnCls] = classification.results;
+  const [decisionTree, randomForest] = treeClassification.models;
 
   return [
     START_MARKER,
@@ -99,6 +118,25 @@ function renderBenchmarkSection(snapshot: BenchmarkSnapshot): string {
     `Bun predict speedup vs scikit-learn: ${classification.comparison.predictSpeedupVsSklearn.toFixed(3)}x`,
     `Accuracy delta (bun - sklearn): ${classification.comparison.accuracyDeltaVsSklearn.toExponential(3)}`,
     `F1 delta (bun - sklearn): ${classification.comparison.f1DeltaVsSklearn.toExponential(3)}`,
+    "",
+    "### Tree Classification",
+    "",
+    "| Model | Implementation | Fit median (ms) | Predict median (ms) | Accuracy | F1 |",
+    "|---|---|---:|---:|---:|---:|",
+    `| ${decisionTree.bun.model} | ${decisionTree.bun.implementation} | ${decisionTree.bun.fitMsMedian.toFixed(4)} | ${decisionTree.bun.predictMsMedian.toFixed(4)} | ${decisionTree.bun.accuracy.toFixed(6)} | ${decisionTree.bun.f1.toFixed(6)} |`,
+    `| ${decisionTree.sklearn.model} | ${decisionTree.sklearn.implementation} | ${decisionTree.sklearn.fitMsMedian.toFixed(4)} | ${decisionTree.sklearn.predictMsMedian.toFixed(4)} | ${decisionTree.sklearn.accuracy.toFixed(6)} | ${decisionTree.sklearn.f1.toFixed(6)} |`,
+    `| ${randomForest.bun.model} | ${randomForest.bun.implementation} | ${randomForest.bun.fitMsMedian.toFixed(4)} | ${randomForest.bun.predictMsMedian.toFixed(4)} | ${randomForest.bun.accuracy.toFixed(6)} | ${randomForest.bun.f1.toFixed(6)} |`,
+    `| ${randomForest.sklearn.model} | ${randomForest.sklearn.implementation} | ${randomForest.sklearn.fitMsMedian.toFixed(4)} | ${randomForest.sklearn.predictMsMedian.toFixed(4)} | ${randomForest.sklearn.accuracy.toFixed(6)} | ${randomForest.sklearn.f1.toFixed(6)} |`,
+    "",
+    `DecisionTree fit speedup vs scikit-learn: ${decisionTree.comparison.fitSpeedupVsSklearn.toFixed(3)}x`,
+    `DecisionTree predict speedup vs scikit-learn: ${decisionTree.comparison.predictSpeedupVsSklearn.toFixed(3)}x`,
+    `DecisionTree accuracy delta (bun - sklearn): ${decisionTree.comparison.accuracyDeltaVsSklearn.toExponential(3)}`,
+    `DecisionTree f1 delta (bun - sklearn): ${decisionTree.comparison.f1DeltaVsSklearn.toExponential(3)}`,
+    "",
+    `RandomForest fit speedup vs scikit-learn: ${randomForest.comparison.fitSpeedupVsSklearn.toFixed(3)}x`,
+    `RandomForest predict speedup vs scikit-learn: ${randomForest.comparison.predictSpeedupVsSklearn.toFixed(3)}x`,
+    `RandomForest accuracy delta (bun - sklearn): ${randomForest.comparison.accuracyDeltaVsSklearn.toExponential(3)}`,
+    `RandomForest f1 delta (bun - sklearn): ${randomForest.comparison.f1DeltaVsSklearn.toExponential(3)}`,
     "",
     `Snapshot generated at: ${snapshot.generatedAt}`,
     END_MARKER,

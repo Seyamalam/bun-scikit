@@ -24,6 +24,17 @@ interface BenchmarkSnapshot {
         f1DeltaVsSklearn: number;
       };
     };
+    treeClassification: {
+      models: Array<{
+        key: string;
+        comparison: {
+          fitSpeedupVsSklearn: number;
+          predictSpeedupVsSklearn: number;
+          accuracyDeltaVsSklearn: number;
+          f1DeltaVsSklearn: number;
+        };
+      }>;
+    };
   };
 }
 
@@ -49,6 +60,10 @@ const historyRecord = {
   benchmarkConfig: snapshot.benchmarkConfig,
   regression: snapshot.suites.regression.comparison,
   classification: snapshot.suites.classification.comparison,
+  treeClassification: snapshot.suites.treeClassification.models.map((model) => ({
+    key: model.key,
+    ...model.comparison,
+  })),
 };
 
 let existing = "";

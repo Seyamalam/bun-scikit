@@ -6,6 +6,9 @@
 - Pipelines:
   - Regression: `StandardScaler + LinearRegression`
   - Classification: `StandardScaler + LogisticRegression`
+  - Tree classification:
+    - `DecisionTreeClassifier`
+    - `RandomForestClassifier`
 - Split: deterministic, `randomState=42`, test fraction `0.2`
 
 ## Commands
@@ -20,6 +23,8 @@
   - `bun run bench:history:update`
 - Run local classification benchmark:
   - `bun run bench:heart:classification`
+- Run local tree benchmark:
+  - `bun run bench:heart:tree`
 - Verify README benchmark section is synced:
   - `bun run bench:readme:check`
 

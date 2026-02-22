@@ -19,6 +19,8 @@
     "typescript",
     "linear-regression",
     "logistic-regression",
+    "decision-tree",
+    "random-forest",
     "knn",
     "classification",
     "preprocessing"
@@ -42,6 +44,7 @@
     "bench": "bun run bench/heart.bench.ts",
     "bench:heart": "bun run bench/heart.bench.ts",
     "bench:heart:classification": "bun run bench/heart-classification.bench.ts",
+    "bench:heart:tree": "bun run bench/heart-tree-classification.bench.ts",
     "bench:synthetic": "bun run bench/linear-regression.bench.ts",
     "bench:ci": "bun run bench/run-ci-benchmarks.ts --output bench/results/heart-ci-current.json",
     "bench:snapshot": "bun run bench/run-ci-benchmarks.ts --output bench/results/heart-ci-latest.json && bun run bench:sync-readme && bun run bench:history:update",

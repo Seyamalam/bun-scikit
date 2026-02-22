@@ -1,10 +1,12 @@
 import { expect, test } from "bun:test";
 import {
   accuracyScore,
+  DecisionTreeClassifier,
   f1Score,
   KNeighborsClassifier,
   LinearRegression,
   LogisticRegression,
+  RandomForestClassifier,
   StandardScaler,
   meanSquaredError,
   trainTestSplit,
@@ -83,7 +85,26 @@ test("heart.csv classification workflow beats majority baseline", async () => {
   const knnPredictions = knn.predict(XTestScaled);
   const knnAccuracy = accuracyScore(yTest, knnPredictions);
 
+  const decisionTree = new DecisionTreeClassifier({
+    maxDepth: 8,
+    minSamplesLeaf: 3,
+    randomState: 42,
+  });
+  decisionTree.fit(XTrainScaled, yTrain);
+  const decisionTreeAccuracy = accuracyScore(yTest, decisionTree.predict(XTestScaled));
+
+  const randomForest = new RandomForestClassifier({
+    nEstimators: 80,
+    maxDepth: 8,
+    minSamplesLeaf: 2,
+    randomState: 42,
+  });
+  randomForest.fit(XTrainScaled, yTrain);
+  const randomForestAccuracy = accuracyScore(yTest, randomForest.predict(XTestScaled));
+
   expect(logisticAccuracy).toBeGreaterThan(baselineAccuracy);
   expect(logisticF1).toBeGreaterThan(0.75);
   expect(knnAccuracy).toBeGreaterThan(baselineAccuracy);
+  expect(decisionTreeAccuracy).toBeGreaterThan(baselineAccuracy);
+  expect(randomForestAccuracy).toBeGreaterThan(baselineAccuracy);
 });
