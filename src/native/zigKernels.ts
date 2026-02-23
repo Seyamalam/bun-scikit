@@ -88,6 +88,33 @@ type DecisionTreeModelPredictFn = (
   nFeatures: number,
   outLabels: Uint8Array,
 ) => number;
+type RandomForestClassifierModelCreateFn = (
+  nEstimators: number,
+  maxDepth: number,
+  minSamplesSplit: number,
+  minSamplesLeaf: number,
+  maxFeaturesMode: number,
+  maxFeaturesValue: number,
+  bootstrap: number,
+  randomState: number,
+  useRandomState: number,
+  nFeatures: number,
+) => NativeHandle;
+type RandomForestClassifierModelDestroyFn = (handle: NativeHandle) => void;
+type RandomForestClassifierModelFitFn = (
+  handle: NativeHandle,
+  x: Float64Array,
+  y: Uint8Array,
+  nSamples: number,
+  nFeatures: number,
+) => number;
+type RandomForestClassifierModelPredictFn = (
+  handle: NativeHandle,
+  x: Float64Array,
+  nSamples: number,
+  nFeatures: number,
+  outLabels: Uint8Array,
+) => number;
 
 type LogisticTrainEpochFn = (
   x: Float64Array,
@@ -138,6 +165,10 @@ interface ZigKernelLibrary {
     decision_tree_model_destroy?: DecisionTreeModelDestroyFn;
     decision_tree_model_fit?: DecisionTreeModelFitFn;
     decision_tree_model_predict?: DecisionTreeModelPredictFn;
+    random_forest_classifier_model_create?: RandomForestClassifierModelCreateFn;
+    random_forest_classifier_model_destroy?: RandomForestClassifierModelDestroyFn;
+    random_forest_classifier_model_fit?: RandomForestClassifierModelFitFn;
+    random_forest_classifier_model_predict?: RandomForestClassifierModelPredictFn;
     logistic_train_epoch?: LogisticTrainEpochFn;
     logistic_train_epochs?: LogisticTrainEpochsFn;
   };
@@ -162,6 +193,10 @@ export interface ZigKernels {
   decisionTreeModelDestroy: DecisionTreeModelDestroyFn | null;
   decisionTreeModelFit: DecisionTreeModelFitFn | null;
   decisionTreeModelPredict: DecisionTreeModelPredictFn | null;
+  randomForestClassifierModelCreate: RandomForestClassifierModelCreateFn | null;
+  randomForestClassifierModelDestroy: RandomForestClassifierModelDestroyFn | null;
+  randomForestClassifierModelFit: RandomForestClassifierModelFitFn | null;
+  randomForestClassifierModelPredict: RandomForestClassifierModelPredictFn | null;
   logisticTrainEpoch: LogisticTrainEpochFn | null;
   logisticTrainEpochs: LogisticTrainEpochsFn | null;
   abiVersion: number | null;
@@ -247,6 +282,10 @@ interface NodeApiAddon {
   decisionTreeModelDestroy?: DecisionTreeModelDestroyFn;
   decisionTreeModelFit?: DecisionTreeModelFitFn;
   decisionTreeModelPredict?: DecisionTreeModelPredictFn;
+  randomForestClassifierModelCreate?: RandomForestClassifierModelCreateFn;
+  randomForestClassifierModelDestroy?: RandomForestClassifierModelDestroyFn;
+  randomForestClassifierModelFit?: RandomForestClassifierModelFitFn;
+  randomForestClassifierModelPredict?: RandomForestClassifierModelPredictFn;
 }
 
 function tryLoadNodeApiKernels(): ZigKernels | null {
@@ -289,6 +328,13 @@ function tryLoadNodeApiKernels(): ZigKernels | null {
           decisionTreeModelDestroy: addon.decisionTreeModelDestroy ?? null,
           decisionTreeModelFit: addon.decisionTreeModelFit ?? null,
           decisionTreeModelPredict: addon.decisionTreeModelPredict ?? null,
+          randomForestClassifierModelCreate:
+            addon.randomForestClassifierModelCreate ?? null,
+          randomForestClassifierModelDestroy:
+            addon.randomForestClassifierModelDestroy ?? null,
+          randomForestClassifierModelFit: addon.randomForestClassifierModelFit ?? null,
+          randomForestClassifierModelPredict:
+            addon.randomForestClassifierModelPredict ?? null,
           logisticTrainEpoch: null,
           logisticTrainEpochs: null,
           abiVersion,
@@ -432,6 +478,33 @@ export function getZigKernels(): ZigKernels | null {
             args: ["usize", FFIType.ptr, "usize", "usize", FFIType.ptr],
             returns: FFIType.u8,
           },
+          random_forest_classifier_model_create: {
+            args: [
+              "usize",
+              "usize",
+              "usize",
+              "usize",
+              FFIType.u8,
+              "usize",
+              FFIType.u8,
+              FFIType.u32,
+              FFIType.u8,
+              "usize",
+            ],
+            returns: "usize",
+          },
+          random_forest_classifier_model_destroy: {
+            args: ["usize"],
+            returns: FFIType.void,
+          },
+          random_forest_classifier_model_fit: {
+            args: ["usize", FFIType.ptr, FFIType.ptr, "usize", "usize"],
+            returns: FFIType.u8,
+          },
+          random_forest_classifier_model_predict: {
+            args: ["usize", FFIType.ptr, "usize", "usize", FFIType.ptr],
+            returns: FFIType.u8,
+          },
           logistic_train_epoch: {
             args: [
               FFIType.ptr,
@@ -492,6 +565,14 @@ export function getZigKernels(): ZigKernels | null {
           decisionTreeModelDestroy: library.symbols.decision_tree_model_destroy ?? null,
           decisionTreeModelFit: library.symbols.decision_tree_model_fit ?? null,
           decisionTreeModelPredict: library.symbols.decision_tree_model_predict ?? null,
+          randomForestClassifierModelCreate:
+            library.symbols.random_forest_classifier_model_create ?? null,
+          randomForestClassifierModelDestroy:
+            library.symbols.random_forest_classifier_model_destroy ?? null,
+          randomForestClassifierModelFit:
+            library.symbols.random_forest_classifier_model_fit ?? null,
+          randomForestClassifierModelPredict:
+            library.symbols.random_forest_classifier_model_predict ?? null,
           logisticTrainEpoch: library.symbols.logistic_train_epoch ?? null,
           logisticTrainEpochs: library.symbols.logistic_train_epochs ?? null,
           abiVersion,
@@ -555,6 +636,10 @@ export function getZigKernels(): ZigKernels | null {
             decisionTreeModelDestroy: null,
             decisionTreeModelFit: null,
             decisionTreeModelPredict: null,
+            randomForestClassifierModelCreate: null,
+            randomForestClassifierModelDestroy: null,
+            randomForestClassifierModelFit: null,
+            randomForestClassifierModelPredict: null,
             logisticTrainEpoch: library.symbols.logistic_train_epoch ?? null,
             logisticTrainEpochs: library.symbols.logistic_train_epochs ?? null,
             abiVersion: null,
@@ -600,6 +685,10 @@ export function getZigKernels(): ZigKernels | null {
             decisionTreeModelDestroy: null,
             decisionTreeModelFit: null,
             decisionTreeModelPredict: null,
+            randomForestClassifierModelCreate: null,
+            randomForestClassifierModelDestroy: null,
+            randomForestClassifierModelFit: null,
+            randomForestClassifierModelPredict: null,
             logisticTrainEpoch: library.symbols.logistic_train_epoch ?? null,
             logisticTrainEpochs: null,
             abiVersion: null,

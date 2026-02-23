@@ -69,6 +69,7 @@
   "devDependencies": {
     "@types/bun": "latest",
     "node-addon-api": "^8.3.1",
+    "node-gyp": "^12.2.0",
     "typedoc": "^0.28.14",
     "typescript": "^5.9.2"
   }

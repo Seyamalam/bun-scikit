@@ -2,6 +2,7 @@ import type { ClassificationModel, Matrix, Vector } from "../types";
 import { accuracyScore } from "../metrics/classification";
 import { DecisionTreeClassifier, type MaxFeaturesOption } from "../tree/DecisionTreeClassifier";
 import { assertFiniteVector, validateClassificationInputs } from "../utils/validation";
+import { getZigKernels } from "../native/zigKernels";
 
 export interface RandomForestClassifierOptions {
   nEstimators?: number;
@@ -23,8 +24,18 @@ function mulberry32(seed: number): () => number {
   };
 }
 
+function isTruthy(value: string | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+  const normalized = value.trim().toLowerCase();
+  return !(normalized === "0" || normalized === "false" || normalized === "off");
+}
+
 export class RandomForestClassifier implements ClassificationModel {
   classes_: Vector = [0, 1];
+  fitBackend_: "zig" | "js" = "js";
+  fitBackendLibrary_: string | null = null;
   private readonly nEstimators: number;
   private readonly maxDepth?: number;
   private readonly minSamplesSplit?: number;
@@ -32,6 +43,7 @@ export class RandomForestClassifier implements ClassificationModel {
   private readonly maxFeatures: MaxFeaturesOption;
   private readonly bootstrap: boolean;
   private readonly randomState?: number;
+  private nativeModelHandle: bigint | null = null;
   private trees: DecisionTreeClassifier[] = [];
 
   constructor(options: RandomForestClassifierOptions = {}) {
@@ -49,6 +61,7 @@ export class RandomForestClassifier implements ClassificationModel {
   }
 
   fit(X: Matrix, y: Vector): this {
+    this.disposeNativeModel();
     validateClassificationInputs(X, y);
 
     const sampleCount = X.length;
@@ -57,6 +70,13 @@ export class RandomForestClassifier implements ClassificationModel {
     const flattenedX = this.flattenTrainingMatrix(X, sampleCount, featureCount);
     const yBinary = this.buildBinaryTargets(y);
     const sampleIndices = new Uint32Array(sampleCount);
+    this.trees = [];
+    if (this.tryFitNativeForest(flattenedX, yBinary, sampleCount, featureCount)) {
+      this.fitBackend_ = "zig";
+      return this;
+    }
+    this.fitBackend_ = "js";
+    this.fitBackendLibrary_ = null;
     this.trees = new Array(this.nEstimators);
 
     for (let estimatorIndex = 0; estimatorIndex < this.nEstimators; estimatorIndex += 1) {
@@ -86,6 +106,27 @@ export class RandomForestClassifier implements ClassificationModel {
   }
 
   predict(X: Matrix): Vector {
+    if (this.nativeModelHandle !== null) {
+      const kernels = getZigKernels();
+      const predict = kernels?.randomForestClassifierModelPredict;
+      if (predict) {
+        const sampleCount = X.length;
+        const featureCount = X[0]?.length ?? 0;
+        const flattened = this.flattenTrainingMatrix(X, sampleCount, featureCount);
+        const out = new Uint8Array(sampleCount);
+        const status = predict(
+          this.nativeModelHandle,
+          flattened,
+          sampleCount,
+          featureCount,
+          out,
+        );
+        if (status === 1) {
+          return Array.from(out);
+        }
+      }
+    }
+
     if (this.trees.length === 0) {
       throw new Error("RandomForestClassifier has not been fitted.");
     }
@@ -117,10 +158,102 @@ export class RandomForestClassifier implements ClassificationModel {
   }
 
   dispose(): void {
+    this.disposeNativeModel();
     for (let i = 0; i < this.trees.length; i += 1) {
       this.trees[i].dispose();
     }
     this.trees = [];
+  }
+
+  private resolveNativeMaxFeatures(featureCount: number): {
+    mode: 0 | 1 | 2 | 3;
+    value: number;
+  } {
+    if (this.maxFeatures === null || this.maxFeatures === undefined) {
+      return { mode: 0, value: 0 };
+    }
+    if (this.maxFeatures === "sqrt") {
+      return { mode: 1, value: 0 };
+    }
+    if (this.maxFeatures === "log2") {
+      return { mode: 2, value: 0 };
+    }
+    const value = Number.isFinite(this.maxFeatures)
+      ? Math.max(1, Math.min(featureCount, Math.floor(this.maxFeatures)))
+      : featureCount;
+    return { mode: 3, value };
+  }
+
+  private tryFitNativeForest(
+    flattenedX: Float64Array,
+    yBinary: Uint8Array,
+    sampleCount: number,
+    featureCount: number,
+  ): boolean {
+    if (!isTruthy(process.env.BUN_SCIKIT_EXPERIMENTAL_NATIVE_FOREST)) {
+      return false;
+    }
+    if (process.env.BUN_SCIKIT_TREE_BACKEND?.trim().toLowerCase() !== "zig") {
+      return false;
+    }
+    const kernels = getZigKernels();
+    const create = kernels?.randomForestClassifierModelCreate;
+    const fit = kernels?.randomForestClassifierModelFit;
+    const destroy = kernels?.randomForestClassifierModelDestroy;
+    if (!create || !fit || !destroy) {
+      return false;
+    }
+
+    const { mode, value } = this.resolveNativeMaxFeatures(featureCount);
+    const useRandomState = this.randomState === undefined ? 0 : 1;
+    const randomState = this.randomState ?? 0;
+    const handle = create(
+      this.nEstimators,
+      this.maxDepth ?? 12,
+      this.minSamplesSplit ?? 2,
+      this.minSamplesLeaf ?? 1,
+      mode,
+      value,
+      this.bootstrap ? 1 : 0,
+      randomState >>> 0,
+      useRandomState,
+      featureCount,
+    );
+    if (handle === 0n) {
+      return false;
+    }
+
+    let shouldDestroy = true;
+    try {
+      const status = fit(handle, flattenedX, yBinary, sampleCount, featureCount);
+      if (status !== 1) {
+        return false;
+      }
+      this.nativeModelHandle = handle;
+      this.fitBackendLibrary_ = kernels.libraryPath;
+      shouldDestroy = false;
+      return true;
+    } finally {
+      if (shouldDestroy) {
+        destroy(handle);
+      }
+    }
+  }
+
+  private disposeNativeModel(): void {
+    if (this.nativeModelHandle === null) {
+      return;
+    }
+    const kernels = getZigKernels();
+    const destroy = kernels?.randomForestClassifierModelDestroy;
+    if (destroy) {
+      try {
+        destroy(this.nativeModelHandle);
+      } catch {
+        // best effort cleanup
+      }
+    }
+    this.nativeModelHandle = null;
   }
 
   private flattenTrainingMatrix(
