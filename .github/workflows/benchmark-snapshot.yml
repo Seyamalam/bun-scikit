@@ -49,11 +49,11 @@ jobs:
       - name: Build Zig kernels
         run: bun run native:build
 
-      - name: Regenerate benchmark snapshot and README table
+      - name: Regenerate benchmark snapshot
         run: bun run bench:snapshot
 
       - name: Commit snapshot updates
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore(bench): update CI benchmark snapshot"
-          file_pattern: "bench/results/heart-ci-latest.json bench/results/heart-ci-latest.md bench/results/history/heart-ci-history.jsonl README.md"
+          file_pattern: "bench/results/heart-ci-latest.json bench/results/heart-ci-latest.md bench/results/history/heart-ci-history.jsonl"

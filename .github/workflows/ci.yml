@@ -43,9 +43,6 @@ jobs:
       - name: Check API docs coverage
         run: bun run docs:coverage:check
 
-      - name: Verify README benchmark section
-        run: bun run bench:readme:check
-
       - name: Consumer smoke test (no trust required)
         run: |
           PKG_VERSION=$(node -p "require('./package.json').version")

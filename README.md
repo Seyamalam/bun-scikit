@@ -3,185 +3,101 @@
 [![CI](https://github.com/Seyamalam/bun-scikit/actions/workflows/ci.yml/badge.svg)](https://github.com/Seyamalam/bun-scikit/actions/workflows/ci.yml)
 [![Benchmark Snapshot](https://github.com/Seyamalam/bun-scikit/actions/workflows/benchmark-snapshot.yml/badge.svg)](https://github.com/Seyamalam/bun-scikit/actions/workflows/benchmark-snapshot.yml)
 
-`bun-scikit` is a scikit-learn-inspired machine learning library for Bun + TypeScript.
-
-## Features
-
-- `StandardScaler`
-- `LinearRegression` (native Zig `normal` solver)
-- `LogisticRegression` (binary classification, native Zig)
-- `KNeighborsClassifier`
-- `DecisionTreeClassifier`
-- `RandomForestClassifier`
-- `trainTestSplit`
-- Regression metrics: `meanSquaredError`, `meanAbsoluteError`, `r2Score`
-- Classification metrics: `accuracyScore`, `precisionScore`, `recallScore`, `f1Score`
-- Dataset-driven benchmark and CI comparison against Python `scikit-learn`
-
-`test_data/heart.csv` is used for integration testing and benchmark comparison.
-
-## Native Zig Backend
-
-`LinearRegression` (`solver: "normal"`) and `LogisticRegression` require native Zig kernels.
-
-```bash
-bun run native:build
-```
-
-Optional Node-API bridge (experimental):
-
-```bash
-bun run native:build:node-addon
-```
-
-```ts
-const linear = new LinearRegression({ solver: "normal" });
-const logistic = new LogisticRegression();
-
-linear.fit(XTrain, yTrain);
-logistic.fit(XTrain, yTrain);
-console.log(linear.fitBackend_, linear.fitBackendLibrary_);
-console.log(logistic.fitBackend_, logistic.fitBackendLibrary_);
-```
-
-If native kernels are missing, `fit()` throws with guidance to run `bun run native:build`.
-
-Bridge selection:
-
-- `BUN_SCIKIT_NATIVE_BRIDGE=node-api|ffi` (`node-api` is attempted first when available)
-- `BUN_SCIKIT_NODE_ADDON=/absolute/path/to/bun_scikit_node_addon.node`
-- `BUN_SCIKIT_ZIG_LIB=/absolute/path/to/bun_scikit_kernels.<ext>`
-
-Native ABI contract: `docs/native-abi.md`
+Scikit-learn-inspired machine learning for Bun + TypeScript, with native Zig acceleration for core training paths.
 
 ## Install
 
 ```bash
-bun install bun-scikit
+bun add bun-scikit
 ```
 
-Postinstall behavior:
-
-- Prebuilt native binaries for `linux-x64` and `windows-x64` are bundled in the npm package.
-- No `bun pm trust` step is required for normal install/use.
-- macOS prebuilt binaries are currently not published.
-
-## Usage
+## Quick Start
 
 ```ts
 import {
   LinearRegression,
+  LogisticRegression,
   StandardScaler,
-  meanSquaredError,
   trainTestSplit,
+  meanSquaredError,
+  accuracyScore,
 } from "bun-scikit";
 
-const X = [
-  [1, 2],
-  [2, 3],
-  [3, 4],
-  [4, 5],
-];
-const y = [5, 7, 9, 11];
+const X = [[1], [2], [3], [4], [5], [6]];
+const yReg = [3, 5, 7, 9, 11, 13];
+const yCls = [0, 0, 0, 1, 1, 1];
 
 const scaler = new StandardScaler();
-const XScaled = scaler.fitTransform(X);
-const { XTrain, XTest, yTrain, yTest } = trainTestSplit(XScaled, y, {
-  testSize: 0.25,
+const Xs = scaler.fitTransform(X);
+
+const { XTrain, XTest, yTrain, yTest } = trainTestSplit(Xs, yReg, {
+  testSize: 0.33,
   randomState: 42,
 });
 
-const model = new LinearRegression({ solver: "normal" });
-model.fit(XTrain, yTrain);
-const predictions = model.predict(XTest);
+const reg = new LinearRegression({ solver: "normal" });
+reg.fit(XTrain, yTrain);
+console.log("MSE:", meanSquaredError(yTest, reg.predict(XTest)));
 
-console.log("MSE:", meanSquaredError(yTest, predictions));
+const clf = new LogisticRegression({
+  solver: "gd",
+  learningRate: 0.8,
+  maxIter: 100,
+  tolerance: 1e-5,
+});
+clf.fit(Xs, yCls);
+console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 ```
 
-## Benchmarks
+## Included APIs
 
-The table below is generated from `bench/results/heart-ci-latest.json`.
-That snapshot is produced by CI in `.github/workflows/benchmark-snapshot.yml`.
+- Models: `LinearRegression`, `LogisticRegression`, `KNeighborsClassifier`, `DecisionTreeClassifier`, `RandomForestClassifier`, plus additional parity models (`LinearSVC`, `GaussianNB`, `SGDClassifier`, `SGDRegressor`, regressors for tree/forest).
+- Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`.
+- Composition: `Pipeline`, `ColumnTransformer`, `FeatureUnion`.
+- Model selection: `trainTestSplit`, `KFold`, stratified/repeated splitters, `crossValScore`, `GridSearchCV`.
+- Metrics: regression and classification metrics, including `logLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport`.
 
-<!-- BENCHMARK_TABLE_START -->
-Benchmark snapshot source: `bench/results/heart-ci-latest.json` (generated in CI workflow `Benchmark Snapshot`).
-Dataset: `test_data/heart.csv` (1025 samples, 13 features, test fraction 0.2).
+## Native Runtime
 
-### Regression
+- Prebuilt binaries are bundled in the npm package for:
+  - `linux-x64`
+  - `windows-x64`
+- No `bun pm trust` step is required for standard install/use.
+- macOS prebuilt binaries are not published yet.
 
-| Implementation | Model | Fit median (ms) | Predict median (ms) | MSE | R2 |
-|---|---|---:|---:|---:|---:|
-| bun-scikit | StandardScaler + LinearRegression(normal) | 0.2103 | 0.0216 | 0.117545 | 0.529539 |
-| python-scikit-learn | StandardScaler + LinearRegression | 0.3201 | 0.0365 | 0.117545 | 0.529539 |
+Optional env vars:
 
-Bun fit speedup vs scikit-learn: 1.522x
-Bun predict speedup vs scikit-learn: 1.684x
-MSE delta (bun - sklearn): 6.362e-14
-R2 delta (bun - sklearn): -2.539e-13
+- `BUN_SCIKIT_NATIVE_BRIDGE=node-api|ffi`
+- `BUN_SCIKIT_NODE_ADDON=/absolute/path/to/bun_scikit_node_addon.node`
+- `BUN_SCIKIT_ZIG_LIB=/absolute/path/to/bun_scikit_kernels.<ext>`
 
-### Classification
+## Performance Snapshot
 
-| Implementation | Model | Fit median (ms) | Predict median (ms) | Accuracy | F1 |
-|---|---|---:|---:|---:|---:|
-| bun-scikit | StandardScaler + LogisticRegression(gd,zig) | 0.4868 | 0.0282 | 0.863415 | 0.876106 |
-| python-scikit-learn | StandardScaler + LogisticRegression(lbfgs) | 1.1246 | 0.0724 | 0.863415 | 0.875000 |
+Latest CI snapshot on `test_data/heart.csv` vs Python scikit-learn:
 
-Bun fit speedup vs scikit-learn: 2.310x
-Bun predict speedup vs scikit-learn: 2.574x
-Accuracy delta (bun - sklearn): 0.000e+0
-F1 delta (bun - sklearn): 1.106e-3
+- Regression: fit `1.52x`, predict `1.68x`
+- Classification: fit `2.31x`, predict `2.57x`
+- DecisionTree: fit `1.83x`, predict `5.24x`
+- RandomForest: fit `6.26x`, predict `3.50x`
 
-### Tree Classification
+Raw benchmark artifacts:
 
-| Model | Implementation | Fit median (ms) | Predict median (ms) | Accuracy | F1 |
-|---|---|---:|---:|---:|---:|
-| DecisionTreeClassifier(maxDepth=8) | bun-scikit | 0.8062 | 0.0190 | 0.946341 | 0.948837 |
-| DecisionTreeClassifier | python-scikit-learn | 1.4781 | 0.0999 | 0.931707 | 0.933962 |
-| RandomForestClassifier(nEstimators=80,maxDepth=8) | bun-scikit | 27.6225 | 1.8535 | 0.990244 | 0.990566 |
-| RandomForestClassifier | python-scikit-learn | 172.9585 | 6.4850 | 0.995122 | 0.995261 |
-
-DecisionTree fit speedup vs scikit-learn: 1.833x
-DecisionTree predict speedup vs scikit-learn: 5.244x
-DecisionTree accuracy delta (bun - sklearn): 1.463e-2
-DecisionTree f1 delta (bun - sklearn): 1.487e-2
-
-RandomForest fit speedup vs scikit-learn: 6.262x
-RandomForest predict speedup vs scikit-learn: 3.499x
-RandomForest accuracy delta (bun - sklearn): -4.878e-3
-RandomForest f1 delta (bun - sklearn): -4.695e-3
-
-Snapshot generated at: 2026-02-23T14:55:51.251Z
-<!-- BENCHMARK_TABLE_END -->
+- `bench/results/heart-ci-latest.json`
+- `bench/results/heart-ci-latest.md`
 
 ## Documentation
 
-- Docs index: `docs/README.md`
 - Getting started: `docs/getting-started.md`
 - API reference: `docs/api.md`
-- Benchmarking flow: `docs/benchmarking.md`
+- Benchmarking: `docs/benchmarking.md`
 - Zig acceleration: `docs/zig-acceleration.md`
+- Native ABI: `docs/native-abi.md`
+- Release checklist: `docs/release-checklist.md`
 
-## Maintainer Files
+## Contributing / Project Files
 
 - Changelog: `CHANGELOG.md`
-- Contributing guide: `CONTRIBUTING.md`
+- Contributing: `CONTRIBUTING.md`
+- Security: `SECURITY.md`
 - Code of Conduct: `CODE_OF_CONDUCT.md`
-- Security policy: `SECURITY.md`
-- Support policy: `SUPPORT.md`
-- License: `LICENSE`
-
-## Local Commands
-
-```bash
-bun run test
-bun run typecheck
-bun run docs:api:generate
-bun run docs:coverage:check
-bun run bench
-bun run bench:heart:classification
-bun run bench:heart:tree
-bun run bench:ci
-bun run bench:ci:native
-bun run bench:snapshot
-bun run native:build
-```
+- Support: `SUPPORT.md`

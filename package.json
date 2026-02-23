@@ -52,7 +52,7 @@
     "bench:synthetic": "bun run bench/linear-regression.bench.ts",
     "bench:ci": "bun run bench/run-ci-benchmarks.ts --output bench/results/heart-ci-current.json",
     "bench:ci:native": "bun run native:build && bun run bench:ci",
-    "bench:snapshot": "bun run bench/run-ci-benchmarks.ts --output bench/results/heart-ci-latest.json && bun run bench:sync-readme && bun run bench:history:update",
+    "bench:snapshot": "bun run bench/run-ci-benchmarks.ts --output bench/results/heart-ci-latest.json && bun run bench:history:update",
     "bench:sync-readme": "bun run scripts/sync-benchmark-readme.ts",
     "bench:readme:check": "bun run scripts/sync-benchmark-readme.ts --check",
     "bench:health": "bun run scripts/check-benchmark-health.ts",
