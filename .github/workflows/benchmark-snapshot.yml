@@ -39,6 +39,8 @@ jobs:
           version: 0.15.2
 
       - name: Install Bun dependencies
+        env:
+          BUN_SCIKIT_SKIP_NATIVE_INSTALL: "1"
         run: bun install --frozen-lockfile
 
       - name: Install Python benchmark dependencies

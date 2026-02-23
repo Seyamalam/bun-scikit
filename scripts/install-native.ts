@@ -132,6 +132,11 @@ async function tryLocalBuild(): Promise<void> {
 }
 
 async function main(): Promise<void> {
+  if (process.env.BUN_SCIKIT_SKIP_NATIVE_INSTALL === "1" || process.env.CI === "true") {
+    console.log("[bun-scikit] skipping native install bootstrap in CI/skip mode");
+    return;
+  }
+
   const existingKernelDll = resolve("dist", "native", "bun_scikit_kernels.dll");
   const existingKernelSo = resolve("dist", "native", "bun_scikit_kernels.so");
   if (await fileExists(existingKernelDll) || (await fileExists(existingKernelSo))) {
