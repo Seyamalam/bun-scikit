@@ -27,6 +27,10 @@ using LogisticModelFitFn = std::size_t (*)(NativeHandle, const double*, const do
 using LogisticModelFitLbfgsFn = std::size_t (*)(NativeHandle, const double*, const double*, std::size_t, std::size_t, double, double, std::size_t);
 using LogisticModelCopyCoefficientsFn = std::uint8_t (*)(NativeHandle, double*);
 using LogisticModelGetInterceptFn = double (*)(NativeHandle);
+using DecisionTreeModelCreateFn = NativeHandle (*)(std::size_t, std::size_t, std::size_t, std::uint8_t, std::size_t, std::uint32_t, std::uint8_t, std::size_t);
+using DecisionTreeModelDestroyFn = void (*)(NativeHandle);
+using DecisionTreeModelFitFn = std::uint8_t (*)(NativeHandle, const double*, const std::uint8_t*, std::size_t, std::size_t, const std::uint32_t*, std::size_t);
+using DecisionTreeModelPredictFn = std::uint8_t (*)(NativeHandle, const double*, std::size_t, std::size_t, std::uint8_t*);
 
 struct KernelLibrary {
 #if defined(_WIN32)
@@ -47,6 +51,10 @@ struct KernelLibrary {
   LogisticModelFitLbfgsFn logistic_model_fit_lbfgs{nullptr};
   LogisticModelCopyCoefficientsFn logistic_model_copy_coefficients{nullptr};
   LogisticModelGetInterceptFn logistic_model_get_intercept{nullptr};
+  DecisionTreeModelCreateFn decision_tree_model_create{nullptr};
+  DecisionTreeModelDestroyFn decision_tree_model_destroy{nullptr};
+  DecisionTreeModelFitFn decision_tree_model_fit{nullptr};
+  DecisionTreeModelPredictFn decision_tree_model_predict{nullptr};
 };
 
 KernelLibrary g_library{};
@@ -138,6 +146,14 @@ Napi::Value LoadNativeLibrary(const Napi::CallbackInfo& info) {
       loadSymbol<LogisticModelCopyCoefficientsFn>("logistic_model_copy_coefficients");
   g_library.logistic_model_get_intercept =
       loadSymbol<LogisticModelGetInterceptFn>("logistic_model_get_intercept");
+  g_library.decision_tree_model_create =
+      loadSymbol<DecisionTreeModelCreateFn>("decision_tree_model_create");
+  g_library.decision_tree_model_destroy =
+      loadSymbol<DecisionTreeModelDestroyFn>("decision_tree_model_destroy");
+  g_library.decision_tree_model_fit =
+      loadSymbol<DecisionTreeModelFitFn>("decision_tree_model_fit");
+  g_library.decision_tree_model_predict =
+      loadSymbol<DecisionTreeModelPredictFn>("decision_tree_model_predict");
 
   return Napi::Boolean::New(env, true);
 }
@@ -423,6 +439,134 @@ Napi::Value LogisticModelGetIntercept(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, g_library.logistic_model_get_intercept(handle));
 }
 
+Napi::Value DecisionTreeModelCreate(const Napi::CallbackInfo& info) {
+  const Napi::Env env = info.Env();
+  if (!isLibraryLoaded(env)) {
+    return env.Null();
+  }
+  if (!g_library.decision_tree_model_create) {
+    throwError(env, "Symbol decision_tree_model_create is unavailable.");
+    return env.Null();
+  }
+  if (info.Length() != 8 || !info[0].IsNumber() || !info[1].IsNumber() || !info[2].IsNumber() ||
+      !info[3].IsNumber() || !info[4].IsNumber() || !info[5].IsNumber() || !info[6].IsNumber() ||
+      !info[7].IsNumber()) {
+    throwTypeError(env, "decisionTreeModelCreate(maxDepth, minSamplesSplit, minSamplesLeaf, maxFeaturesMode, maxFeaturesValue, randomState, useRandomState, nFeatures) expects eight numbers.");
+    return env.Null();
+  }
+
+  const std::size_t max_depth = static_cast<std::size_t>(info[0].As<Napi::Number>().Uint32Value());
+  const std::size_t min_samples_split = static_cast<std::size_t>(info[1].As<Napi::Number>().Uint32Value());
+  const std::size_t min_samples_leaf = static_cast<std::size_t>(info[2].As<Napi::Number>().Uint32Value());
+  const std::uint8_t max_features_mode = static_cast<std::uint8_t>(info[3].As<Napi::Number>().Uint32Value());
+  const std::size_t max_features_value = static_cast<std::size_t>(info[4].As<Napi::Number>().Uint32Value());
+  const std::uint32_t random_state = static_cast<std::uint32_t>(info[5].As<Napi::Number>().Uint32Value());
+  const std::uint8_t use_random_state = static_cast<std::uint8_t>(info[6].As<Napi::Number>().Uint32Value());
+  const std::size_t n_features = static_cast<std::size_t>(info[7].As<Napi::Number>().Uint32Value());
+
+  const NativeHandle handle = g_library.decision_tree_model_create(
+      max_depth,
+      min_samples_split,
+      min_samples_leaf,
+      max_features_mode,
+      max_features_value,
+      random_state,
+      use_random_state,
+      n_features);
+  return Napi::BigInt::New(env, static_cast<std::uint64_t>(handle));
+}
+
+Napi::Value DecisionTreeModelDestroy(const Napi::CallbackInfo& info) {
+  const Napi::Env env = info.Env();
+  if (!isLibraryLoaded(env)) {
+    return env.Null();
+  }
+  if (!g_library.decision_tree_model_destroy) {
+    throwError(env, "Symbol decision_tree_model_destroy is unavailable.");
+    return env.Null();
+  }
+  if (info.Length() != 1) {
+    throwTypeError(env, "decisionTreeModelDestroy(handle) expects one BigInt.");
+    return env.Null();
+  }
+  const NativeHandle handle = handleFromBigInt(info[0], env);
+  if (env.IsExceptionPending()) {
+    return env.Null();
+  }
+  g_library.decision_tree_model_destroy(handle);
+  return env.Undefined();
+}
+
+Napi::Value DecisionTreeModelFit(const Napi::CallbackInfo& info) {
+  const Napi::Env env = info.Env();
+  if (!isLibraryLoaded(env)) {
+    return env.Null();
+  }
+  if (!g_library.decision_tree_model_fit) {
+    throwError(env, "Symbol decision_tree_model_fit is unavailable.");
+    return env.Null();
+  }
+  if (info.Length() != 7 || !info[1].IsTypedArray() || !info[2].IsTypedArray() ||
+      !info[3].IsNumber() || !info[4].IsNumber() || !info[5].IsTypedArray() || !info[6].IsNumber()) {
+    throwTypeError(env, "decisionTreeModelFit(handle, x, y, nSamples, nFeatures, sampleIndices, sampleCount) has invalid arguments.");
+    return env.Null();
+  }
+
+  const NativeHandle handle = handleFromBigInt(info[0], env);
+  if (env.IsExceptionPending()) {
+    return env.Null();
+  }
+  auto x = info[1].As<Napi::Float64Array>();
+  auto y = info[2].As<Napi::Uint8Array>();
+  const std::size_t n_samples = static_cast<std::size_t>(info[3].As<Napi::Number>().Uint32Value());
+  const std::size_t n_features = static_cast<std::size_t>(info[4].As<Napi::Number>().Uint32Value());
+  auto sample_indices = info[5].As<Napi::Uint32Array>();
+  const std::size_t sample_count = static_cast<std::size_t>(info[6].As<Napi::Number>().Uint32Value());
+
+  const std::uint8_t status = g_library.decision_tree_model_fit(
+      handle,
+      x.Data(),
+      y.Data(),
+      n_samples,
+      n_features,
+      sample_indices.Data(),
+      sample_count);
+  return Napi::Number::New(env, status);
+}
+
+Napi::Value DecisionTreeModelPredict(const Napi::CallbackInfo& info) {
+  const Napi::Env env = info.Env();
+  if (!isLibraryLoaded(env)) {
+    return env.Null();
+  }
+  if (!g_library.decision_tree_model_predict) {
+    throwError(env, "Symbol decision_tree_model_predict is unavailable.");
+    return env.Null();
+  }
+  if (info.Length() != 5 || !info[1].IsTypedArray() || !info[2].IsNumber() || !info[3].IsNumber() ||
+      !info[4].IsTypedArray()) {
+    throwTypeError(env, "decisionTreeModelPredict(handle, x, nSamples, nFeatures, outLabels) has invalid arguments.");
+    return env.Null();
+  }
+
+  const NativeHandle handle = handleFromBigInt(info[0], env);
+  if (env.IsExceptionPending()) {
+    return env.Null();
+  }
+  auto x = info[1].As<Napi::Float64Array>();
+  const std::size_t n_samples = static_cast<std::size_t>(info[2].As<Napi::Number>().Uint32Value());
+  const std::size_t n_features = static_cast<std::size_t>(info[3].As<Napi::Number>().Uint32Value());
+  auto out_labels = info[4].As<Napi::Uint8Array>();
+
+  const std::uint8_t status = g_library.decision_tree_model_predict(
+      handle,
+      x.Data(),
+      n_samples,
+      n_features,
+      out_labels.Data());
+  return Napi::Number::New(env, status);
+}
+
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports.Set("loadLibrary", Napi::Function::New(env, LoadNativeLibrary));
   exports.Set("unloadLibrary", Napi::Function::New(env, UnloadLibrary));
@@ -441,6 +585,11 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports.Set("logisticModelFitLbfgs", Napi::Function::New(env, LogisticModelFitLbfgs));
   exports.Set("logisticModelCopyCoefficients", Napi::Function::New(env, LogisticModelCopyCoefficients));
   exports.Set("logisticModelGetIntercept", Napi::Function::New(env, LogisticModelGetIntercept));
+
+  exports.Set("decisionTreeModelCreate", Napi::Function::New(env, DecisionTreeModelCreate));
+  exports.Set("decisionTreeModelDestroy", Napi::Function::New(env, DecisionTreeModelDestroy));
+  exports.Set("decisionTreeModelFit", Napi::Function::New(env, DecisionTreeModelFit));
+  exports.Set("decisionTreeModelPredict", Napi::Function::New(env, DecisionTreeModelPredict));
 
   return exports;
 }

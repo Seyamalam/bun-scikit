@@ -292,3 +292,33 @@ export function classificationReport(
     },
   };
 }
+
+export function balancedAccuracyScore(yTrue: number[], yPred: number[]): number {
+  const report = classificationReport(yTrue, yPred);
+  return report.macroAvg.recall;
+}
+
+export function matthewsCorrcoef(
+  yTrue: number[],
+  yPred: number[],
+  positiveLabel = 1,
+): number {
+  const { tp, fp, fn, tn } = confusionCounts(yTrue, yPred, positiveLabel);
+  const numerator = tp * tn - fp * fn;
+  const denominator = Math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn));
+  if (denominator === 0) {
+    return 0;
+  }
+  return numerator / denominator;
+}
+
+export function brierScoreLoss(yTrue: number[], yPredProb: number[]): number {
+  validateInputs(yTrue, yPredProb);
+  validateBinaryTargets(yTrue);
+  let total = 0;
+  for (let i = 0; i < yTrue.length; i += 1) {
+    const diff = yPredProb[i] - yTrue[i];
+    total += diff * diff;
+  }
+  return total / yTrue.length;
+}

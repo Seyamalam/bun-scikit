@@ -52,10 +52,28 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 ## Included APIs
 
 - Models: `LinearRegression`, `LogisticRegression`, `KNeighborsClassifier`, `DecisionTreeClassifier`, `RandomForestClassifier`, plus additional parity models (`LinearSVC`, `GaussianNB`, `SGDClassifier`, `SGDRegressor`, regressors for tree/forest).
-- Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`.
+- Baselines: `DummyClassifier`, `DummyRegressor`.
+- Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`.
 - Composition: `Pipeline`, `ColumnTransformer`, `FeatureUnion`.
-- Model selection: `trainTestSplit`, `KFold`, stratified/repeated splitters, `crossValScore`, `GridSearchCV`.
-- Metrics: regression and classification metrics, including `logLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport`.
+- Feature selection: `VarianceThreshold`.
+- Model selection: `trainTestSplit`, `KFold`, stratified/repeated splitters, `crossValScore`, `GridSearchCV`, `RandomizedSearchCV`.
+- Metrics: regression and classification metrics, including `logLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport`, `balancedAccuracyScore`, `matthewsCorrcoef`, `brierScoreLoss`, `meanAbsolutePercentageError`, and `explainedVarianceScore`.
+
+## Scikit Parity Matrix
+
+| Area | Status |
+| --- | --- |
+| Linear models | `LinearRegression`, `LogisticRegression`, `SGDClassifier`, `SGDRegressor`, `LinearSVC` |
+| Tree/ensemble | `DecisionTreeClassifier`, `DecisionTreeRegressor`, `RandomForestClassifier`, `RandomForestRegressor` |
+| Neighbors / Bayes | `KNeighborsClassifier`, `GaussianNB` |
+| Baselines | `DummyClassifier`, `DummyRegressor` |
+| Preprocessing | `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder` |
+| Feature selection | `VarianceThreshold` |
+| Model selection | `trainTestSplit`, `KFold`, `StratifiedKFold`, `StratifiedShuffleSplit`, `RepeatedKFold`, `RepeatedStratifiedKFold`, `crossValScore`, `GridSearchCV`, `RandomizedSearchCV` |
+| Metrics (regression) | `meanSquaredError`, `meanAbsoluteError`, `r2Score`, `meanAbsolutePercentageError`, `explainedVarianceScore` |
+| Metrics (classification) | `accuracyScore`, `precisionScore`, `recallScore`, `f1Score`, `balancedAccuracyScore`, `matthewsCorrcoef`, `logLoss`, `brierScoreLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport` |
+
+Near-term parity gaps vs scikit-learn include clustering, decomposition, calibration, advanced feature selection, and probability calibration/meta-estimators.
 
 ## Native Runtime
 
@@ -70,6 +88,7 @@ Optional env vars:
 - `BUN_SCIKIT_NATIVE_BRIDGE=node-api|ffi`
 - `BUN_SCIKIT_NODE_ADDON=/absolute/path/to/bun_scikit_node_addon.node`
 - `BUN_SCIKIT_ZIG_LIB=/absolute/path/to/bun_scikit_kernels.<ext>`
+- `BUN_SCIKIT_TREE_BACKEND=zig` (opt-in native tree/forest training path; default keeps JS-fast tree splitter)
 
 ## Performance Snapshot
 

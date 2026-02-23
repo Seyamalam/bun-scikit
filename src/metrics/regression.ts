@@ -49,3 +49,43 @@ export function r2Score(yTrue: number[], yPred: number[]): number {
 
   return 1 - ssRes / ssTot;
 }
+
+export function meanAbsolutePercentageError(yTrue: number[], yPred: number[]): number {
+  validateInputs(yTrue, yPred);
+  let total = 0;
+  for (let i = 0; i < yTrue.length; i += 1) {
+    const denom = Math.max(Math.abs(yTrue[i]), 1e-12);
+    total += Math.abs((yTrue[i] - yPred[i]) / denom);
+  }
+  return total / yTrue.length;
+}
+
+export function explainedVarianceScore(yTrue: number[], yPred: number[]): number {
+  validateInputs(yTrue, yPred);
+  const n = yTrue.length;
+  const yTrueMean = mean(yTrue);
+  const residuals = new Array<number>(n);
+  let residualMean = 0;
+  for (let i = 0; i < n; i += 1) {
+    const r = yTrue[i] - yPred[i];
+    residuals[i] = r;
+    residualMean += r;
+  }
+  residualMean /= n;
+
+  let varTrue = 0;
+  let varResidual = 0;
+  for (let i = 0; i < n; i += 1) {
+    const centeredY = yTrue[i] - yTrueMean;
+    const centeredR = residuals[i] - residualMean;
+    varTrue += centeredY * centeredY;
+    varResidual += centeredR * centeredR;
+  }
+
+  varTrue /= n;
+  varResidual /= n;
+  if (varTrue === 0) {
+    return varResidual === 0 ? 1 : 0;
+  }
+  return 1 - varResidual / varTrue;
+}

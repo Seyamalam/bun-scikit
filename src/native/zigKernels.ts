@@ -243,6 +243,10 @@ interface NodeApiAddon {
   logisticModelFitLbfgs: LogisticModelFitLbfgsFn;
   logisticModelCopyCoefficients: LogisticModelCopyCoefficientsFn;
   logisticModelGetIntercept: LogisticModelGetInterceptFn;
+  decisionTreeModelCreate?: DecisionTreeModelCreateFn;
+  decisionTreeModelDestroy?: DecisionTreeModelDestroyFn;
+  decisionTreeModelFit?: DecisionTreeModelFitFn;
+  decisionTreeModelPredict?: DecisionTreeModelPredictFn;
 }
 
 function tryLoadNodeApiKernels(): ZigKernels | null {
@@ -281,10 +285,10 @@ function tryLoadNodeApiKernels(): ZigKernels | null {
           logisticModelPredict: null,
           logisticModelCopyCoefficients: addon.logisticModelCopyCoefficients ?? null,
           logisticModelGetIntercept: addon.logisticModelGetIntercept ?? null,
-          decisionTreeModelCreate: null,
-          decisionTreeModelDestroy: null,
-          decisionTreeModelFit: null,
-          decisionTreeModelPredict: null,
+          decisionTreeModelCreate: addon.decisionTreeModelCreate ?? null,
+          decisionTreeModelDestroy: addon.decisionTreeModelDestroy ?? null,
+          decisionTreeModelFit: addon.decisionTreeModelFit ?? null,
+          decisionTreeModelPredict: addon.decisionTreeModelPredict ?? null,
           logisticTrainEpoch: null,
           logisticTrainEpochs: null,
           abiVersion,
@@ -402,6 +406,31 @@ export function getZigKernels(): ZigKernels | null {
           logistic_model_get_intercept: {
             args: ["usize"],
             returns: FFIType.f64,
+          },
+          decision_tree_model_create: {
+            args: [
+              "usize",
+              "usize",
+              "usize",
+              FFIType.u8,
+              "usize",
+              FFIType.u32,
+              FFIType.u8,
+              "usize",
+            ],
+            returns: "usize",
+          },
+          decision_tree_model_destroy: {
+            args: ["usize"],
+            returns: FFIType.void,
+          },
+          decision_tree_model_fit: {
+            args: ["usize", FFIType.ptr, FFIType.ptr, "usize", "usize", FFIType.ptr, "usize"],
+            returns: FFIType.u8,
+          },
+          decision_tree_model_predict: {
+            args: ["usize", FFIType.ptr, "usize", "usize", FFIType.ptr],
+            returns: FFIType.u8,
           },
           logistic_train_epoch: {
             args: [
