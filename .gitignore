@@ -4,5 +4,6 @@ build/
 coverage/
 *.log
 /.venv/
+prebuilt_tmp/
 bench/results/heart-ci-current.json
 bench/results/heart-ci-current.md

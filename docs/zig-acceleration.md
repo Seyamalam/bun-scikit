@@ -59,6 +59,8 @@ Or build both:
 bun run native:build:all
 ```
 
+Note: published npm packages already include Linux/Windows prebuilt binaries, so local native builds are typically only needed for development or unsupported platforms.
+
 ## Benchmarks
 
 CI benchmark workflows compile native Zig kernels before running the Bun vs

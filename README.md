@@ -62,8 +62,8 @@ bun install bun-scikit
 
 Postinstall behavior:
 
-- Downloads prebuilt native binaries from GitHub Releases for `linux-x64` and `windows-x64`.
-- If prebuilt binaries are unavailable, it falls back to local native build.
+- Prebuilt native binaries for `linux-x64` and `windows-x64` are bundled in the npm package.
+- No `bun pm trust` step is required for normal install/use.
 - macOS prebuilt binaries are currently not published.
 
 ## Usage

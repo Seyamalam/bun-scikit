@@ -191,9 +191,16 @@ function candidateLibraryPaths(): string[] {
   const extension = suffix;
   const fileName = `bun_scikit_kernels.${extension}`;
   const explicitPath = process.env.BUN_SCIKIT_ZIG_LIB;
+  const platformPackagedPath =
+    process.platform === "win32"
+      ? resolve(import.meta.dir, "../../prebuilt/windows-x64", fileName)
+      : process.platform === "linux"
+        ? resolve(import.meta.dir, "../../prebuilt/linux-x64", fileName)
+        : null;
 
   const candidates = [
     explicitPath,
+    platformPackagedPath,
     resolve(process.cwd(), "dist", "native", fileName),
     resolve(process.cwd(), "native", fileName),
     resolve(import.meta.dir, "../../dist/native", fileName),
@@ -204,8 +211,15 @@ function candidateLibraryPaths(): string[] {
 }
 
 function candidateAddonPaths(): string[] {
+  const platformPackagedPath =
+    process.platform === "win32"
+      ? resolve(import.meta.dir, "../../prebuilt/windows-x64", "bun_scikit_node_addon.node")
+      : process.platform === "linux"
+        ? resolve(import.meta.dir, "../../prebuilt/linux-x64", "bun_scikit_node_addon.node")
+        : null;
   const candidates = [
     process.env.BUN_SCIKIT_NODE_ADDON,
+    platformPackagedPath,
     resolve(process.cwd(), "dist", "native", "bun_scikit_node_addon.node"),
     resolve(process.cwd(), "build", "Release", "bun_scikit_node_addon.node"),
     resolve(import.meta.dir, "../../dist/native", "bun_scikit_node_addon.node"),
