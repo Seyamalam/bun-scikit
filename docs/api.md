@@ -167,3 +167,7 @@ Learned attributes:
 - `precisionScore(yTrue, yPred, positiveLabel?): number`
 - `recallScore(yTrue, yPred, positiveLabel?): number`
 - `f1Score(yTrue, yPred, positiveLabel?): number`
+
+## API Symbol Index
+
+`BuiltInScoring`, `classificationReport`, `ClassificationReportLabelMetrics`, `ClassificationReportResult`, `ColumnSelector`, `ColumnTransformer`, `ColumnTransformerOptions`, `ColumnTransformerSpec`, `confusionMatrix`, `ConfusionMatrixResult`, `CrossValEstimator`, `crossValScore`, `CrossValScoreOptions`, `CrossValSplitter`, `DecisionTreeRegressor`, `DecisionTreeRegressorOptions`, `FeatureUnion`, `FeatureUnionSpec`, `FoldIndices`, `GaussianNB`, `GaussianNBOptions`, `GridSearchCV`, `GridSearchCVOptions`, `GridSearchResultRow`, `ImputerStrategy`, `KFold`, `KFoldOptions`, `LinearSVC`, `LinearSVCOptions`, `logLoss`, `MinMaxScaler`, `MinMaxScalerOptions`, `OneHotEncoder`, `OneHotEncoderOptions`, `ParamGrid`, `Pipeline`, `PipelineStep`, `PolynomialFeatures`, `PolynomialFeaturesOptions`, `RandomForestRegressor`, `RandomForestRegressorOptions`, `RepeatedKFold`, `RepeatedKFoldOptions`, `RepeatedStratifiedKFold`, `RepeatedStratifiedKFoldOptions`, `RobustScaler`, `RobustScalerOptions`, `rocAucScore`, `ScoringFn`, `SGDClassifier`, `SGDClassifierLoss`, `SGDClassifierOptions`, `SGDRegressor`, `SGDRegressorOptions`, `SimpleImputer`, `SimpleImputerOptions`, `StratifiedKFold`, `StratifiedKFoldOptions`, `StratifiedShuffleSplit`, `StratifiedShuffleSplitOptions`, `Transformer`.
