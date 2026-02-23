@@ -44,36 +44,7 @@ jobs:
       - name: Verify README benchmark section
         run: bun run bench:readme:check
 
-  native-matrix:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Setup Zig
-        uses: goto-bus-stop/setup-zig@v2
-        with:
-          version: 0.15.2
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Build Zig kernels
-        run: bun run native:build
-
-      - name: Run native smoke tests (FFI bridge)
-        env:
-          BUN_SCIKIT_NATIVE_BRIDGE: ffi
-        run: bun test test/linear-regression.test.ts test/logistic-regression.test.ts
-
-  node-api-matrix:
+  native-addon-matrix:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -102,9 +73,7 @@ jobs:
       - name: Build Zig kernels + Node-API addon
         run: bun run native:build:all
 
-      - name: Run Node-API bridge smoke tests
-        env:
-          BUN_SCIKIT_NATIVE_BRIDGE: node-api
+      - name: Run native smoke tests
         run: bun test test/linear-regression.test.ts test/logistic-regression.test.ts
 
   benchmarks:
