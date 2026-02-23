@@ -38,9 +38,3 @@ console.log(
 );
 
 runBenchmark("linear_regression(normal)", { solver: "normal" });
-runBenchmark("linear_regression(gd)", {
-  solver: "gd",
-  learningRate: 0.03,
-  maxIter: 30_000,
-  tolerance: 1e-9,
-});

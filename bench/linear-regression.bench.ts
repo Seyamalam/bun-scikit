@@ -23,11 +23,11 @@ function makeSyntheticRegressionData(
 }
 
 const { X, y } = makeSyntheticRegressionData(4_000, 8);
-const model = new LinearRegression({ solver: "gd", learningRate: 0.002, maxIter: 3_000 });
+const model = new LinearRegression({ solver: "normal" });
 
 const start = performance.now();
 model.fit(X, y);
 const elapsed = performance.now() - start;
 
-console.log(`LinearRegression.fit (gd) on 4k x 8: ${elapsed.toFixed(2)}ms`);
+console.log(`LinearRegression.fit (normal) on 4k x 8: ${elapsed.toFixed(2)}ms`);
 console.log(`R2 on training data: ${model.score(X, y).toFixed(6)}`);

@@ -8,6 +8,12 @@ bun install bun-scikit
 
 ## Quick Start
 
+Build native kernels first:
+
+```bash
+bun run native:build
+```
+
 ```ts
 import {
   LinearRegression,

@@ -1,8 +1,10 @@
 import { dlopen, FFIType, suffix } from "bun:ffi";
 import { existsSync } from "node:fs";
+import { createRequire } from "node:module";
 import { resolve } from "node:path";
 
 type NativeHandle = bigint;
+type AbiVersionFn = () => number;
 
 type LinearModelCreateFn = (nFeatures: number, fitIntercept: number) => NativeHandle;
 type LinearModelDestroyFn = (handle: NativeHandle) => void;
@@ -117,6 +119,7 @@ type LogisticTrainEpochsFn = (
 
 interface ZigKernelLibrary {
   symbols: {
+    bun_scikit_abi_version?: AbiVersionFn;
     linear_model_create?: LinearModelCreateFn;
     linear_model_destroy?: LinearModelDestroyFn;
     linear_model_fit?: LinearModelFitFn;
@@ -161,10 +164,12 @@ export interface ZigKernels {
   decisionTreeModelPredict: DecisionTreeModelPredictFn | null;
   logisticTrainEpoch: LogisticTrainEpochFn | null;
   logisticTrainEpochs: LogisticTrainEpochsFn | null;
+  abiVersion: number | null;
   libraryPath: string;
 }
 
 let cachedKernels: ZigKernels | null | undefined;
+const EXPECTED_ABI_VERSION = 1;
 
 function isTruthy(value: string | undefined): boolean {
   if (!value) {
@@ -198,6 +203,88 @@ function candidateLibraryPaths(): string[] {
   return candidates.filter((entry): entry is string => Boolean(entry));
 }
 
+function candidateAddonPaths(): string[] {
+  const candidates = [
+    process.env.BUN_SCIKIT_NODE_ADDON,
+    resolve(process.cwd(), "dist", "native", "bun_scikit_node_addon.node"),
+    resolve(process.cwd(), "build", "Release", "bun_scikit_node_addon.node"),
+    resolve(import.meta.dir, "../../dist/native", "bun_scikit_node_addon.node"),
+  ];
+  return candidates.filter((entry): entry is string => Boolean(entry));
+}
+
+interface NodeApiAddon {
+  loadLibrary: (path: string) => boolean;
+  unloadLibrary?: () => void;
+  loadedPath: () => string | null;
+  abiVersion: () => number;
+  linearModelCreate: LinearModelCreateFn;
+  linearModelDestroy: LinearModelDestroyFn;
+  linearModelFit: LinearModelFitFn;
+  linearModelCopyCoefficients: LinearModelCopyCoefficientsFn;
+  linearModelGetIntercept: LinearModelGetInterceptFn;
+  logisticModelCreate: LogisticModelCreateFn;
+  logisticModelDestroy: LogisticModelDestroyFn;
+  logisticModelFit: LogisticModelFitFn;
+  logisticModelFitLbfgs: LogisticModelFitLbfgsFn;
+  logisticModelCopyCoefficients: LogisticModelCopyCoefficientsFn;
+  logisticModelGetIntercept: LogisticModelGetInterceptFn;
+}
+
+function tryLoadNodeApiKernels(): ZigKernels | null {
+  const require = createRequire(import.meta.url);
+  for (const addonPath of candidateAddonPaths()) {
+    if (!existsSync(addonPath)) {
+      continue;
+    }
+    try {
+      const addon = require(addonPath) as NodeApiAddon;
+      for (const libraryPath of candidateLibraryPaths()) {
+        if (!existsSync(libraryPath)) {
+          continue;
+        }
+        if (!addon.loadLibrary(libraryPath)) {
+          continue;
+        }
+        const abiVersion = addon.abiVersion();
+        if (abiVersion !== EXPECTED_ABI_VERSION) {
+          addon.unloadLibrary?.();
+          continue;
+        }
+
+        return {
+          linearModelCreate: addon.linearModelCreate ?? null,
+          linearModelDestroy: addon.linearModelDestroy ?? null,
+          linearModelFit: addon.linearModelFit ?? null,
+          linearModelPredict: null,
+          linearModelCopyCoefficients: addon.linearModelCopyCoefficients ?? null,
+          linearModelGetIntercept: addon.linearModelGetIntercept ?? null,
+          logisticModelCreate: addon.logisticModelCreate ?? null,
+          logisticModelDestroy: addon.logisticModelDestroy ?? null,
+          logisticModelFit: addon.logisticModelFit ?? null,
+          logisticModelFitLbfgs: addon.logisticModelFitLbfgs ?? null,
+          logisticModelPredictProba: null,
+          logisticModelPredict: null,
+          logisticModelCopyCoefficients: addon.logisticModelCopyCoefficients ?? null,
+          logisticModelGetIntercept: addon.logisticModelGetIntercept ?? null,
+          decisionTreeModelCreate: null,
+          decisionTreeModelDestroy: null,
+          decisionTreeModelFit: null,
+          decisionTreeModelPredict: null,
+          logisticTrainEpoch: null,
+          logisticTrainEpochs: null,
+          abiVersion,
+          libraryPath: addon.loadedPath() ?? libraryPath,
+        };
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
 export function getZigKernels(): ZigKernels | null {
   if (!isZigBackendEnabled()) {
     return null;
@@ -205,6 +292,15 @@ export function getZigKernels(): ZigKernels | null {
 
   if (cachedKernels !== undefined) {
     return cachedKernels;
+  }
+
+  const bridgePreference = process.env.BUN_SCIKIT_NATIVE_BRIDGE?.trim().toLowerCase();
+  if (bridgePreference !== "ffi") {
+    const nodeApiKernels = tryLoadNodeApiKernels();
+    if (nodeApiKernels) {
+      cachedKernels = nodeApiKernels;
+      return cachedKernels;
+    }
   }
 
   for (const libraryPath of candidateLibraryPaths()) {
@@ -218,6 +314,10 @@ export function getZigKernels(): ZigKernels | null {
           linear_model_create: {
             args: ["usize", FFIType.u8],
             returns: "usize",
+          },
+          bun_scikit_abi_version: {
+            args: [],
+            returns: FFIType.u32,
           },
           linear_model_destroy: {
             args: ["usize"],
@@ -323,6 +423,11 @@ export function getZigKernels(): ZigKernels | null {
           },
         }) as ZigKernelLibrary;
 
+        const abiVersion = library.symbols.bun_scikit_abi_version?.() ?? null;
+        if (abiVersion !== null && abiVersion !== EXPECTED_ABI_VERSION) {
+          continue;
+        }
+
         cachedKernels = {
           linearModelCreate: library.symbols.linear_model_create ?? null,
           linearModelDestroy: library.symbols.linear_model_destroy ?? null,
@@ -346,6 +451,7 @@ export function getZigKernels(): ZigKernels | null {
           decisionTreeModelPredict: library.symbols.decision_tree_model_predict ?? null,
           logisticTrainEpoch: library.symbols.logistic_train_epoch ?? null,
           logisticTrainEpochs: library.symbols.logistic_train_epochs ?? null,
+          abiVersion,
           libraryPath,
         };
 
@@ -408,6 +514,7 @@ export function getZigKernels(): ZigKernels | null {
             decisionTreeModelPredict: null,
             logisticTrainEpoch: library.symbols.logistic_train_epoch ?? null,
             logisticTrainEpochs: library.symbols.logistic_train_epochs ?? null,
+            abiVersion: null,
             libraryPath,
           };
 
@@ -452,6 +559,7 @@ export function getZigKernels(): ZigKernels | null {
             decisionTreeModelPredict: null,
             logisticTrainEpoch: library.symbols.logistic_train_epoch ?? null,
             logisticTrainEpochs: null,
+            abiVersion: null,
             libraryPath,
           };
 

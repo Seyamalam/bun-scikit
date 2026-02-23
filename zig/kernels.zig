@@ -1,6 +1,43 @@
 const std = @import("std");
 
 const allocator = std.heap.page_allocator;
+const ABI_VERSION: u32 = 1;
+const Status = enum(u32) {
+    ok = 1,
+    invalid_handle = 2,
+    invalid_shape = 3,
+    allocation_failed = 4,
+    fit_failed = 5,
+    symbol_unavailable = 6,
+};
+
+pub export fn bun_scikit_abi_version() u32 {
+    return ABI_VERSION;
+}
+
+pub export fn bun_scikit_status_ok() u32 {
+    return @intFromEnum(Status.ok);
+}
+
+pub export fn bun_scikit_status_invalid_handle() u32 {
+    return @intFromEnum(Status.invalid_handle);
+}
+
+pub export fn bun_scikit_status_invalid_shape() u32 {
+    return @intFromEnum(Status.invalid_shape);
+}
+
+pub export fn bun_scikit_status_allocation_failed() u32 {
+    return @intFromEnum(Status.allocation_failed);
+}
+
+pub export fn bun_scikit_status_fit_failed() u32 {
+    return @intFromEnum(Status.fit_failed);
+}
+
+pub export fn bun_scikit_status_symbol_unavailable() u32 {
+    return @intFromEnum(Status.symbol_unavailable);
+}
 
 const LinearModel = struct {
     n_features: usize,

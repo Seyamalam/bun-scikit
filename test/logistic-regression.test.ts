@@ -22,19 +22,20 @@ test("LogisticRegression learns a linearly separable boundary", () => {
   expect(proba).toBeLessThan(0.6);
 });
 
-test("LogisticRegression supports explicit JS backend", () => {
+test("LogisticRegression requires Zig kernels", () => {
   const X = [[0], [1], [2], [3], [4], [5]];
   const y = [0, 0, 0, 1, 1, 1];
+  const kernels = getZigKernels();
 
-  const model = new LogisticRegression({
-    backend: "js",
-    learningRate: 0.2,
-    maxIter: 40_000,
-    tolerance: 1e-10,
-  });
+  const model = new LogisticRegression({ learningRate: 0.2, maxIter: 40_000, tolerance: 1e-10 });
+
+  if (!kernels) {
+    expect(() => model.fit(X, y)).toThrow(/requires native zig kernels/i);
+    return;
+  }
 
   model.fit(X, y);
-  expect(model.fitBackend_).toBe("js");
+  expect(model.fitBackend_).toBe("zig");
   expect(model.predict([[-1], [6]])).toEqual([0, 1]);
 });
 
@@ -44,14 +45,13 @@ test("LogisticRegression zig backend behavior is deterministic", () => {
 
   const kernels = getZigKernels();
   const model = new LogisticRegression({
-    backend: "zig",
     learningRate: 0.2,
     maxIter: 40_000,
     tolerance: 1e-10,
   });
 
   if (!kernels) {
-    expect(() => model.fit(X, y)).toThrow(/backend 'zig' requested/i);
+    expect(() => model.fit(X, y)).toThrow(/requires native zig kernels/i);
     return;
   }
 
@@ -66,7 +66,6 @@ test("LogisticRegression zig lbfgs solver behavior is deterministic", () => {
 
   const kernels = getZigKernels();
   const model = new LogisticRegression({
-    backend: "zig",
     solver: "lbfgs",
     maxIter: 50,
     tolerance: 1e-6,
@@ -74,7 +73,7 @@ test("LogisticRegression zig lbfgs solver behavior is deterministic", () => {
   });
 
   if (!kernels) {
-    expect(() => model.fit(X, y)).toThrow(/backend 'zig' requested/i);
+    expect(() => model.fit(X, y)).toThrow(/requires native zig kernels/i);
     return;
   }
 

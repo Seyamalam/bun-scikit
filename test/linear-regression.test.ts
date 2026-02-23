@@ -16,36 +16,15 @@ test("LinearRegression (normal equation) fits a simple line", () => {
   expect(prediction).toBeCloseTo(13, 4);
 });
 
-test("LinearRegression (gradient descent) converges on simple data", () => {
-  const X = [[0], [1], [2], [3], [4]];
-  const y = [1, 3, 5, 7, 9];
-
-  const model = new LinearRegression({
-    solver: "gd",
-    learningRate: 0.05,
-    maxIter: 20_000,
-    tolerance: 1e-10,
-  });
-
-  model.fit(X, y);
-
-  expect(model.intercept_).toBeCloseTo(1, 2);
-  expect(model.coef_[0]).toBeCloseTo(2, 2);
-  expect(model.score(X, y)).toBeGreaterThan(0.999);
-});
-
 test("LinearRegression zig backend behavior is deterministic", () => {
   const X = [[1], [2], [3], [4], [5]];
   const y = [3, 5, 7, 9, 11];
 
   const kernels = getZigKernels();
-  const model = new LinearRegression({
-    solver: "normal",
-    backend: "zig",
-  });
+  const model = new LinearRegression({ solver: "normal" });
 
   if (!kernels) {
-    expect(() => model.fit(X, y)).toThrow(/backend 'zig' requested/i);
+    expect(() => model.fit(X, y)).toThrow(/requires native zig kernels/i);
     return;
   }
 

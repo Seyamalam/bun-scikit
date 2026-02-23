@@ -34,10 +34,7 @@ test("heart.csv workflow: split, scale, fit, and beat a baseline predictor", asy
   const XTestScaled = scaler.transform(XTest);
 
   const model = new LinearRegression({
-    solver: "gd",
-    learningRate: 0.03,
-    maxIter: 30_000,
-    tolerance: 1e-9,
+    solver: "normal",
   });
 
   model.fit(XTrainScaled, yTrain);

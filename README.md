@@ -8,8 +8,8 @@
 ## Features
 
 - `StandardScaler`
-- `LinearRegression` (`normal` and `gd` solvers)
-- `LogisticRegression` (binary classification, optional Zig backend)
+- `LinearRegression` (native Zig `normal` solver)
+- `LogisticRegression` (binary classification, native Zig)
 - `KNeighborsClassifier`
 - `DecisionTreeClassifier`
 - `RandomForestClassifier`
@@ -20,17 +20,23 @@
 
 `test_data/heart.csv` is used for integration testing and benchmark comparison.
 
-## Native Acceleration (Optional)
+## Native Zig Backend
 
-`LinearRegression` (`solver: "normal"`) and `LogisticRegression` support a native Zig backend.
+`LinearRegression` (`solver: "normal"`) and `LogisticRegression` require native Zig kernels.
 
 ```bash
 bun run native:build
 ```
 
+Optional Node-API bridge (experimental):
+
+```bash
+bun run native:build:node-addon
+```
+
 ```ts
-const linear = new LinearRegression({ solver: "normal", backend: "auto" });
-const logistic = new LogisticRegression({ backend: "auto" });
+const linear = new LinearRegression({ solver: "normal" });
+const logistic = new LogisticRegression();
 
 linear.fit(XTrain, yTrain);
 logistic.fit(XTrain, yTrain);
@@ -38,11 +44,15 @@ console.log(linear.fitBackend_, linear.fitBackendLibrary_);
 console.log(logistic.fitBackend_, logistic.fitBackendLibrary_);
 ```
 
-Backends:
+If native kernels are missing, `fit()` throws with guidance to run `bun run native:build`.
 
-- `auto` (default): use Zig if found, otherwise JS fallback
-- `js`: force JavaScript/TypeScript path
-- `zig`: require native kernel (throws if missing)
+Bridge selection:
+
+- `BUN_SCIKIT_NATIVE_BRIDGE=node-api|ffi` (`node-api` is attempted first when available)
+- `BUN_SCIKIT_NODE_ADDON=/absolute/path/to/bun_scikit_node_addon.node`
+- `BUN_SCIKIT_ZIG_LIB=/absolute/path/to/bun_scikit_kernels.<ext>`
+
+Native ABI contract: `docs/native-abi.md`
 
 ## Install
 
