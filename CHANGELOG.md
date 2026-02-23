@@ -16,6 +16,15 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 - Benchmark automation for Bun vs Python scikit-learn on `test_data/heart.csv` for regression, classification, and tree classification.
 - CI benchmark workflows with snapshot history tracking and README benchmark sync/check tooling.
 - API docs quality gates via Typedoc generation and exported-symbol coverage checks.
+- Release checklist (`docs/release-checklist.md`).
+- Consumer smoke test in CI to verify `bun add bun-scikit` works without trust-based install scripts.
+- Benchmark health speedup floors to prevent regressions vs Python scikit-learn.
+
+### Changed
+- Bundled Linux/Windows prebuilt native binaries directly in npm package to avoid trust-required install hooks.
+
+### Deprecated
+- Dependency install-script bootstrap for downloading/building native artifacts at install time.
 
 ## [0.1.0] - 2026-02-22
 

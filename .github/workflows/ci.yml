@@ -46,6 +46,27 @@ jobs:
       - name: Verify README benchmark section
         run: bun run bench:readme:check
 
+      - name: Consumer smoke test (no trust required)
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          npm pack --silent
+          mkdir -p /tmp/bun-scikit-smoke
+          cd /tmp/bun-scikit-smoke
+          bun init -y
+          bun add "${GITHUB_WORKSPACE}/bun-scikit-${PKG_VERSION}.tgz"
+          cat > index.ts <<'EOF'
+          import { LinearRegression, LogisticRegression } from "bun-scikit";
+          const X = [[1],[2],[3],[4]];
+          const yReg = [2,4,6,8];
+          const yCls = [0,0,1,1];
+          const r = new LinearRegression({ solver: "normal" });
+          r.fit(X, yReg);
+          const c = new LogisticRegression({ maxIter: 50, learningRate: 0.5, tolerance: 1e-5 });
+          c.fit(X, yCls);
+          console.log(r.predict([[5]])[0], c.predict([[1],[4]]));
+          EOF
+          bun run index.ts
+
   native-addon-matrix:
     runs-on: ${{ matrix.os }}
     strategy:

@@ -31,6 +31,8 @@ interface BenchmarkSnapshot {
     regression: {
       results: [RegressionBenchmarkResult, RegressionBenchmarkResult];
       comparison: {
+        fitSpeedupVsSklearn: number;
+        predictSpeedupVsSklearn: number;
         mseDeltaVsSklearn: number;
         r2DeltaVsSklearn: number;
       };
@@ -38,14 +40,44 @@ interface BenchmarkSnapshot {
     classification: {
       results: [ClassificationBenchmarkResult, ClassificationBenchmarkResult];
       comparison: {
+        fitSpeedupVsSklearn: number;
+        predictSpeedupVsSklearn: number;
         accuracyDeltaVsSklearn: number;
         f1DeltaVsSklearn: number;
       };
     };
     treeClassification: {
-      models: [TreeModelComparison, TreeModelComparison];
+      models: [
+        TreeModelComparison & {
+          comparison: TreeModelComparison["comparison"] & {
+            fitSpeedupVsSklearn: number;
+            predictSpeedupVsSklearn: number;
+          };
+        },
+        TreeModelComparison & {
+          comparison: TreeModelComparison["comparison"] & {
+            fitSpeedupVsSklearn: number;
+            predictSpeedupVsSklearn: number;
+          };
+        },
+      ];
     };
   };
+}
+
+function speedupThreshold(
+  envName: string,
+  defaultValue: number,
+): number {
+  const raw = process.env[envName];
+  if (!raw) {
+    return defaultValue;
+  }
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`${envName} must be a positive number when set. Got: ${raw}`);
+  }
+  return parsed;
 }
 
 const pathArgIndex = Bun.argv.indexOf("--input");
@@ -59,6 +91,23 @@ const snapshot = JSON.parse(await readFile(inputPath, "utf-8")) as BenchmarkSnap
 const [bunRegression, sklearnRegression] = snapshot.suites.regression.results;
 const [bunClassification, sklearnClassification] = snapshot.suites.classification.results;
 const [decisionTree, randomForest] = snapshot.suites.treeClassification.models;
+const minRegressionFitSpeedup = speedupThreshold("BENCH_MIN_REGRESSION_FIT_SPEEDUP", 1.1);
+const minRegressionPredictSpeedup = speedupThreshold("BENCH_MIN_REGRESSION_PREDICT_SPEEDUP", 1.1);
+const minClassificationFitSpeedup = speedupThreshold("BENCH_MIN_CLASSIFICATION_FIT_SPEEDUP", 1.3);
+const minClassificationPredictSpeedup = speedupThreshold(
+  "BENCH_MIN_CLASSIFICATION_PREDICT_SPEEDUP",
+  1.3,
+);
+const minDecisionTreeFitSpeedup = speedupThreshold("BENCH_MIN_DECISION_TREE_FIT_SPEEDUP", 1.2);
+const minDecisionTreePredictSpeedup = speedupThreshold(
+  "BENCH_MIN_DECISION_TREE_PREDICT_SPEEDUP",
+  1.5,
+);
+const minRandomForestFitSpeedup = speedupThreshold("BENCH_MIN_RANDOM_FOREST_FIT_SPEEDUP", 2.0);
+const minRandomForestPredictSpeedup = speedupThreshold(
+  "BENCH_MIN_RANDOM_FOREST_PREDICT_SPEEDUP",
+  2.0,
+);
 
 for (const result of [
   bunRegression,
@@ -99,6 +148,18 @@ if (Math.abs(snapshot.suites.regression.comparison.mseDeltaVsSklearn) > 0.01) {
   );
 }
 
+if (snapshot.suites.regression.comparison.fitSpeedupVsSklearn < minRegressionFitSpeedup) {
+  throw new Error(
+    `Regression fit speedup too low: ${snapshot.suites.regression.comparison.fitSpeedupVsSklearn} < ${minRegressionFitSpeedup}.`,
+  );
+}
+
+if (snapshot.suites.regression.comparison.predictSpeedupVsSklearn < minRegressionPredictSpeedup) {
+  throw new Error(
+    `Regression predict speedup too low: ${snapshot.suites.regression.comparison.predictSpeedupVsSklearn} < ${minRegressionPredictSpeedup}.`,
+  );
+}
+
 if (Math.abs(snapshot.suites.regression.comparison.r2DeltaVsSklearn) > 0.01) {
   throw new Error(
     `Regression R2 delta too large: ${snapshot.suites.regression.comparison.r2DeltaVsSklearn}.`,
@@ -117,6 +178,21 @@ if (Math.abs(snapshot.suites.classification.comparison.f1DeltaVsSklearn) > 0.05)
   );
 }
 
+if (snapshot.suites.classification.comparison.fitSpeedupVsSklearn < minClassificationFitSpeedup) {
+  throw new Error(
+    `Classification fit speedup too low: ${snapshot.suites.classification.comparison.fitSpeedupVsSklearn} < ${minClassificationFitSpeedup}.`,
+  );
+}
+
+if (
+  snapshot.suites.classification.comparison.predictSpeedupVsSklearn <
+  minClassificationPredictSpeedup
+) {
+  throw new Error(
+    `Classification predict speedup too low: ${snapshot.suites.classification.comparison.predictSpeedupVsSklearn} < ${minClassificationPredictSpeedup}.`,
+  );
+}
+
 if (Math.abs(decisionTree.comparison.accuracyDeltaVsSklearn) > 0.08) {
   throw new Error(
     `DecisionTree accuracy delta too large: ${decisionTree.comparison.accuracyDeltaVsSklearn}.`,
@@ -127,6 +203,18 @@ if (Math.abs(decisionTree.comparison.f1DeltaVsSklearn) > 0.08) {
   throw new Error(`DecisionTree F1 delta too large: ${decisionTree.comparison.f1DeltaVsSklearn}.`);
 }
 
+if (decisionTree.comparison.fitSpeedupVsSklearn < minDecisionTreeFitSpeedup) {
+  throw new Error(
+    `DecisionTree fit speedup too low: ${decisionTree.comparison.fitSpeedupVsSklearn} < ${minDecisionTreeFitSpeedup}.`,
+  );
+}
+
+if (decisionTree.comparison.predictSpeedupVsSklearn < minDecisionTreePredictSpeedup) {
+  throw new Error(
+    `DecisionTree predict speedup too low: ${decisionTree.comparison.predictSpeedupVsSklearn} < ${minDecisionTreePredictSpeedup}.`,
+  );
+}
+
 if (Math.abs(randomForest.comparison.accuracyDeltaVsSklearn) > 0.08) {
   throw new Error(
     `RandomForest accuracy delta too large: ${randomForest.comparison.accuracyDeltaVsSklearn}.`,
@@ -135,6 +223,18 @@ if (Math.abs(randomForest.comparison.accuracyDeltaVsSklearn) > 0.08) {
 
 if (Math.abs(randomForest.comparison.f1DeltaVsSklearn) > 0.08) {
   throw new Error(`RandomForest F1 delta too large: ${randomForest.comparison.f1DeltaVsSklearn}.`);
+}
+
+if (randomForest.comparison.fitSpeedupVsSklearn < minRandomForestFitSpeedup) {
+  throw new Error(
+    `RandomForest fit speedup too low: ${randomForest.comparison.fitSpeedupVsSklearn} < ${minRandomForestFitSpeedup}.`,
+  );
+}
+
+if (randomForest.comparison.predictSpeedupVsSklearn < minRandomForestPredictSpeedup) {
+  throw new Error(
+    `RandomForest predict speedup too low: ${randomForest.comparison.predictSpeedupVsSklearn} < ${minRandomForestPredictSpeedup}.`,
+  );
 }
 
 console.log("Benchmark comparison health checks passed.");
