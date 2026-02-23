@@ -185,12 +185,24 @@ export class DecisionTreeClassifier implements ClassificationModel {
       }
     }
 
-    return X.map((sample) => this.predictOne(sample, this.root!));
+    const predictions = new Array<number>(X.length);
+    const root = this.root!;
+    for (let i = 0; i < X.length; i += 1) {
+      predictions[i] = this.predictOne(X[i], root);
+    }
+    return predictions;
   }
 
   score(X: Matrix, y: Vector): number {
     assertFiniteVector(y);
     return accuracyScore(y, this.predict(X));
+  }
+
+  dispose(): void {
+    this.destroyZigModel();
+    this.root = null;
+    this.flattenedXTrain = null;
+    this.yBinaryTrain = null;
   }
 
   private predictOne(sample: Vector, node: TreeNode): 0 | 1 {

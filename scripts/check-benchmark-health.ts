@@ -80,6 +80,14 @@ interface BenchmarkSnapshot {
   };
 }
 
+function parseArgValue(flag: string): string | null {
+  const index = Bun.argv.indexOf(flag);
+  if (index === -1 || index + 1 >= Bun.argv.length) {
+    return null;
+  }
+  return Bun.argv[index + 1];
+}
+
 function speedupThreshold(
   envName: string,
   defaultValue: number,
@@ -95,13 +103,18 @@ function speedupThreshold(
   return parsed;
 }
 
-const pathArgIndex = Bun.argv.indexOf("--input");
-const inputPath =
-  pathArgIndex !== -1 && pathArgIndex + 1 < Bun.argv.length
-    ? resolve(Bun.argv[pathArgIndex + 1])
-    : resolve("bench/results/heart-ci-current.json");
+const inputPath = resolve(parseArgValue("--input") ?? "bench/results/heart-ci-current.json");
+const baselinePath = resolve(
+  parseArgValue("--baseline") ?? process.env.BENCH_BASELINE_INPUT ?? "bench/results/heart-ci-latest.json",
+);
+const baselineInputEnabled = inputPath !== baselinePath;
 
 const snapshot = JSON.parse(await readFile(inputPath, "utf-8")) as BenchmarkSnapshot;
+const baselineSnapshot = baselineInputEnabled
+  ? ((await readFile(baselinePath, "utf-8").then((raw) => JSON.parse(raw) as BenchmarkSnapshot).catch(
+      () => null,
+    )) as BenchmarkSnapshot | null)
+  : null;
 
 const [bunRegression, sklearnRegression] = snapshot.suites.regression.results;
 const [bunClassification, sklearnClassification] = snapshot.suites.classification.results;
@@ -135,6 +148,14 @@ const maxZigForestFitSlowdownVsJs = speedupThreshold(
 const maxZigForestPredictSlowdownVsJs = speedupThreshold(
   "BENCH_MAX_ZIG_FOREST_PREDICT_SLOWDOWN_VS_JS",
   20,
+);
+const minZigTreeFitRetentionVsBaseline = speedupThreshold(
+  "BENCH_MIN_ZIG_TREE_FIT_RETENTION_VS_BASELINE",
+  0.9,
+);
+const minZigForestFitRetentionVsBaseline = speedupThreshold(
+  "BENCH_MIN_ZIG_FOREST_FIT_RETENTION_VS_BASELINE",
+  0.9,
 );
 
 for (const result of [
@@ -295,6 +316,30 @@ if (snapshot.suites.treeBackendModes.enabled) {
     throw new Error(
       `RandomForest zig predict slowdown too large vs js-fast: ${randomForestPredictSlowdown} > ${maxZigForestPredictSlowdownVsJs}.`,
     );
+  }
+
+  if (baselineSnapshot?.suites?.treeBackendModes?.enabled) {
+    const [baselineDecisionTreeModes, baselineRandomForestModes] =
+      baselineSnapshot.suites.treeBackendModes.models;
+    if (baselineDecisionTreeModes && baselineRandomForestModes) {
+      const decisionTreeFitRetention =
+        decisionTreeModes.comparison.zigFitSpeedupVsJs /
+        baselineDecisionTreeModes.comparison.zigFitSpeedupVsJs;
+      const randomForestFitRetention =
+        randomForestModes.comparison.zigFitSpeedupVsJs /
+        baselineRandomForestModes.comparison.zigFitSpeedupVsJs;
+
+      if (decisionTreeFitRetention < minZigTreeFitRetentionVsBaseline) {
+        throw new Error(
+          `DecisionTree zig/js fit retention too low vs baseline: ${decisionTreeFitRetention} < ${minZigTreeFitRetentionVsBaseline}.`,
+        );
+      }
+      if (randomForestFitRetention < minZigForestFitRetentionVsBaseline) {
+        throw new Error(
+          `RandomForest zig/js fit retention too low vs baseline: ${randomForestFitRetention} < ${minZigForestFitRetentionVsBaseline}.`,
+        );
+      }
+    }
   }
 }
 

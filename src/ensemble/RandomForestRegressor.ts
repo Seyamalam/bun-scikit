@@ -56,10 +56,10 @@ export class RandomForestRegressor implements RegressionModel {
     const random = this.randomState === undefined ? Math.random : mulberry32(this.randomState);
     const flattenedX = this.flattenTrainingMatrix(X, sampleCount, featureCount);
     const yValues = this.toFloat64Vector(y);
+    const sampleIndices = new Uint32Array(sampleCount);
     this.trees = new Array(this.nEstimators);
 
     for (let estimatorIndex = 0; estimatorIndex < this.nEstimators; estimatorIndex += 1) {
-      const sampleIndices = new Uint32Array(sampleCount);
       if (this.bootstrap) {
         for (let i = 0; i < sampleCount; i += 1) {
           sampleIndices[i] = Math.floor(random() * sampleCount);
@@ -90,16 +90,20 @@ export class RandomForestRegressor implements RegressionModel {
       throw new Error("RandomForestRegressor has not been fitted.");
     }
 
-    const treePredictions = this.trees.map((tree) => tree.predict(X));
     const sampleCount = X.length;
-    const predictions = new Array<number>(sampleCount).fill(0);
+    const sums = new Float64Array(sampleCount);
 
-    for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex += 1) {
-      let sum = 0;
-      for (let treeIndex = 0; treeIndex < treePredictions.length; treeIndex += 1) {
-        sum += treePredictions[treeIndex][sampleIndex];
+    for (let treeIndex = 0; treeIndex < this.trees.length; treeIndex += 1) {
+      const treePrediction = this.trees[treeIndex].predict(X);
+      for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex += 1) {
+        sums[sampleIndex] += treePrediction[sampleIndex];
       }
-      predictions[sampleIndex] = sum / this.trees.length;
+    }
+
+    const predictions = new Array<number>(sampleCount);
+    const denominator = this.trees.length;
+    for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex += 1) {
+      predictions[sampleIndex] = sums[sampleIndex] / denominator;
     }
 
     return predictions;

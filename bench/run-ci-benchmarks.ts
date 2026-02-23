@@ -339,7 +339,11 @@ async function runBunTreeModelBenchmark(
   treeBackendMode: TreeBackendMode,
   iterations: number,
   warmup: number,
-  modelFactory: () => { fit(X: Matrix, y: Vector): unknown; predict(X: Matrix): Vector },
+  modelFactory: () => {
+    fit(X: Matrix, y: Vector): unknown;
+    predict(X: Matrix): Vector;
+    dispose?: () => void;
+  },
 ): Promise<TreeClassificationModelResult> {
   const previousTreeBackend = process.env.BUN_SCIKIT_TREE_BACKEND;
   if (treeBackendMode === "zig-tree") {
@@ -357,14 +361,20 @@ async function runBunTreeModelBenchmark(
     const loops = warmup + iterations;
     for (let i = 0; i < loops; i += 1) {
       const model = modelFactory();
+      let fitMs = 0;
+      let predictMs = 0;
+      let predictions: Vector = [];
+      try {
+        const fitStart = performance.now();
+        model.fit(XTrainScaled, split.yTrain);
+        fitMs = performance.now() - fitStart;
 
-      const fitStart = performance.now();
-      model.fit(XTrainScaled, split.yTrain);
-      const fitMs = performance.now() - fitStart;
-
-      const predictStart = performance.now();
-      const predictions = model.predict(XTestScaled);
-      const predictMs = performance.now() - predictStart;
+        const predictStart = performance.now();
+        predictions = model.predict(XTestScaled);
+        predictMs = performance.now() - predictStart;
+      } finally {
+        model.dispose?.();
+      }
 
       if (i >= warmup) {
         fitTimes.push(fitMs);

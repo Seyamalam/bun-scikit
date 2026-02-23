@@ -56,10 +56,10 @@ export class RandomForestClassifier implements ClassificationModel {
     const random = this.randomState === undefined ? Math.random : mulberry32(this.randomState);
     const flattenedX = this.flattenTrainingMatrix(X, sampleCount, featureCount);
     const yBinary = this.buildBinaryTargets(y);
+    const sampleIndices = new Uint32Array(sampleCount);
     this.trees = new Array(this.nEstimators);
 
     for (let estimatorIndex = 0; estimatorIndex < this.nEstimators; estimatorIndex += 1) {
-      const sampleIndices = new Uint32Array(sampleCount);
       if (this.bootstrap) {
         for (let i = 0; i < sampleCount; i += 1) {
           sampleIndices[i] = Math.floor(random() * sampleCount);
@@ -90,16 +90,22 @@ export class RandomForestClassifier implements ClassificationModel {
       throw new Error("RandomForestClassifier has not been fitted.");
     }
 
-    const treePredictions = this.trees.map((tree) => tree.predict(X));
     const sampleCount = X.length;
-    const predictions = new Array(sampleCount).fill(0);
+    const voteCounts = new Uint16Array(sampleCount);
 
-    for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex += 1) {
-      let positiveVotes = 0;
-      for (let treeIndex = 0; treeIndex < treePredictions.length; treeIndex += 1) {
-        positiveVotes += treePredictions[treeIndex][sampleIndex] === 1 ? 1 : 0;
+    for (let treeIndex = 0; treeIndex < this.trees.length; treeIndex += 1) {
+      const treePrediction = this.trees[treeIndex].predict(X);
+      for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex += 1) {
+        if (treePrediction[sampleIndex] === 1) {
+          voteCounts[sampleIndex] += 1;
+        }
       }
-      predictions[sampleIndex] = positiveVotes * 2 >= this.trees.length ? 1 : 0;
+    }
+
+    const predictions = new Array<number>(sampleCount);
+    const voteThreshold = this.trees.length;
+    for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex += 1) {
+      predictions[sampleIndex] = voteCounts[sampleIndex] * 2 >= voteThreshold ? 1 : 0;
     }
 
     return predictions;
@@ -108,6 +114,13 @@ export class RandomForestClassifier implements ClassificationModel {
   score(X: Matrix, y: Vector): number {
     assertFiniteVector(y);
     return accuracyScore(y, this.predict(X));
+  }
+
+  dispose(): void {
+    for (let i = 0; i < this.trees.length; i += 1) {
+      this.trees[i].dispose();
+    }
+    this.trees = [];
   }
 
   private flattenTrainingMatrix(
