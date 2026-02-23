@@ -74,12 +74,16 @@ const DecisionTreeModel = struct {
     use_random_state: bool,
     root_index: usize,
     has_root: bool,
+    feature_scratch: []usize,
     nodes: std.ArrayListUnmanaged(TreeNode),
 };
 
-const SplitResult = struct {
+const SplitEvaluation = struct {
     threshold: f64,
     impurity: f64,
+};
+
+const SplitPartition = struct {
     left_indices: []usize,
     right_indices: []usize,
 };
@@ -167,41 +171,31 @@ fn resolveMaxFeatures(model: *const DecisionTreeModel) usize {
     }
 }
 
-fn freeSplit(split: SplitResult) void {
-    allocator.free(split.left_indices);
-    allocator.free(split.right_indices);
+fn freePartition(partition: SplitPartition) void {
+    allocator.free(partition.left_indices);
+    allocator.free(partition.right_indices);
 }
 
-fn selectCandidateFeatures(model: *const DecisionTreeModel, rng: *Mulberry32) ![]usize {
-    const k = resolveMaxFeatures(model);
-    if (k >= model.n_features) {
-        const all_features = try allocator.alloc(usize, model.n_features);
-        errdefer allocator.free(all_features);
-        for (all_features, 0..) |*entry, idx| {
-            entry.* = idx;
-        }
-        return all_features;
-    }
-
-    const shuffled = try allocator.alloc(usize, model.n_features);
-    errdefer allocator.free(shuffled);
-    for (shuffled, 0..) |*entry, idx| {
+fn selectCandidateFeatures(model: *DecisionTreeModel, rng: *Mulberry32) []const usize {
+    for (model.feature_scratch, 0..) |*entry, idx| {
         entry.* = idx;
     }
 
-    var i = model.n_features;
-    while (i > 1) {
-        i -= 1;
-        const j = rng.nextIndex(i + 1);
-        const tmp = shuffled[i];
-        shuffled[i] = shuffled[j];
-        shuffled[j] = tmp;
+    const k = resolveMaxFeatures(model);
+    if (k >= model.n_features) {
+        return model.feature_scratch[0..model.n_features];
     }
 
-    const selected = try allocator.alloc(usize, k);
-    @memcpy(selected, shuffled[0..k]);
-    allocator.free(shuffled);
-    return selected;
+    var i: usize = 0;
+    while (i < k) : (i += 1) {
+        const remaining = model.n_features - i;
+        const j = i + rng.nextIndex(remaining);
+        const tmp = model.feature_scratch[i];
+        model.feature_scratch[i] = model.feature_scratch[j];
+        model.feature_scratch[j] = tmp;
+    }
+
+    return model.feature_scratch[0..k];
 }
 
 fn findBestSplitForFeature(
@@ -210,7 +204,7 @@ fn findBestSplitForFeature(
     y_ptr: [*]const u8,
     indices: []const usize,
     feature_index: usize,
-) !?SplitResult {
+) ?SplitEvaluation {
     const sample_count = indices.len;
     if (sample_count < 2) {
         return null;
@@ -282,29 +276,42 @@ fn findBestSplitForFeature(
         return null;
     }
 
-    var left_partition_count: usize = 0;
+    return SplitEvaluation{
+        .threshold = best_threshold,
+        .impurity = best_impurity,
+    };
+}
+
+fn partitionIndicesForThreshold(
+    model: *const DecisionTreeModel,
+    x_ptr: [*]const f64,
+    indices: []const usize,
+    feature_index: usize,
+    threshold: f64,
+) !?SplitPartition {
+    var left_count: usize = 0;
     for (indices) |sample_index| {
         const value = x_ptr[sample_index * model.n_features + feature_index];
-        if (value <= best_threshold) {
-            left_partition_count += 1;
+        if (value <= threshold) {
+            left_count += 1;
         }
     }
 
-    const right_partition_count = sample_count - left_partition_count;
-    if (left_partition_count < model.min_samples_leaf or right_partition_count < model.min_samples_leaf) {
+    const right_count = indices.len - left_count;
+    if (left_count < model.min_samples_leaf or right_count < model.min_samples_leaf) {
         return null;
     }
 
-    const left_indices = try allocator.alloc(usize, left_partition_count);
+    const left_indices = try allocator.alloc(usize, left_count);
     errdefer allocator.free(left_indices);
-    const right_indices = try allocator.alloc(usize, right_partition_count);
+    const right_indices = try allocator.alloc(usize, right_count);
     errdefer allocator.free(right_indices);
 
     var left_write: usize = 0;
     var right_write: usize = 0;
     for (indices) |sample_index| {
         const value = x_ptr[sample_index * model.n_features + feature_index];
-        if (value <= best_threshold) {
+        if (value <= threshold) {
             left_indices[left_write] = sample_index;
             left_write += 1;
         } else {
@@ -313,9 +320,7 @@ fn findBestSplitForFeature(
         }
     }
 
-    return SplitResult{
-        .threshold = best_threshold,
-        .impurity = best_impurity,
+    return SplitPartition{
         .left_indices = left_indices,
         .right_indices = right_indices,
     };
@@ -353,25 +358,19 @@ fn buildDecisionTreeNode(
     }
 
     const parent_impurity = giniImpurity(positive_count, sample_count);
-    const candidate_features = try selectCandidateFeatures(model, rng);
-    defer allocator.free(candidate_features);
+    const candidate_features = selectCandidateFeatures(model, rng);
 
     var best_feature: usize = 0;
-    var best_split: ?SplitResult = null;
+    var best_split: ?SplitEvaluation = null;
     var best_found = false;
 
     for (candidate_features) |feature_index| {
-        const split_opt = try findBestSplitForFeature(model, x_ptr, y_ptr, indices, feature_index);
+        const split_opt = findBestSplitForFeature(model, x_ptr, y_ptr, indices, feature_index);
         if (split_opt) |split| {
             if (!best_found or split.impurity < best_split.?.impurity) {
-                if (best_split) |previous| {
-                    freeSplit(previous);
-                }
                 best_split = split;
                 best_feature = feature_index;
                 best_found = true;
-            } else {
-                freeSplit(split);
             }
         }
     }
@@ -390,7 +389,6 @@ fn buildDecisionTreeNode(
     }
 
     const split = best_split.?;
-    defer freeSplit(split);
     if (split.impurity >= parent_impurity - 1e-12) {
         const node_index = model.nodes.items.len;
         try model.nodes.append(allocator, TreeNode{
@@ -403,6 +401,26 @@ fn buildDecisionTreeNode(
         });
         return node_index;
     }
+
+    const partition = (try partitionIndicesForThreshold(
+        model,
+        x_ptr,
+        indices,
+        best_feature,
+        split.threshold,
+    )) orelse {
+        const node_index = model.nodes.items.len;
+        try model.nodes.append(allocator, TreeNode{
+            .prediction = prediction,
+            .feature_index = 0,
+            .threshold = 0.0,
+            .left_index = 0,
+            .right_index = 0,
+            .is_leaf = true,
+        });
+        return node_index;
+    };
+    defer freePartition(partition);
 
     const node_index = model.nodes.items.len;
     try model.nodes.append(allocator, TreeNode{
@@ -418,7 +436,7 @@ fn buildDecisionTreeNode(
         model,
         x_ptr,
         y_ptr,
-        split.left_indices,
+        partition.left_indices,
         depth + 1,
         rng,
     );
@@ -426,7 +444,7 @@ fn buildDecisionTreeNode(
         model,
         x_ptr,
         y_ptr,
-        split.right_indices,
+        partition.right_indices,
         depth + 1,
         rng,
     );
@@ -1136,6 +1154,11 @@ pub export fn decision_tree_model_create(
 
     const model = allocator.create(DecisionTreeModel) catch return 0;
     errdefer allocator.destroy(model);
+    const feature_scratch = allocator.alloc(usize, n_features) catch return 0;
+    errdefer allocator.free(feature_scratch);
+    for (feature_scratch, 0..) |*entry, idx| {
+        entry.* = idx;
+    }
     model.* = .{
         .n_features = n_features,
         .max_depth = max_depth,
@@ -1147,6 +1170,7 @@ pub export fn decision_tree_model_create(
         .use_random_state = use_random_state != 0,
         .root_index = 0,
         .has_root = false,
+        .feature_scratch = feature_scratch,
         .nodes = .empty,
     };
     return @intFromPtr(model);
@@ -1154,6 +1178,7 @@ pub export fn decision_tree_model_create(
 
 pub export fn decision_tree_model_destroy(handle: usize) void {
     const model = asDecisionTreeModel(handle) orelse return;
+    allocator.free(model.feature_scratch);
     model.nodes.deinit(allocator);
     allocator.destroy(model);
 }
