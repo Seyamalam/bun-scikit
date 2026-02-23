@@ -81,3 +81,15 @@ export function f1Score(yTrue: number[], yPred: number[], positiveLabel = 1): nu
   }
   return (2 * precision * recall) / denominator;
 }
+
+export function confusionMatrix(
+  yTrue: number[],
+  yPred: number[],
+  positiveLabel = 1,
+): [[number, number], [number, number]] {
+  const { tp, fp, fn, tn } = confusionCounts(yTrue, yPred, positiveLabel);
+  return [
+    [tn, fp],
+    [fn, tp],
+  ];
+}

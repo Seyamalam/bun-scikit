@@ -171,3 +171,4 @@ Learned attributes:
 - `precisionScore(yTrue, yPred, positiveLabel?): number`
 - `recallScore(yTrue, yPred, positiveLabel?): number`
 - `f1Score(yTrue, yPred, positiveLabel?): number`
+- `confusionMatrix(yTrue, yPred, positiveLabel?): [[number, number], [number, number]]`
