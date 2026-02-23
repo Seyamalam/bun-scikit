@@ -7,6 +7,27 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-02-23
+
+### Added
+- New sklearn-style APIs:
+  - Baselines: `DummyClassifier`, `DummyRegressor`
+  - Preprocessing: `MaxAbsScaler`, `Binarizer`, `LabelEncoder`, `Normalizer`
+  - Feature selection: `VarianceThreshold`
+  - Model selection: `RandomizedSearchCV`
+  - Metrics: `balancedAccuracyScore`, `matthewsCorrcoef`, `brierScoreLoss`, `meanAbsolutePercentageError`, `explainedVarianceScore`
+- Tree backend mode benchmarking (`js-fast` vs `zig-tree` vs `python-scikit-learn`) in CI benchmark snapshots.
+- Dedicated tree backend control via `BUN_SCIKIT_TREE_BACKEND=zig`.
+
+### Changed
+- Optimized Zig decision-tree split kernel hot path using a binned splitter.
+- Wired DecisionTree native fit/predict through runtime kernel loading with safe JS fallback.
+- Extended Node-API addon to expose decision-tree native symbols.
+- Added benchmark health guardrails for tree/forest and zig-vs-js backend slowdown limits.
+- Updated README parity matrix and performance snapshot details.
+
+## [0.1.3] - 2026-02-23
+
 ### Added
 - Maintainer documentation baseline (`CONTRIBUTING`, `SECURITY`, `CODE_OF_CONDUCT`, `LICENSE`).
 - `LogisticRegression` and `KNeighborsClassifier`.

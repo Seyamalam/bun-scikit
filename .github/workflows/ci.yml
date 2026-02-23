@@ -98,6 +98,34 @@ jobs:
       - name: Run native smoke tests
         run: bun test test/linear-regression.test.ts test/logistic-regression.test.ts
 
+  zig-tree-smoke:
+    runs-on: ubuntu-latest
+    env:
+      BUN_SCIKIT_TREE_BACKEND: "zig"
+      BUN_SCIKIT_NATIVE_BRIDGE: "ffi"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.2
+
+      - name: Install dependencies
+        env:
+          BUN_SCIKIT_SKIP_NATIVE_INSTALL: "1"
+        run: bun install --frozen-lockfile
+
+      - name: Build Zig kernels
+        run: bun run native:build
+
+      - name: Run zig tree smoke tests
+        run: bun test test/decision-tree-classifier.test.ts test/random-forest-classifier.test.ts
+
   benchmarks:
     runs-on: ubuntu-latest
     env:
