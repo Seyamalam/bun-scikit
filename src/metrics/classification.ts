@@ -82,6 +82,7 @@ export function f1Score(yTrue: number[], yPred: number[], positiveLabel = 1): nu
   return (2 * precision * recall) / denominator;
 }
 
+/** Returns binary confusion matrix as [[TN, FP], [FN, TP]] where TN=true negative, FP=false positive, FN=false negative, TP=true positive. */
 export function confusionMatrix(
   yTrue: number[],
   yPred: number[],
