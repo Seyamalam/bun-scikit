@@ -36,9 +36,11 @@ interface ClassificationBenchmarkResult extends SharedBenchmarkResult {
 }
 
 type TreeModelKey = "decision_tree" | "random_forest";
+type TreeBackendMode = "js-fast" | "zig-tree";
 
 interface TreeClassificationModelResult extends ClassificationBenchmarkResult {
   key: TreeModelKey;
+  treeBackendMode: TreeBackendMode;
 }
 
 interface RegressionSuite {
@@ -80,6 +82,27 @@ interface TreeClassificationSuite {
   models: [TreeModelComparison, TreeModelComparison];
 }
 
+interface TreeBackendModeComparison {
+  key: TreeModelKey;
+  jsFast: TreeClassificationModelResult;
+  zigTree: TreeClassificationModelResult;
+  sklearn: TreeClassificationModelResult;
+  comparison: {
+    zigFitSpeedupVsJs: number;
+    zigPredictSpeedupVsJs: number;
+    jsFitSpeedupVsSklearn: number;
+    jsPredictSpeedupVsSklearn: number;
+    zigFitSpeedupVsSklearn: number;
+    zigPredictSpeedupVsSklearn: number;
+  };
+}
+
+interface TreeBackendModesSuite {
+  task: "classification-tree-backend-modes";
+  enabled: boolean;
+  models: [TreeBackendModeComparison, TreeBackendModeComparison] | [];
+}
+
 interface PythonTreeBenchPayload {
   implementation: string;
   iterations: number;
@@ -113,6 +136,7 @@ interface BenchmarkSnapshot {
     regression: RegressionSuite;
     classification: ClassificationSuite;
     treeClassification: TreeClassificationSuite;
+    treeBackendModes: TreeBackendModesSuite;
   };
 }
 
@@ -127,6 +151,14 @@ function parseArgValue(flag: string): string | null {
     return null;
   }
   return Bun.argv[index + 1];
+}
+
+function isTruthy(value: string | undefined): boolean {
+  if (!value) {
+    return false;
+  }
+  const normalized = value.trim().toLowerCase();
+  return !(normalized === "0" || normalized === "false" || normalized === "off");
 }
 
 function median(values: number[]): number {
@@ -304,42 +336,59 @@ async function runBunClassificationBenchmark(
 async function runBunTreeModelBenchmark(
   key: TreeModelKey,
   modelLabel: string,
+  treeBackendMode: TreeBackendMode,
   iterations: number,
   warmup: number,
   modelFactory: () => { fit(X: Matrix, y: Vector): unknown; predict(X: Matrix): Vector },
 ): Promise<TreeClassificationModelResult> {
+  const previousTreeBackend = process.env.BUN_SCIKIT_TREE_BACKEND;
+  if (treeBackendMode === "zig-tree") {
+    process.env.BUN_SCIKIT_TREE_BACKEND = "zig";
+  } else {
+    delete process.env.BUN_SCIKIT_TREE_BACKEND;
+  }
+
   const { split, XTrainScaled, XTestScaled } = await prepareHeartSplit();
   const fitTimes: number[] = [];
   const predictTimes: number[] = [];
   let predictionsForMetrics: number[] | null = null;
 
-  const loops = warmup + iterations;
-  for (let i = 0; i < loops; i += 1) {
-    const model = modelFactory();
+  try {
+    const loops = warmup + iterations;
+    for (let i = 0; i < loops; i += 1) {
+      const model = modelFactory();
 
-    const fitStart = performance.now();
-    model.fit(XTrainScaled, split.yTrain);
-    const fitMs = performance.now() - fitStart;
+      const fitStart = performance.now();
+      model.fit(XTrainScaled, split.yTrain);
+      const fitMs = performance.now() - fitStart;
 
-    const predictStart = performance.now();
-    const predictions = model.predict(XTestScaled);
-    const predictMs = performance.now() - predictStart;
+      const predictStart = performance.now();
+      const predictions = model.predict(XTestScaled);
+      const predictMs = performance.now() - predictStart;
 
-    if (i >= warmup) {
-      fitTimes.push(fitMs);
-      predictTimes.push(predictMs);
-      predictionsForMetrics = predictions;
+      if (i >= warmup) {
+        fitTimes.push(fitMs);
+        predictTimes.push(predictMs);
+        predictionsForMetrics = predictions;
+      }
+    }
+  } finally {
+    if (previousTreeBackend === undefined) {
+      delete process.env.BUN_SCIKIT_TREE_BACKEND;
+    } else {
+      process.env.BUN_SCIKIT_TREE_BACKEND = previousTreeBackend;
     }
   }
 
   if (!predictionsForMetrics) {
-    throw new Error(`No Bun tree benchmark iterations were recorded for ${key}.`);
+    throw new Error(`No Bun tree benchmark iterations were recorded for ${key} (${treeBackendMode}).`);
   }
 
   return {
     key,
+    treeBackendMode,
     implementation: "bun-scikit",
-    model: modelLabel,
+    model: `${modelLabel} [${treeBackendMode}]`,
     iterations,
     fitMsMedian: median(fitTimes),
     predictMsMedian: median(predictTimes),
@@ -348,17 +397,20 @@ async function runBunTreeModelBenchmark(
     environment: {
       bun: Bun.version,
       runtime: "bun",
+      treeBackendMode,
     },
   };
 }
 
-async function runBunTreeBenchmarks(
+async function runBunTreeBenchmarksForMode(
+  treeBackendMode: TreeBackendMode,
   iterations: number,
   warmup: number,
 ): Promise<[TreeClassificationModelResult, TreeClassificationModelResult]> {
   const decisionTree = await runBunTreeModelBenchmark(
     "decision_tree",
     "DecisionTreeClassifier(maxDepth=8)",
+    treeBackendMode,
     iterations,
     warmup,
     () =>
@@ -371,6 +423,7 @@ async function runBunTreeBenchmarks(
   const randomForest = await runBunTreeModelBenchmark(
     "random_forest",
     "RandomForestClassifier(nEstimators=80,maxDepth=8)",
+    treeBackendMode,
     iterations,
     warmup,
     () =>
@@ -392,6 +445,10 @@ function renderMarkdownTable(snapshot: BenchmarkSnapshot): string {
   const [bunReg, sklearnReg] = regression.results;
   const [bunCls, sklearnCls] = classification.results;
   const [decisionTree, randomForest] = treeClassification.models;
+  const treeBackendModes = snapshot.suites.treeBackendModes;
+  const hasTreeBackendModes = treeBackendModes.enabled && treeBackendModes.models.length === 2;
+  const decisionTreeModes = hasTreeBackendModes ? treeBackendModes.models[0] : null;
+  const randomForestModes = hasTreeBackendModes ? treeBackendModes.models[1] : null;
 
   return [
     "## Regression (Heart Dataset)",
@@ -437,8 +494,48 @@ function renderMarkdownTable(snapshot: BenchmarkSnapshot): string {
     `RandomForest accuracy delta (bun - sklearn): ${randomForest.comparison.accuracyDeltaVsSklearn.toExponential(3)}`,
     `RandomForest f1 delta (bun - sklearn): ${randomForest.comparison.f1DeltaVsSklearn.toExponential(3)}`,
     "",
+    "## Tree Backend Modes (Bun vs Bun vs sklearn)",
+    "",
+    hasTreeBackendModes
+      ? "| Model | Backend | Fit median (ms) | Predict median (ms) | Accuracy | F1 |"
+      : "Tree backend mode matrix disabled (`BENCH_TREE_BACKEND_MATRIX=0`).",
+    hasTreeBackendModes ? "|---|---|---:|---:|---:|---:|" : "",
+    hasTreeBackendModes
+      ? `| DecisionTreeClassifier(maxDepth=8) | js-fast | ${decisionTreeModes!.jsFast.fitMsMedian.toFixed(4)} | ${decisionTreeModes!.jsFast.predictMsMedian.toFixed(4)} | ${decisionTreeModes!.jsFast.accuracy.toFixed(6)} | ${decisionTreeModes!.jsFast.f1.toFixed(6)} |`
+      : "",
+    hasTreeBackendModes
+      ? `| DecisionTreeClassifier(maxDepth=8) | zig-tree | ${decisionTreeModes!.zigTree.fitMsMedian.toFixed(4)} | ${decisionTreeModes!.zigTree.predictMsMedian.toFixed(4)} | ${decisionTreeModes!.zigTree.accuracy.toFixed(6)} | ${decisionTreeModes!.zigTree.f1.toFixed(6)} |`
+      : "",
+    hasTreeBackendModes
+      ? `| DecisionTreeClassifier | python-scikit-learn | ${decisionTreeModes!.sklearn.fitMsMedian.toFixed(4)} | ${decisionTreeModes!.sklearn.predictMsMedian.toFixed(4)} | ${decisionTreeModes!.sklearn.accuracy.toFixed(6)} | ${decisionTreeModes!.sklearn.f1.toFixed(6)} |`
+      : "",
+    hasTreeBackendModes
+      ? `| RandomForestClassifier(nEstimators=80,maxDepth=8) | js-fast | ${randomForestModes!.jsFast.fitMsMedian.toFixed(4)} | ${randomForestModes!.jsFast.predictMsMedian.toFixed(4)} | ${randomForestModes!.jsFast.accuracy.toFixed(6)} | ${randomForestModes!.jsFast.f1.toFixed(6)} |`
+      : "",
+    hasTreeBackendModes
+      ? `| RandomForestClassifier(nEstimators=80,maxDepth=8) | zig-tree | ${randomForestModes!.zigTree.fitMsMedian.toFixed(4)} | ${randomForestModes!.zigTree.predictMsMedian.toFixed(4)} | ${randomForestModes!.zigTree.accuracy.toFixed(6)} | ${randomForestModes!.zigTree.f1.toFixed(6)} |`
+      : "",
+    hasTreeBackendModes
+      ? `| RandomForestClassifier | python-scikit-learn | ${randomForestModes!.sklearn.fitMsMedian.toFixed(4)} | ${randomForestModes!.sklearn.predictMsMedian.toFixed(4)} | ${randomForestModes!.sklearn.accuracy.toFixed(6)} | ${randomForestModes!.sklearn.f1.toFixed(6)} |`
+      : "",
+    "",
+    hasTreeBackendModes
+      ? `DecisionTree zig/js fit speedup: ${decisionTreeModes!.comparison.zigFitSpeedupVsJs.toFixed(3)}x`
+      : "",
+    hasTreeBackendModes
+      ? `DecisionTree zig/js predict speedup: ${decisionTreeModes!.comparison.zigPredictSpeedupVsJs.toFixed(3)}x`
+      : "",
+    hasTreeBackendModes
+      ? `RandomForest zig/js fit speedup: ${randomForestModes!.comparison.zigFitSpeedupVsJs.toFixed(3)}x`
+      : "",
+    hasTreeBackendModes
+      ? `RandomForest zig/js predict speedup: ${randomForestModes!.comparison.zigPredictSpeedupVsJs.toFixed(3)}x`
+      : "",
+    "",
     `Snapshot generated at: ${snapshot.generatedAt}`,
-  ].join("\n");
+  ]
+    .filter((line) => line !== "")
+    .join("\n");
 }
 
 async function main(): Promise<void> {
@@ -461,7 +558,15 @@ async function main(): Promise<void> {
 
   const bunRegression = await runBunRegressionBenchmark(iterations, warmup);
   const bunClassification = await runBunClassificationBenchmark(iterations, warmup);
-  const bunTreeBenchmarks = await runBunTreeBenchmarks(iterations, warmup);
+  const bunTreeBenchmarksJsFast = await runBunTreeBenchmarksForMode(
+    "js-fast",
+    iterations,
+    warmup,
+  );
+  const treeBackendMatrixEnabled = isTruthy(process.env.BENCH_TREE_BACKEND_MATRIX ?? "1");
+  const bunTreeBenchmarksZig = treeBackendMatrixEnabled
+    ? await runBunTreeBenchmarksForMode("zig-tree", iterations, warmup)
+    : null;
 
   const sklearnRegression = await runPythonBenchmark<RegressionBenchmarkResult>(
     "bench/python/heart_sklearn_bench.py",
@@ -509,7 +614,7 @@ async function main(): Promise<void> {
     ],
   );
 
-  const [bunDecisionTree, bunRandomForest] = bunTreeBenchmarks;
+  const [bunDecisionTree, bunRandomForest] = bunTreeBenchmarksJsFast;
   const sklearnDecisionTreeRaw = sklearnTreeBenchmarks.models.find(
     (model) => model.key === "decision_tree",
   );
@@ -523,6 +628,7 @@ async function main(): Promise<void> {
 
   const sklearnDecisionTree: TreeClassificationModelResult = {
     key: "decision_tree",
+    treeBackendMode: "js-fast",
     implementation: sklearnTreeBenchmarks.implementation,
     model: sklearnDecisionTreeRaw.model,
     iterations: sklearnTreeBenchmarks.iterations,
@@ -535,6 +641,7 @@ async function main(): Promise<void> {
 
   const sklearnRandomForest: TreeClassificationModelResult = {
     key: "random_forest",
+    treeBackendMode: "js-fast",
     implementation: sklearnTreeBenchmarks.implementation,
     model: sklearnRandomForestRaw.model,
     iterations: sklearnTreeBenchmarks.iterations,
@@ -544,6 +651,62 @@ async function main(): Promise<void> {
     f1: sklearnRandomForestRaw.f1,
     environment: sklearnTreeBenchmarks.environment,
   };
+
+  const treeBackendModes: TreeBackendModesSuite = treeBackendMatrixEnabled && bunTreeBenchmarksZig
+    ? {
+        task: "classification-tree-backend-modes",
+        enabled: true,
+        models: [
+          {
+            key: "decision_tree",
+            jsFast: bunTreeBenchmarksJsFast[0],
+            zigTree: bunTreeBenchmarksZig[0],
+            sklearn: sklearnDecisionTree,
+            comparison: {
+              zigFitSpeedupVsJs:
+                bunTreeBenchmarksJsFast[0].fitMsMedian / bunTreeBenchmarksZig[0].fitMsMedian,
+              zigPredictSpeedupVsJs:
+                bunTreeBenchmarksJsFast[0].predictMsMedian /
+                bunTreeBenchmarksZig[0].predictMsMedian,
+              jsFitSpeedupVsSklearn:
+                sklearnDecisionTree.fitMsMedian / bunTreeBenchmarksJsFast[0].fitMsMedian,
+              jsPredictSpeedupVsSklearn:
+                sklearnDecisionTree.predictMsMedian / bunTreeBenchmarksJsFast[0].predictMsMedian,
+              zigFitSpeedupVsSklearn:
+                sklearnDecisionTree.fitMsMedian / bunTreeBenchmarksZig[0].fitMsMedian,
+              zigPredictSpeedupVsSklearn:
+                sklearnDecisionTree.predictMsMedian / bunTreeBenchmarksZig[0].predictMsMedian,
+            },
+          },
+          {
+            key: "random_forest",
+            jsFast: bunTreeBenchmarksJsFast[1],
+            zigTree: bunTreeBenchmarksZig[1],
+            sklearn: sklearnRandomForest,
+            comparison: {
+              zigFitSpeedupVsJs:
+                bunTreeBenchmarksJsFast[1].fitMsMedian / bunTreeBenchmarksZig[1].fitMsMedian,
+              zigPredictSpeedupVsJs:
+                bunTreeBenchmarksJsFast[1].predictMsMedian /
+                bunTreeBenchmarksZig[1].predictMsMedian,
+              jsFitSpeedupVsSklearn:
+                sklearnRandomForest.fitMsMedian / bunTreeBenchmarksJsFast[1].fitMsMedian,
+              jsPredictSpeedupVsSklearn:
+                sklearnRandomForest.predictMsMedian /
+                bunTreeBenchmarksJsFast[1].predictMsMedian,
+              zigFitSpeedupVsSklearn:
+                sklearnRandomForest.fitMsMedian / bunTreeBenchmarksZig[1].fitMsMedian,
+              zigPredictSpeedupVsSklearn:
+                sklearnRandomForest.predictMsMedian / bunTreeBenchmarksZig[1].predictMsMedian,
+            },
+          },
+        ],
+      }
+    : {
+        task: "classification-tree-backend-modes",
+        enabled: false,
+        models: [],
+      };
 
   const snapshot: BenchmarkSnapshot = {
     generatedAt: new Date().toISOString(),
@@ -617,6 +780,7 @@ async function main(): Promise<void> {
           },
         ],
       },
+      treeBackendModes,
     },
   };
 
@@ -636,6 +800,18 @@ async function main(): Promise<void> {
   console.log(`DecisionTree sklearn fit median: ${formatMs(sklearnDecisionTree.fitMsMedian)}`);
   console.log(`RandomForest Bun fit median: ${formatMs(bunRandomForest.fitMsMedian)}`);
   console.log(`RandomForest sklearn fit median: ${formatMs(sklearnRandomForest.fitMsMedian)}`);
+  if (treeBackendModes.enabled) {
+    const [decisionTreeModeComparison, randomForestModeComparison] = treeBackendModes.models;
+    if (!decisionTreeModeComparison || !randomForestModeComparison) {
+      throw new Error("treeBackendModes is enabled but missing comparison entries.");
+    }
+    console.log(
+      `DecisionTree zig/js fit speedup: ${decisionTreeModeComparison.comparison.zigFitSpeedupVsJs.toFixed(3)}x`,
+    );
+    console.log(
+      `RandomForest zig/js fit speedup: ${randomForestModeComparison.comparison.zigFitSpeedupVsJs.toFixed(3)}x`,
+    );
+  }
 }
 
 main().catch((error) => {

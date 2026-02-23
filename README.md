@@ -94,10 +94,11 @@ Optional env vars:
 
 Latest CI snapshot on `test_data/heart.csv` vs Python scikit-learn:
 
-- Regression: fit `1.52x`, predict `1.68x`
-- Classification: fit `2.31x`, predict `2.57x`
-- DecisionTree: fit `1.83x`, predict `5.24x`
-- RandomForest: fit `6.26x`, predict `3.50x`
+- Regression: fit `1.67x`, predict `1.84x`
+- Classification: fit `1.78x`, predict `2.66x`
+- DecisionTree (`js-fast`): fit `1.54x`, predict `4.06x`
+- RandomForest (`js-fast`): fit `2.59x`, predict `1.29x`
+- Tree backend matrix (`js-fast` vs `zig-tree` vs `sklearn`) is included in `bench/results/heart-ci-latest.md`
 
 Raw benchmark artifacts:
 

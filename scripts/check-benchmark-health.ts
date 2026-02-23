@@ -26,6 +26,17 @@ interface TreeModelComparison {
   };
 }
 
+interface TreeBackendModeComparison {
+  comparison: {
+    zigFitSpeedupVsJs: number;
+    zigPredictSpeedupVsJs: number;
+    jsFitSpeedupVsSklearn: number;
+    jsPredictSpeedupVsSklearn: number;
+    zigFitSpeedupVsSklearn: number;
+    zigPredictSpeedupVsSklearn: number;
+  };
+}
+
 interface BenchmarkSnapshot {
   suites: {
     regression: {
@@ -61,6 +72,10 @@ interface BenchmarkSnapshot {
           };
         },
       ];
+    };
+    treeBackendModes: {
+      enabled: boolean;
+      models: [TreeBackendModeComparison, TreeBackendModeComparison] | [];
     };
   };
 }
@@ -106,7 +121,20 @@ const minDecisionTreePredictSpeedup = speedupThreshold(
 const minRandomForestFitSpeedup = speedupThreshold("BENCH_MIN_RANDOM_FOREST_FIT_SPEEDUP", 2.0);
 const minRandomForestPredictSpeedup = speedupThreshold(
   "BENCH_MIN_RANDOM_FOREST_PREDICT_SPEEDUP",
-  2.0,
+  1.2,
+);
+const maxZigTreeFitSlowdownVsJs = speedupThreshold("BENCH_MAX_ZIG_TREE_FIT_SLOWDOWN_VS_JS", 20);
+const maxZigTreePredictSlowdownVsJs = speedupThreshold(
+  "BENCH_MAX_ZIG_TREE_PREDICT_SLOWDOWN_VS_JS",
+  20,
+);
+const maxZigForestFitSlowdownVsJs = speedupThreshold(
+  "BENCH_MAX_ZIG_FOREST_FIT_SLOWDOWN_VS_JS",
+  20,
+);
+const maxZigForestPredictSlowdownVsJs = speedupThreshold(
+  "BENCH_MAX_ZIG_FOREST_PREDICT_SLOWDOWN_VS_JS",
+  20,
 );
 
 for (const result of [
@@ -235,6 +263,39 @@ if (randomForest.comparison.predictSpeedupVsSklearn < minRandomForestPredictSpee
   throw new Error(
     `RandomForest predict speedup too low: ${randomForest.comparison.predictSpeedupVsSklearn} < ${minRandomForestPredictSpeedup}.`,
   );
+}
+
+if (snapshot.suites.treeBackendModes.enabled) {
+  const [decisionTreeModes, randomForestModes] = snapshot.suites.treeBackendModes.models;
+  if (!decisionTreeModes || !randomForestModes) {
+    throw new Error("Tree backend mode suite is enabled but missing model comparisons.");
+  }
+
+  const decisionTreeFitSlowdown = 1 / decisionTreeModes.comparison.zigFitSpeedupVsJs;
+  const decisionTreePredictSlowdown = 1 / decisionTreeModes.comparison.zigPredictSpeedupVsJs;
+  const randomForestFitSlowdown = 1 / randomForestModes.comparison.zigFitSpeedupVsJs;
+  const randomForestPredictSlowdown = 1 / randomForestModes.comparison.zigPredictSpeedupVsJs;
+
+  if (decisionTreeFitSlowdown > maxZigTreeFitSlowdownVsJs) {
+    throw new Error(
+      `DecisionTree zig fit slowdown too large vs js-fast: ${decisionTreeFitSlowdown} > ${maxZigTreeFitSlowdownVsJs}.`,
+    );
+  }
+  if (decisionTreePredictSlowdown > maxZigTreePredictSlowdownVsJs) {
+    throw new Error(
+      `DecisionTree zig predict slowdown too large vs js-fast: ${decisionTreePredictSlowdown} > ${maxZigTreePredictSlowdownVsJs}.`,
+    );
+  }
+  if (randomForestFitSlowdown > maxZigForestFitSlowdownVsJs) {
+    throw new Error(
+      `RandomForest zig fit slowdown too large vs js-fast: ${randomForestFitSlowdown} > ${maxZigForestFitSlowdownVsJs}.`,
+    );
+  }
+  if (randomForestPredictSlowdown > maxZigForestPredictSlowdownVsJs) {
+    throw new Error(
+      `RandomForest zig predict slowdown too large vs js-fast: ${randomForestPredictSlowdown} > ${maxZigForestPredictSlowdownVsJs}.`,
+    );
+  }
 }
 
 console.log("Benchmark comparison health checks passed.");

@@ -84,6 +84,8 @@ const SplitResult = struct {
     right_indices: []usize,
 };
 
+const MAX_THRESHOLD_BINS: usize = 128;
+
 const Mulberry32 = struct {
     state: u32,
 
@@ -213,52 +215,52 @@ fn findBestSplitForFeature(
     if (sample_count < 2) {
         return null;
     }
-
-    const sorted_indices = try allocator.alloc(usize, sample_count);
-    defer allocator.free(sorted_indices);
-    @memcpy(sorted_indices, indices);
-
-    const SortContext = struct {
-        x_ptr: [*]const f64,
-        n_features: usize,
-        feature_index: usize,
-        fn lessThan(ctx: @This(), a: usize, b: usize) bool {
-            return ctx.x_ptr[a * ctx.n_features + ctx.feature_index] <
-                ctx.x_ptr[b * ctx.n_features + ctx.feature_index];
-        }
-    };
-    std.sort.heap(usize, sorted_indices, SortContext{
-        .x_ptr = x_ptr,
-        .n_features = model.n_features,
-        .feature_index = feature_index,
-    }, SortContext.lessThan);
-
+    var min_value = std.math.inf(f64);
+    var max_value = -std.math.inf(f64);
     var total_positive: usize = 0;
-    for (sorted_indices) |sample_index| {
+    for (indices) |sample_index| {
+        const value = x_ptr[sample_index * model.n_features + feature_index];
+        if (value < min_value) {
+            min_value = value;
+        }
+        if (value > max_value) {
+            max_value = value;
+        }
         total_positive += y_ptr[sample_index];
+    }
+
+    if (!std.math.isFinite(min_value) or !std.math.isFinite(max_value) or min_value == max_value) {
+        return null;
+    }
+
+    const dynamic_bins = @as(usize, @intFromFloat(@floor(@sqrt(@as(f64, @floatFromInt(sample_count))))));
+    const bin_count = std.math.clamp(dynamic_bins, 16, MAX_THRESHOLD_BINS);
+    var bin_totals: [MAX_THRESHOLD_BINS]usize = [_]usize{0} ** MAX_THRESHOLD_BINS;
+    var bin_positives: [MAX_THRESHOLD_BINS]usize = [_]usize{0} ** MAX_THRESHOLD_BINS;
+    const value_range = max_value - min_value;
+
+    for (indices) |sample_index| {
+        const value = x_ptr[sample_index * model.n_features + feature_index];
+        var bin_index = @as(usize, @intFromFloat(@floor(((value - min_value) / value_range) * @as(f64, @floatFromInt(bin_count)))));
+        if (bin_index >= bin_count) {
+            bin_index = bin_count - 1;
+        }
+        bin_totals[bin_index] += 1;
+        bin_positives[bin_index] += y_ptr[sample_index];
     }
 
     var left_count: usize = 0;
     var left_positive: usize = 0;
     var best_impurity = std.math.inf(f64);
     var best_threshold: f64 = 0.0;
-    var best_split_index: usize = 0;
     var found = false;
 
-    var i: usize = 1;
-    while (i < sample_count) : (i += 1) {
-        const previous_index = sorted_indices[i - 1];
-        left_count += 1;
-        left_positive += y_ptr[previous_index];
+    var bin: usize = 0;
+    while (bin + 1 < bin_count) : (bin += 1) {
+        left_count += bin_totals[bin];
+        left_positive += bin_positives[bin];
         const right_count = sample_count - left_count;
-
         if (left_count < model.min_samples_leaf or right_count < model.min_samples_leaf) {
-            continue;
-        }
-
-        const left_value = x_ptr[previous_index * model.n_features + feature_index];
-        const right_value = x_ptr[sorted_indices[i] * model.n_features + feature_index];
-        if (left_value == right_value) {
             continue;
         }
 
@@ -271,8 +273,7 @@ fn findBestSplitForFeature(
 
         if (impurity < best_impurity) {
             best_impurity = impurity;
-            best_threshold = (left_value + right_value) / 2.0;
-            best_split_index = i;
+            best_threshold = min_value + (value_range * @as(f64, @floatFromInt(bin + 1))) / @as(f64, @floatFromInt(bin_count));
             found = true;
         }
     }
@@ -281,14 +282,36 @@ fn findBestSplitForFeature(
         return null;
     }
 
-    const left_indices = try allocator.alloc(usize, best_split_index);
+    var left_partition_count: usize = 0;
+    for (indices) |sample_index| {
+        const value = x_ptr[sample_index * model.n_features + feature_index];
+        if (value <= best_threshold) {
+            left_partition_count += 1;
+        }
+    }
+
+    const right_partition_count = sample_count - left_partition_count;
+    if (left_partition_count < model.min_samples_leaf or right_partition_count < model.min_samples_leaf) {
+        return null;
+    }
+
+    const left_indices = try allocator.alloc(usize, left_partition_count);
     errdefer allocator.free(left_indices);
-    const right_size = sample_count - best_split_index;
-    const right_indices = try allocator.alloc(usize, right_size);
+    const right_indices = try allocator.alloc(usize, right_partition_count);
     errdefer allocator.free(right_indices);
 
-    @memcpy(left_indices, sorted_indices[0..best_split_index]);
-    @memcpy(right_indices, sorted_indices[best_split_index..]);
+    var left_write: usize = 0;
+    var right_write: usize = 0;
+    for (indices) |sample_index| {
+        const value = x_ptr[sample_index * model.n_features + feature_index];
+        if (value <= best_threshold) {
+            left_indices[left_write] = sample_index;
+            left_write += 1;
+        } else {
+            right_indices[right_write] = sample_index;
+            right_write += 1;
+        }
+    }
 
     return SplitResult{
         .threshold = best_threshold,

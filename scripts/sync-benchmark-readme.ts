@@ -62,6 +62,19 @@ interface BenchmarkSnapshot {
     treeClassification: {
       models: [TreeModelComparison, TreeModelComparison];
     };
+    treeBackendModes?: {
+      enabled: boolean;
+      models: Array<{
+        key: TreeModelKey;
+        jsFast: ClassificationBenchmarkResult;
+        zigTree: ClassificationBenchmarkResult;
+        sklearn: ClassificationBenchmarkResult;
+        comparison: {
+          zigFitSpeedupVsJs: number;
+          zigPredictSpeedupVsJs: number;
+        };
+      }>;
+    };
   };
 }
 
@@ -89,6 +102,11 @@ function renderBenchmarkSection(snapshot: BenchmarkSnapshot): string {
   const [bunReg, sklearnReg] = regression.results;
   const [bunCls, sklearnCls] = classification.results;
   const [decisionTree, randomForest] = treeClassification.models;
+  const treeBackendModes = snapshot.suites.treeBackendModes;
+  const hasTreeBackendModes =
+    treeBackendModes?.enabled === true && Array.isArray(treeBackendModes.models) && treeBackendModes.models.length === 2;
+  const decisionTreeModes = hasTreeBackendModes ? treeBackendModes.models[0] : null;
+  const randomForestModes = hasTreeBackendModes ? treeBackendModes.models[1] : null;
 
   return [
     START_MARKER,
@@ -137,6 +155,44 @@ function renderBenchmarkSection(snapshot: BenchmarkSnapshot): string {
     `RandomForest predict speedup vs scikit-learn: ${randomForest.comparison.predictSpeedupVsSklearn.toFixed(3)}x`,
     `RandomForest accuracy delta (bun - sklearn): ${randomForest.comparison.accuracyDeltaVsSklearn.toExponential(3)}`,
     `RandomForest f1 delta (bun - sklearn): ${randomForest.comparison.f1DeltaVsSklearn.toExponential(3)}`,
+    "",
+    "### Tree Backend Modes (Bun vs Bun vs sklearn)",
+    "",
+    hasTreeBackendModes
+      ? "| Model | Backend | Fit median (ms) | Predict median (ms) | Accuracy | F1 |"
+      : "Tree backend mode matrix disabled (`BENCH_TREE_BACKEND_MATRIX=0`).",
+    hasTreeBackendModes ? "|---|---|---:|---:|---:|---:|" : "",
+    hasTreeBackendModes
+      ? `| DecisionTreeClassifier(maxDepth=8) | js-fast | ${decisionTreeModes!.jsFast.fitMsMedian.toFixed(4)} | ${decisionTreeModes!.jsFast.predictMsMedian.toFixed(4)} | ${decisionTreeModes!.jsFast.accuracy.toFixed(6)} | ${decisionTreeModes!.jsFast.f1.toFixed(6)} |`
+      : "",
+    hasTreeBackendModes
+      ? `| DecisionTreeClassifier(maxDepth=8) | zig-tree | ${decisionTreeModes!.zigTree.fitMsMedian.toFixed(4)} | ${decisionTreeModes!.zigTree.predictMsMedian.toFixed(4)} | ${decisionTreeModes!.zigTree.accuracy.toFixed(6)} | ${decisionTreeModes!.zigTree.f1.toFixed(6)} |`
+      : "",
+    hasTreeBackendModes
+      ? `| DecisionTreeClassifier | python-scikit-learn | ${decisionTreeModes!.sklearn.fitMsMedian.toFixed(4)} | ${decisionTreeModes!.sklearn.predictMsMedian.toFixed(4)} | ${decisionTreeModes!.sklearn.accuracy.toFixed(6)} | ${decisionTreeModes!.sklearn.f1.toFixed(6)} |`
+      : "",
+    hasTreeBackendModes
+      ? `| RandomForestClassifier(nEstimators=80,maxDepth=8) | js-fast | ${randomForestModes!.jsFast.fitMsMedian.toFixed(4)} | ${randomForestModes!.jsFast.predictMsMedian.toFixed(4)} | ${randomForestModes!.jsFast.accuracy.toFixed(6)} | ${randomForestModes!.jsFast.f1.toFixed(6)} |`
+      : "",
+    hasTreeBackendModes
+      ? `| RandomForestClassifier(nEstimators=80,maxDepth=8) | zig-tree | ${randomForestModes!.zigTree.fitMsMedian.toFixed(4)} | ${randomForestModes!.zigTree.predictMsMedian.toFixed(4)} | ${randomForestModes!.zigTree.accuracy.toFixed(6)} | ${randomForestModes!.zigTree.f1.toFixed(6)} |`
+      : "",
+    hasTreeBackendModes
+      ? `| RandomForestClassifier | python-scikit-learn | ${randomForestModes!.sklearn.fitMsMedian.toFixed(4)} | ${randomForestModes!.sklearn.predictMsMedian.toFixed(4)} | ${randomForestModes!.sklearn.accuracy.toFixed(6)} | ${randomForestModes!.sklearn.f1.toFixed(6)} |`
+      : "",
+    "",
+    hasTreeBackendModes
+      ? `DecisionTree zig/js fit speedup: ${decisionTreeModes!.comparison.zigFitSpeedupVsJs.toFixed(3)}x`
+      : "",
+    hasTreeBackendModes
+      ? `DecisionTree zig/js predict speedup: ${decisionTreeModes!.comparison.zigPredictSpeedupVsJs.toFixed(3)}x`
+      : "",
+    hasTreeBackendModes
+      ? `RandomForest zig/js fit speedup: ${randomForestModes!.comparison.zigFitSpeedupVsJs.toFixed(3)}x`
+      : "",
+    hasTreeBackendModes
+      ? `RandomForest zig/js predict speedup: ${randomForestModes!.comparison.zigPredictSpeedupVsJs.toFixed(3)}x`
+      : "",
     "",
     `Snapshot generated at: ${snapshot.generatedAt}`,
     END_MARKER,
