@@ -103,6 +103,7 @@ jobs:
     env:
       BUN_SCIKIT_TREE_BACKEND: "zig"
       BUN_SCIKIT_NATIVE_BRIDGE: "ffi"
+      BUN_SCIKIT_REQUIRE_ZIG_BACKEND: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -124,7 +125,7 @@ jobs:
         run: bun run native:build
 
       - name: Run zig tree smoke tests
-        run: bun test test/decision-tree-classifier.test.ts test/random-forest-classifier.test.ts
+        run: bun test test/zig-backend-guard.test.ts test/decision-tree-classifier.test.ts test/random-forest-classifier.test.ts
 
   benchmarks:
     runs-on: ubuntu-latest

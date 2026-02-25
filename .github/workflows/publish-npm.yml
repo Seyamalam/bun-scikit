@@ -15,11 +15,67 @@ permissions:
   id-token: write
 
 jobs:
+  build-native:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: linux-x64
+            kernelExt: so
+          - os: windows-latest
+            target: windows-x64
+            kernelExt: dll
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag || github.sha }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.2
+
+      - name: Install dependencies
+        env:
+          BUN_SCIKIT_SKIP_NATIVE_INSTALL: "1"
+        run: bun install --frozen-lockfile
+
+      - name: Build native artifacts
+        run: bun run native:build:all
+
+      - name: Collect native binaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "dist/publish-native/${{ matrix.target }}"
+          cp "dist/native/bun_scikit_kernels.${{ matrix.kernelExt }}" "dist/publish-native/${{ matrix.target }}/bun_scikit_kernels.${{ matrix.kernelExt }}"
+          cp "dist/native/bun_scikit_node_addon.node" "dist/publish-native/${{ matrix.target }}/bun_scikit_node_addon.node"
+
+      - name: Upload native binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-${{ matrix.target }}
+          path: dist/publish-native/${{ matrix.target }}/*
+
   publish:
+    needs: build-native
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag || github.sha }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -30,10 +86,42 @@ jobs:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Download linux native binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: native-linux-x64
+          path: dist/publish-native/linux-x64
+
+      - name: Download windows native binaries
+        uses: actions/download-artifact@v4
+        with:
+          name: native-windows-x64
+          path: dist/publish-native/windows-x64
+
+      - name: Assemble package prebuilt directory from fresh artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p prebuilt/linux-x64 prebuilt/windows-x64
+          cp dist/publish-native/linux-x64/bun_scikit_kernels.so prebuilt/linux-x64/bun_scikit_kernels.so
+          cp dist/publish-native/linux-x64/bun_scikit_node_addon.node prebuilt/linux-x64/bun_scikit_node_addon.node
+          cp dist/publish-native/windows-x64/bun_scikit_kernels.dll prebuilt/windows-x64/bun_scikit_kernels.dll
+          cp dist/publish-native/windows-x64/bun_scikit_node_addon.node prebuilt/windows-x64/bun_scikit_node_addon.node
+
       - name: Install dependencies
         env:
           BUN_SCIKIT_SKIP_NATIVE_INSTALL: "1"
         run: bun install --frozen-lockfile
+
+      - name: Verify tag and package.json version match
+        if: ${{ github.event_name == 'release' || inputs.tag != '' }}
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.tag }}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "v${PKG_VERSION}" != "${TAG}" ]; then
+            echo "Tag/version mismatch: tag=${TAG}, package.json=${PKG_VERSION}"
+            exit 1
+          fi
 
       - name: Verify package version is unpublished
         run: |
@@ -43,6 +131,27 @@ jobs:
             echo "Version already exists on npm: ${PKG_NAME}@${PKG_VERSION}"
             exit 1
           fi
+
+      - name: Consumer smoke test from npm pack
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          npm pack --silent
+          mkdir -p /tmp/bun-scikit-publish-smoke
+          cd /tmp/bun-scikit-publish-smoke
+          bun init -y
+          bun add "${GITHUB_WORKSPACE}/bun-scikit-${PKG_VERSION}.tgz"
+          cat > index.ts <<'EOF'
+          import { LinearRegression, LogisticRegression } from "bun-scikit";
+          const X = [[1],[2],[3],[4]];
+          const yReg = [2,4,6,8];
+          const yCls = [0,0,1,1];
+          const r = new LinearRegression({ solver: "normal" });
+          r.fit(X, yReg);
+          const c = new LogisticRegression({ maxIter: 50, learningRate: 0.5, tolerance: 1e-5 });
+          c.fit(X, yCls);
+          console.log(r.predict([[5]])[0], c.predict([[1],[4]]));
+          EOF
+          bun run index.ts
 
       - name: Publish package
         env:

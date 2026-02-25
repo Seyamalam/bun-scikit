@@ -7,6 +7,18 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-02-25
+
+### Added
+- CI Zig backend guard test (`test/zig-backend-guard.test.ts`) and enforced zig-tree smoke job gate (`BUN_SCIKIT_REQUIRE_ZIG_BACKEND=1`).
+
+### Changed
+- `Publish to npm` workflow now builds native artifacts in-job (Linux + Windows), assembles `prebuilt/*` from those fresh outputs, runs a consumer smoke test from `npm pack`, and only then publishes.
+- Tree/forest backend path remains Zig-first with JS fallback, with stricter CI verification in Zig mode.
+
+### Fixed
+- Native kernel loading now tolerates prebuilt libraries that do not export random-forest symbols while still loading linear/logistic/tree symbols.
+
 ## [0.1.4] - 2026-02-23
 
 ### Added
