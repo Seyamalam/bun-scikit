@@ -1,6 +1,17 @@
 const std = @import("std");
 const common = @import("./common.zig");
 
+const EXACT_SPLIT_MAX_SAMPLES: usize = 88;
+
+const FeatureSample = struct {
+    value: f64,
+    label: u8,
+};
+
+fn featureSampleLessThan(_: void, a: FeatureSample, b: FeatureSample) bool {
+    return a.value < b.value;
+}
+
 fn resolveMaxFeatures(model: *const common.DecisionTreeModel) usize {
     switch (model.max_features_mode) {
         0 => return model.n_features,
@@ -79,8 +90,64 @@ fn findBestSplitForFeature(
         return null;
     }
 
+    if (sample_count <= EXACT_SPLIT_MAX_SAMPLES) {
+        var sorted: [EXACT_SPLIT_MAX_SAMPLES]FeatureSample = undefined;
+        for (indices, 0..) |sample_index, idx| {
+            sorted[idx] = .{
+                .value = x_ptr[sample_index * model.n_features + feature_index],
+                .label = y_ptr[sample_index],
+            };
+        }
+        const sorted_samples = sorted[0..sample_count];
+        std.sort.pdq(FeatureSample, sorted_samples, {}, featureSampleLessThan);
+
+        var left_count: usize = 0;
+        var left_positive: usize = 0;
+        var best_impurity = std.math.inf(f64);
+        var best_threshold: f64 = 0.0;
+        var found = false;
+
+        var split_index: usize = 0;
+        while (split_index + 1 < sample_count) : (split_index += 1) {
+            left_count += 1;
+            left_positive += sorted_samples[split_index].label;
+
+            const current_value = sorted_samples[split_index].value;
+            const next_value = sorted_samples[split_index + 1].value;
+            if (current_value == next_value) {
+                continue;
+            }
+
+            const right_count = sample_count - left_count;
+            if (left_count < model.min_samples_leaf or right_count < model.min_samples_leaf) {
+                continue;
+            }
+
+            const right_positive = total_positive - left_positive;
+            const impurity =
+                (@as(f64, @floatFromInt(left_count)) / @as(f64, @floatFromInt(sample_count))) *
+                    common.giniImpurity(left_positive, left_count) +
+                (@as(f64, @floatFromInt(right_count)) / @as(f64, @floatFromInt(sample_count))) *
+                    common.giniImpurity(right_positive, right_count);
+
+            if (impurity < best_impurity) {
+                best_impurity = impurity;
+                best_threshold = (current_value + next_value) * 0.5;
+                found = true;
+            }
+        }
+
+        if (!found) {
+            return null;
+        }
+        return .{
+            .threshold = best_threshold,
+            .impurity = best_impurity,
+        };
+    }
+
     const dynamic_bins = @as(usize, @intFromFloat(@floor(@sqrt(@as(f64, @floatFromInt(sample_count))))));
-    const bin_count = std.math.clamp(dynamic_bins, 6, common.MAX_THRESHOLD_BINS);
+    const bin_count = std.math.clamp(dynamic_bins, 16, common.MAX_THRESHOLD_BINS);
     var bin_totals: [common.MAX_THRESHOLD_BINS]usize = [_]usize{0} ** common.MAX_THRESHOLD_BINS;
     var bin_positives: [common.MAX_THRESHOLD_BINS]usize = [_]usize{0} ** common.MAX_THRESHOLD_BINS;
     const value_range = max_value - min_value;

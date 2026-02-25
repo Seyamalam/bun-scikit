@@ -67,7 +67,7 @@ pub const SplitPartition = struct {
     right_indices: []usize,
 };
 
-pub const MAX_THRESHOLD_BINS: usize = 32;
+pub const MAX_THRESHOLD_BINS: usize = 128;
 
 pub const Mulberry32 = struct {
     state: u32,
