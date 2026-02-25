@@ -12,7 +12,13 @@ permissions:
   contents: write
 
 jobs:
+  release-prep:
+    uses: ./.github/workflows/release-prep.yml
+    with:
+      ref: ${{ github.ref }}
+
   build-assets:
+    needs: release-prep
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false

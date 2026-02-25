@@ -7,6 +7,21 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Reusable `Release Prep` workflow (`.github/workflows/release-prep.yml`) that gates release pipelines with tests, typecheck, Zig guard checks, benchmark checks, README benchmark sync checks, and npm-pack smoke validation.
+- Zig backend smoke example for users: `examples/zig-backend-smoke.ts`.
+
+### Changed
+- README install docs now include a post-install Zig backend smoke check for `DecisionTreeClassifier` and `RandomForestClassifier`.
+- README benchmark section is now marker-driven and auto-generated from `bench/results/heart-ci-latest.json` via `scripts/sync-benchmark-readme.ts`.
+- `bench:snapshot` now also runs `bench:sync-readme`.
+- `Benchmark Snapshot` workflow now commits README benchmark updates.
+- CI benchmark gating now enforces tighter zig/js slowdown limits and README benchmark sync.
+
+### Improved
+- Zig tree predict path uses row-pointer traversal and compact `u32` node indices for better cache behavior.
+- Tree splitter threshold bin cap increased from 24 to 32 for improved split quality.
+
 ## [0.1.6] - 2026-02-25
 
 ### Added

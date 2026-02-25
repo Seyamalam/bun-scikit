@@ -5,8 +5,13 @@ Use this checklist for each release.
 ## 1) Pre-release validation
 
 - Ensure `main` CI is green.
-- Ensure benchmark health checks pass (`bun run bench:health`).
-- Ensure README benchmark block is in sync (`bun run bench:readme:check`).
+- Run `Release Prep` workflow (or rely on release-triggered `release-prep` gate) and confirm it passes:
+  - tests
+  - typecheck
+  - Zig backend guard test
+  - benchmark run + `bench:health`
+  - `bench:readme:check`
+  - `npm pack` consumer smoke test
 
 ## 2) Version bump
 
@@ -18,6 +23,7 @@ Use this checklist for each release.
 
 - Create GitHub release with tag `vX.Y.Z` pointing to `main`.
 - This triggers:
+  - `Release Prep` (blocking gate)
   - `Release Native Prebuilds` (linux/windows assets)
   - `Publish to npm` (if `NPM_TOKEN` is configured)
 

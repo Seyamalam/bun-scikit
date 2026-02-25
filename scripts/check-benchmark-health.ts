@@ -27,6 +27,8 @@ interface TreeModelComparison {
 }
 
 interface TreeBackendModeComparison {
+  jsFast: ClassificationBenchmarkResult;
+  zigTree: ClassificationBenchmarkResult;
   comparison: {
     zigFitSpeedupVsJs: number;
     zigPredictSpeedupVsJs: number;
@@ -136,18 +138,34 @@ const minRandomForestPredictSpeedup = speedupThreshold(
   "BENCH_MIN_RANDOM_FOREST_PREDICT_SPEEDUP",
   1.2,
 );
-const maxZigTreeFitSlowdownVsJs = speedupThreshold("BENCH_MAX_ZIG_TREE_FIT_SLOWDOWN_VS_JS", 20);
+const maxZigTreeFitSlowdownVsJs = speedupThreshold("BENCH_MAX_ZIG_TREE_FIT_SLOWDOWN_VS_JS", 4);
 const maxZigTreePredictSlowdownVsJs = speedupThreshold(
   "BENCH_MAX_ZIG_TREE_PREDICT_SLOWDOWN_VS_JS",
-  20,
+  4,
 );
 const maxZigForestFitSlowdownVsJs = speedupThreshold(
   "BENCH_MAX_ZIG_FOREST_FIT_SLOWDOWN_VS_JS",
-  20,
+  4,
 );
 const maxZigForestPredictSlowdownVsJs = speedupThreshold(
   "BENCH_MAX_ZIG_FOREST_PREDICT_SLOWDOWN_VS_JS",
-  20,
+  4,
+);
+const maxZigTreeAccuracyDropVsJs = speedupThreshold(
+  "BENCH_MAX_ZIG_TREE_ACCURACY_DROP_VS_JS",
+  0.06,
+);
+const maxZigTreeF1DropVsJs = speedupThreshold(
+  "BENCH_MAX_ZIG_TREE_F1_DROP_VS_JS",
+  0.06,
+);
+const maxZigForestAccuracyDropVsJs = speedupThreshold(
+  "BENCH_MAX_ZIG_FOREST_ACCURACY_DROP_VS_JS",
+  0.03,
+);
+const maxZigForestF1DropVsJs = speedupThreshold(
+  "BENCH_MAX_ZIG_FOREST_F1_DROP_VS_JS",
+  0.03,
 );
 const minZigTreeFitRetentionVsBaseline = speedupThreshold(
   "BENCH_MIN_ZIG_TREE_FIT_RETENTION_VS_BASELINE",
@@ -296,6 +314,10 @@ if (snapshot.suites.treeBackendModes.enabled) {
   const decisionTreePredictSlowdown = 1 / decisionTreeModes.comparison.zigPredictSpeedupVsJs;
   const randomForestFitSlowdown = 1 / randomForestModes.comparison.zigFitSpeedupVsJs;
   const randomForestPredictSlowdown = 1 / randomForestModes.comparison.zigPredictSpeedupVsJs;
+  const decisionTreeAccuracyDropVsJs = decisionTreeModes.jsFast.accuracy - decisionTreeModes.zigTree.accuracy;
+  const decisionTreeF1DropVsJs = decisionTreeModes.jsFast.f1 - decisionTreeModes.zigTree.f1;
+  const randomForestAccuracyDropVsJs = randomForestModes.jsFast.accuracy - randomForestModes.zigTree.accuracy;
+  const randomForestF1DropVsJs = randomForestModes.jsFast.f1 - randomForestModes.zigTree.f1;
 
   if (decisionTreeFitSlowdown > maxZigTreeFitSlowdownVsJs) {
     throw new Error(
@@ -315,6 +337,26 @@ if (snapshot.suites.treeBackendModes.enabled) {
   if (randomForestPredictSlowdown > maxZigForestPredictSlowdownVsJs) {
     throw new Error(
       `RandomForest zig predict slowdown too large vs js-fast: ${randomForestPredictSlowdown} > ${maxZigForestPredictSlowdownVsJs}.`,
+    );
+  }
+  if (decisionTreeAccuracyDropVsJs > maxZigTreeAccuracyDropVsJs) {
+    throw new Error(
+      `DecisionTree zig accuracy drop too large vs js-fast: ${decisionTreeAccuracyDropVsJs} > ${maxZigTreeAccuracyDropVsJs}.`,
+    );
+  }
+  if (decisionTreeF1DropVsJs > maxZigTreeF1DropVsJs) {
+    throw new Error(
+      `DecisionTree zig F1 drop too large vs js-fast: ${decisionTreeF1DropVsJs} > ${maxZigTreeF1DropVsJs}.`,
+    );
+  }
+  if (randomForestAccuracyDropVsJs > maxZigForestAccuracyDropVsJs) {
+    throw new Error(
+      `RandomForest zig accuracy drop too large vs js-fast: ${randomForestAccuracyDropVsJs} > ${maxZigForestAccuracyDropVsJs}.`,
+    );
+  }
+  if (randomForestF1DropVsJs > maxZigForestF1DropVsJs) {
+    throw new Error(
+      `RandomForest zig F1 drop too large vs js-fast: ${randomForestF1DropVsJs} > ${maxZigForestF1DropVsJs}.`,
     );
   }
 

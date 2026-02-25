@@ -21,6 +21,7 @@
   - `bun run bench:ci:native`
 - Generate latest snapshot and sync README benchmark table:
   - `bun run bench:snapshot`
+  - This command uses `bench/results/heart-ci-latest.json` as the source of truth and rewrites the README benchmark section.
 - Append latest snapshot summary to history:
   - `bun run bench:history:update`
 - Run local classification benchmark:

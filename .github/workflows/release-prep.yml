@@ -1,0 +1,127 @@
+name: Release Prep
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: "Git ref to validate (tag, branch, or SHA)"
+        required: false
+        type: string
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to validate (tag, branch, or SHA)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  release-prep:
+    runs-on: ubuntu-latest
+    env:
+      BENCH_ITERATIONS: 50
+      BENCH_WARMUP: 8
+      BENCH_TREE_BACKEND_MATRIX: "1"
+      PYTHONHASHSEED: "0"
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      BENCH_MIN_DECISION_TREE_FIT_SPEEDUP: "1.1"
+      BENCH_MIN_DECISION_TREE_PREDICT_SPEEDUP: "1.2"
+      BENCH_MIN_RANDOM_FOREST_FIT_SPEEDUP: "2.0"
+      BENCH_MIN_RANDOM_FOREST_PREDICT_SPEEDUP: "1.2"
+      BENCH_MAX_ZIG_TREE_FIT_SLOWDOWN_VS_JS: "3.0"
+      BENCH_MAX_ZIG_TREE_PREDICT_SLOWDOWN_VS_JS: "2.5"
+      BENCH_MAX_ZIG_FOREST_FIT_SLOWDOWN_VS_JS: "3.0"
+      BENCH_MAX_ZIG_FOREST_PREDICT_SLOWDOWN_VS_JS: "2.5"
+      BENCH_MAX_ZIG_TREE_ACCURACY_DROP_VS_JS: "0.06"
+      BENCH_MAX_ZIG_TREE_F1_DROP_VS_JS: "0.06"
+      BENCH_MAX_ZIG_FOREST_ACCURACY_DROP_VS_JS: "0.03"
+      BENCH_MAX_ZIG_FOREST_F1_DROP_VS_JS: "0.03"
+      BUN_SCIKIT_REQUIRE_ZIG_BACKEND: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.15.2
+
+      - name: Install dependencies
+        env:
+          BUN_SCIKIT_SKIP_NATIVE_INSTALL: "1"
+        run: bun install --frozen-lockfile
+
+      - name: Build Zig kernels
+        run: bun run native:build
+
+      - name: Run tests
+        run: bun run test
+
+      - name: Run typecheck
+        run: bun run typecheck
+
+      - name: Run Zig backend guard test
+        env:
+          BUN_SCIKIT_TREE_BACKEND: "zig"
+          BUN_SCIKIT_NATIVE_BRIDGE: "ffi"
+        run: bun test test/zig-backend-guard.test.ts
+
+      - name: Install Python benchmark dependencies
+        run: python -m pip install -r bench/python/requirements.txt
+
+      - name: Run benchmark suite (release gate)
+        run: bun run bench:ci
+
+      - name: Run benchmark health checks
+        run: bun run bench:health
+
+      - name: Verify README benchmark sync
+        run: bun run bench:readme:check
+
+      - name: Consumer smoke test from npm pack
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          npm pack --silent
+          mkdir -p /tmp/bun-scikit-release-prep-smoke
+          cd /tmp/bun-scikit-release-prep-smoke
+          bun init -y
+          bun add "${GITHUB_WORKSPACE}/bun-scikit-${PKG_VERSION}.tgz"
+          cat > index.ts <<'EOF'
+          import { LinearRegression, LogisticRegression, DecisionTreeClassifier, RandomForestClassifier } from "bun-scikit";
+          const X = [[1],[2],[3],[4]];
+          const yReg = [2,4,6,8];
+          const yCls = [0,0,1,1];
+          const r = new LinearRegression({ solver: "normal" });
+          r.fit(X, yReg);
+          const c = new LogisticRegression({ maxIter: 50, learningRate: 0.5, tolerance: 1e-5 });
+          c.fit(X, yCls);
+
+          const Xt = [[0,0],[0,1],[1,0],[2,2],[2,3],[3,2]];
+          const yt = [0,0,0,1,1,1];
+          const t = new DecisionTreeClassifier({ maxDepth: 3, randomState: 42 });
+          t.fit(Xt, yt);
+          const f = new RandomForestClassifier({ nEstimators: 20, maxDepth: 4, randomState: 42 });
+          f.fit(Xt, yt);
+          console.log(r.predict([[5]])[0], c.predict([[1],[4]]), t.fitBackend_, f.fitBackend_);
+          EOF
+          bun run index.ts

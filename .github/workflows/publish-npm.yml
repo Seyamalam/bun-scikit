@@ -15,7 +15,13 @@ permissions:
   id-token: write
 
 jobs:
+  release-prep:
+    uses: ./.github/workflows/release-prep.yml
+    with:
+      ref: ${{ github.event.release.tag_name || inputs.tag || github.sha }}
+
   build-native:
+    needs: release-prep
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

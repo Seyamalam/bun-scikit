@@ -113,6 +113,17 @@ function renderBenchmarkSection(snapshot: BenchmarkSnapshot): string {
     "Benchmark snapshot source: `bench/results/heart-ci-latest.json` (generated in CI workflow `Benchmark Snapshot`).",
     `Dataset: \`${snapshot.dataset.path}\` (${snapshot.dataset.samples} samples, ${snapshot.dataset.features} features, test fraction ${snapshot.dataset.testFraction}).`,
     "",
+    "### Summary",
+    "",
+    `- Regression: fit \`${regression.comparison.fitSpeedupVsSklearn.toFixed(3)}x\`, predict \`${regression.comparison.predictSpeedupVsSklearn.toFixed(3)}x\` (MSE delta \`${regression.comparison.mseDeltaVsSklearn.toExponential(3)}\`, R2 delta \`${regression.comparison.r2DeltaVsSklearn.toExponential(3)}\`)`,
+    `- Classification: fit \`${classification.comparison.fitSpeedupVsSklearn.toFixed(3)}x\`, predict \`${classification.comparison.predictSpeedupVsSklearn.toFixed(3)}x\` (accuracy delta \`${classification.comparison.accuracyDeltaVsSklearn.toExponential(3)}\`, F1 delta \`${classification.comparison.f1DeltaVsSklearn.toExponential(3)}\`)`,
+    `- DecisionTree (\`js-fast\`): fit \`${decisionTree.comparison.fitSpeedupVsSklearn.toFixed(3)}x\`, predict \`${decisionTree.comparison.predictSpeedupVsSklearn.toFixed(3)}x\``,
+    `- RandomForest (\`js-fast\`): fit \`${randomForest.comparison.fitSpeedupVsSklearn.toFixed(3)}x\`, predict \`${randomForest.comparison.predictSpeedupVsSklearn.toFixed(3)}x\``,
+    hasTreeBackendModes
+      ? `- Tree backend matrix: DecisionTree \`zig/js\` fit \`${decisionTreeModes!.comparison.zigFitSpeedupVsJs.toFixed(3)}x\`, predict \`${decisionTreeModes!.comparison.zigPredictSpeedupVsJs.toFixed(3)}x\`; RandomForest \`zig/js\` fit \`${randomForestModes!.comparison.zigFitSpeedupVsJs.toFixed(3)}x\`, predict \`${randomForestModes!.comparison.zigPredictSpeedupVsJs.toFixed(3)}x\``
+      : "- Tree backend matrix disabled (`BENCH_TREE_BACKEND_MATRIX=0`).",
+    `- Snapshot generated at \`${snapshot.generatedAt}\``,
+    "",
     "### Regression",
     "",
     "| Implementation | Model | Fit median (ms) | Predict median (ms) | MSE | R2 |",

@@ -43,6 +43,13 @@ fn selectCandidateFeatures(
     return feature_scratch[0..k];
 }
 
+fn toTreeIndex(value: usize) !u32 {
+    if (value > std.math.maxInt(u32)) {
+        return error.TreeTooLarge;
+    }
+    return @as(u32, @intCast(value));
+}
+
 fn findBestSplitForFeature(
     model: *const common.DecisionTreeModel,
     x_ptr: [*]const f64,
@@ -300,10 +307,10 @@ fn buildDecisionTreeNode(
 
     model.nodes.items[node_index] = common.TreeNode{
         .prediction = prediction,
-        .feature_index = best_feature,
+        .feature_index = try toTreeIndex(best_feature),
         .threshold = split.threshold,
-        .left_index = left_index,
-        .right_index = right_index,
+        .left_index = try toTreeIndex(left_index),
+        .right_index = try toTreeIndex(right_index),
         .is_leaf = false,
     };
 
@@ -497,19 +504,25 @@ pub fn decision_tree_model_predict(
         return 0;
     }
 
+    const nodes = model.nodes.items;
+    const feature_count = model.n_features;
     var i: usize = 0;
     while (i < n_samples) : (i += 1) {
-        const row_offset = i * model.n_features;
+        const row_ptr = x_ptr + i * feature_count;
         var node_index = model.root_index;
         while (true) {
-            const node = model.nodes.items[node_index];
+            const node = nodes[node_index];
             if (node.is_leaf) {
                 out_labels_ptr[i] = node.prediction;
                 break;
             }
 
-            const value = x_ptr[row_offset + node.feature_index];
-            node_index = if (value <= node.threshold) node.left_index else node.right_index;
+            const feature_index = @as(usize, @intCast(node.feature_index));
+            const value = row_ptr[feature_index];
+            node_index = if (value <= node.threshold)
+                @as(usize, @intCast(node.left_index))
+            else
+                @as(usize, @intCast(node.right_index));
         }
     }
 
@@ -788,22 +801,27 @@ pub fn random_forest_classifier_model_predict(
         return 0;
     }
 
+    const active_trees = model.active_tree_handles[0..model.active_tree_count];
+    const feature_count = model.n_features;
     var i: usize = 0;
     while (i < n_samples) : (i += 1) {
-        const row_offset = i * model.n_features;
+        const row_ptr = x_ptr + i * feature_count;
         var positive_votes: usize = 0;
-        var tree_index: usize = 0;
-        while (tree_index < model.active_tree_count) : (tree_index += 1) {
-            const tree = model.active_tree_handles[tree_index];
+        for (active_trees) |tree| {
+            const nodes = tree.nodes.items;
             var node_index = tree.root_index;
             while (true) {
-                const node = tree.nodes.items[node_index];
+                const node = nodes[node_index];
                 if (node.is_leaf) {
                     positive_votes += if (node.prediction == 1) 1 else 0;
                     break;
                 }
-                const value = x_ptr[row_offset + node.feature_index];
-                node_index = if (value <= node.threshold) node.left_index else node.right_index;
+                const feature_index = @as(usize, @intCast(node.feature_index));
+                const value = row_ptr[feature_index];
+                node_index = if (value <= node.threshold)
+                    @as(usize, @intCast(node.left_index))
+                else
+                    @as(usize, @intCast(node.right_index));
             }
         }
         out_labels_ptr[i] = if (positive_votes * 2 >= model.active_tree_count) 1 else 0;

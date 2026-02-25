@@ -19,10 +19,10 @@ pub const LogisticModel = struct {
 
 pub const TreeNode = struct {
     prediction: u8,
-    feature_index: usize,
+    feature_index: u32,
     threshold: f64,
-    left_index: usize,
-    right_index: usize,
+    left_index: u32,
+    right_index: u32,
     is_leaf: bool,
 };
 
@@ -67,7 +67,7 @@ pub const SplitPartition = struct {
     right_indices: []usize,
 };
 
-pub const MAX_THRESHOLD_BINS: usize = 24;
+pub const MAX_THRESHOLD_BINS: usize = 32;
 
 pub const Mulberry32 = struct {
     state: u32,
