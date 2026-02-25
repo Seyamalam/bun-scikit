@@ -99,6 +99,7 @@ Latest CI snapshot on `test_data/heart.csv` vs Python scikit-learn:
 - DecisionTree (`js-fast`): fit `1.54x`, predict `4.06x`
 - RandomForest (`js-fast`): fit `2.59x`, predict `1.29x`
 - Tree backend matrix (`js-fast` vs `zig-tree` vs `sklearn`) is included in `bench/results/heart-ci-latest.md`
+- Synthetic tree/forest hot-path benchmark command: `bun run bench:hotpaths`
 
 Raw benchmark artifacts:
 

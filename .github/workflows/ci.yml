@@ -178,6 +178,14 @@ jobs:
       - name: Run Bun vs scikit-learn benchmark
         run: bun run bench:ci
 
+      - name: Run tree hot-path benchmark (diagnostic)
+        env:
+          BENCH_ITERATIONS: "12"
+          BENCH_WARMUP: "3"
+          BENCH_TREE_SAMPLES: "4000"
+          BENCH_TREE_FEATURES: "24"
+        run: bun run bench:hotpaths
+
       - name: Validate benchmark metrics
         run: bun run bench:health
 

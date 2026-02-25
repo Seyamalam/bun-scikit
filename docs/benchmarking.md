@@ -27,6 +27,8 @@
   - `bun run bench:heart:classification`
 - Run local tree benchmark:
   - `bun run bench:heart:tree`
+- Run synthetic tree/forest hot-path benchmark (`js-fast` vs `zig-tree`):
+  - `bun run bench:hotpaths`
 - Verify README benchmark section is synced:
   - `bun run bench:readme:check`
 - Build benchmark runner with Bun bytecode + minify (startup optimization):
