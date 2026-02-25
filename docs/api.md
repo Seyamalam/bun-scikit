@@ -93,6 +93,8 @@ Methods:
 Learned attributes:
 
 - `classes_: number[]`
+- `fitBackend_: "zig" | "js"`
+- `fitBackendLibrary_: string | null`
 
 ## Ensemble Models
 
@@ -117,6 +119,8 @@ Methods:
 Learned attributes:
 
 - `classes_: number[]`
+- `fitBackend_: "zig" | "js"`
+- `fitBackendLibrary_: string | null`
 
 ## Neighbors
 

@@ -235,11 +235,11 @@ function candidateLibraryPaths(): string[] {
 
   const candidates = [
     explicitPath,
-    platformPackagedPath,
     resolve(process.cwd(), "dist", "native", fileName),
     resolve(process.cwd(), "native", fileName),
     resolve(import.meta.dir, "../../dist/native", fileName),
     resolve(import.meta.dir, "../../native", fileName),
+    platformPackagedPath,
   ];
 
   return candidates.filter((entry): entry is string => Boolean(entry));
@@ -254,10 +254,10 @@ function candidateAddonPaths(): string[] {
         : null;
   const candidates = [
     process.env.BUN_SCIKIT_NODE_ADDON,
-    platformPackagedPath,
     resolve(process.cwd(), "dist", "native", "bun_scikit_node_addon.node"),
     resolve(process.cwd(), "build", "Release", "bun_scikit_node_addon.node"),
     resolve(import.meta.dir, "../../dist/native", "bun_scikit_node_addon.node"),
+    platformPackagedPath,
   ];
   return candidates.filter((entry): entry is string => Boolean(entry));
 }
@@ -349,6 +349,19 @@ function tryLoadNodeApiKernels(): ZigKernels | null {
   return null;
 }
 
+function hasNativeTreeSymbols(kernels: ZigKernels): boolean {
+  return Boolean(
+    kernels.decisionTreeModelCreate &&
+      kernels.decisionTreeModelDestroy &&
+      kernels.decisionTreeModelFit &&
+      kernels.decisionTreeModelPredict &&
+      kernels.randomForestClassifierModelCreate &&
+      kernels.randomForestClassifierModelDestroy &&
+      kernels.randomForestClassifierModelFit &&
+      kernels.randomForestClassifierModelPredict,
+  );
+}
+
 export function getZigKernels(): ZigKernels | null {
   if (!isZigBackendEnabled()) {
     return null;
@@ -359,11 +372,15 @@ export function getZigKernels(): ZigKernels | null {
   }
 
   const bridgePreference = process.env.BUN_SCIKIT_NATIVE_BRIDGE?.trim().toLowerCase();
+  let nodeApiFallback: ZigKernels | null = null;
   if (bridgePreference !== "ffi") {
     const nodeApiKernels = tryLoadNodeApiKernels();
     if (nodeApiKernels) {
-      cachedKernels = nodeApiKernels;
-      return cachedKernels;
+      if (bridgePreference === "node-api" || hasNativeTreeSymbols(nodeApiKernels)) {
+        cachedKernels = nodeApiKernels;
+        return cachedKernels;
+      }
+      nodeApiFallback = nodeApiKernels;
     }
   }
 
@@ -701,6 +718,11 @@ export function getZigKernels(): ZigKernels | null {
     } catch {
       continue;
     }
+  }
+
+  if (nodeApiFallback) {
+    cachedKernels = nodeApiFallback;
+    return cachedKernels;
   }
 
   cachedKernels = null;

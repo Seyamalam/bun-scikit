@@ -349,7 +349,7 @@ async function runBunTreeModelBenchmark(
   if (treeBackendMode === "zig-tree") {
     process.env.BUN_SCIKIT_TREE_BACKEND = "zig";
   } else {
-    delete process.env.BUN_SCIKIT_TREE_BACKEND;
+    process.env.BUN_SCIKIT_TREE_BACKEND = "js";
   }
 
   const { split, XTrainScaled, XTestScaled } = await prepareHeartSplit();

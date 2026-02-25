@@ -347,33 +347,31 @@ fn destroyDecisionTreeModelInternal(model: *common.DecisionTreeModel) void {
     common.allocator.destroy(model);
 }
 
-fn fitDecisionTreeModelInternal(
+fn fitDecisionTreeModelWithWorkspace(
     model: *common.DecisionTreeModel,
     x_ptr: [*]const f64,
     y_ptr: [*]const u8,
     n_samples: usize,
     n_features: usize,
     sample_indices_opt: ?[]const usize,
+    validate_sample_indices: bool,
+    workspace: std.mem.Allocator,
 ) u8 {
     if (n_samples == 0 or n_features == 0 or n_features != model.n_features) {
         return 0;
     }
 
-    model.nodes.clearRetainingCapacity();
-    model.has_root = false;
-
-    var arena = std.heap.ArenaAllocator.init(common.allocator);
-    defer arena.deinit();
-    const workspace = arena.allocator();
     const feature_scratch = workspace.alloc(usize, model.n_features) catch return 0;
 
     const root_indices = if (sample_indices_opt) |sample_indices| blk: {
         if (sample_indices.len == 0) {
             return 0;
         }
-        for (sample_indices) |sample_index| {
-            if (sample_index >= n_samples) {
-                return 0;
+        if (validate_sample_indices) {
+            for (sample_indices) |sample_index| {
+                if (sample_index >= n_samples) {
+                    return 0;
+                }
             }
         }
         break :blk sample_indices;
@@ -398,6 +396,35 @@ fn fitDecisionTreeModelInternal(
     model.root_index = root_index;
     model.has_root = true;
     return 1;
+}
+
+fn fitDecisionTreeModelInternal(
+    model: *common.DecisionTreeModel,
+    x_ptr: [*]const f64,
+    y_ptr: [*]const u8,
+    n_samples: usize,
+    n_features: usize,
+    sample_indices_opt: ?[]const usize,
+) u8 {
+    if (n_samples == 0 or n_features == 0 or n_features != model.n_features) {
+        return 0;
+    }
+
+    model.nodes.clearRetainingCapacity();
+    model.has_root = false;
+
+    var arena = std.heap.ArenaAllocator.init(common.allocator);
+    defer arena.deinit();
+    return fitDecisionTreeModelWithWorkspace(
+        model,
+        x_ptr,
+        y_ptr,
+        n_samples,
+        n_features,
+        sample_indices_opt,
+        true,
+        arena.allocator(),
+    );
 }
 
 pub fn decision_tree_model_create(
@@ -496,6 +523,7 @@ fn resetRandomForestClassifierModel(model: *common.RandomForestClassifierModel) 
         tree_model.nodes.clearRetainingCapacity();
         tree_model.has_root = false;
     }
+    model.active_tree_count = 0;
     model.fitted_estimators = 0;
 }
 
@@ -507,6 +535,7 @@ fn destroyRandomForestClassifierTrees(model: *common.RandomForestClassifierModel
             model.tree_handles[i] = null;
         }
     }
+    model.active_tree_count = 0;
     model.fitted_estimators = 0;
 }
 
@@ -526,6 +555,8 @@ fn fitForestRange(task: *const ForestFitTask) bool {
     const model = task.model;
     const sample_indices = common.allocator.alloc(usize, task.n_samples) catch return false;
     defer common.allocator.free(sample_indices);
+    var arena = std.heap.ArenaAllocator.init(common.allocator);
+    defer arena.deinit();
 
     if (!model.bootstrap) {
         for (sample_indices, 0..) |*entry, idx| {
@@ -552,13 +583,16 @@ fn fitForestRange(task: *const ForestFitTask) bool {
             }
         }
 
-        const fit_status = fitDecisionTreeModelInternal(
+        _ = arena.reset(.retain_capacity);
+        const fit_status = fitDecisionTreeModelWithWorkspace(
             tree_model,
             task.x_ptr,
             task.y_ptr,
             task.n_samples,
             task.n_features,
             sample_indices,
+            false,
+            arena.allocator(),
         );
         if (fit_status != 1) {
             return false;
@@ -594,6 +628,8 @@ pub fn random_forest_classifier_model_create(
     errdefer common.allocator.destroy(model);
     const tree_handles = common.allocator.alloc(?*common.DecisionTreeModel, n_estimators) catch return 0;
     errdefer common.allocator.free(tree_handles);
+    const active_tree_handles = common.allocator.alloc(*common.DecisionTreeModel, n_estimators) catch return 0;
+    errdefer common.allocator.free(active_tree_handles);
     for (tree_handles, 0..) |*entry, estimator_index| {
         const tree_model = createDecisionTreeModelInternal(
             max_depth,
@@ -629,6 +665,8 @@ pub fn random_forest_classifier_model_create(
         .random_state = random_state,
         .use_random_state = use_random_state != 0,
         .tree_handles = tree_handles,
+        .active_tree_handles = active_tree_handles,
+        .active_tree_count = 0,
         .fitted_estimators = 0,
     };
     return @intFromPtr(model);
@@ -637,6 +675,7 @@ pub fn random_forest_classifier_model_create(
 pub fn random_forest_classifier_model_destroy(handle: usize) void {
     const model = common.asRandomForestClassifierModel(handle) orelse return;
     destroyRandomForestClassifierTrees(model);
+    common.allocator.free(model.active_tree_handles);
     common.allocator.free(model.tree_handles);
     common.allocator.destroy(model);
 }
@@ -718,7 +757,22 @@ pub fn random_forest_classifier_model_fit(
         return 0;
     }
 
-    model.fitted_estimators = model.n_estimators;
+    var active_tree_count: usize = 0;
+    var estimator_index: usize = 0;
+    while (estimator_index < model.n_estimators) : (estimator_index += 1) {
+        const tree = model.tree_handles[estimator_index] orelse continue;
+        if (!tree.has_root) {
+            continue;
+        }
+        model.active_tree_handles[active_tree_count] = tree;
+        active_tree_count += 1;
+    }
+    if (active_tree_count == 0) {
+        resetRandomForestClassifierModel(model);
+        return 0;
+    }
+    model.active_tree_count = active_tree_count;
+    model.fitted_estimators = active_tree_count;
     return 1;
 }
 
@@ -730,23 +784,7 @@ pub fn random_forest_classifier_model_predict(
     out_labels_ptr: [*]u8,
 ) u8 {
     const model = common.asRandomForestClassifierModel(handle) orelse return 0;
-    if (model.fitted_estimators == 0 or n_samples == 0 or n_features != model.n_features) {
-        return 0;
-    }
-
-    const tree_ptrs = common.allocator.alloc(*const common.DecisionTreeModel, model.fitted_estimators) catch return 0;
-    defer common.allocator.free(tree_ptrs);
-    var active_tree_count: usize = 0;
-    var preload_index: usize = 0;
-    while (preload_index < model.fitted_estimators) : (preload_index += 1) {
-        const tree = model.tree_handles[preload_index] orelse continue;
-        if (!tree.has_root) {
-            continue;
-        }
-        tree_ptrs[active_tree_count] = tree;
-        active_tree_count += 1;
-    }
-    if (active_tree_count == 0) {
+    if (model.active_tree_count == 0 or n_samples == 0 or n_features != model.n_features) {
         return 0;
     }
 
@@ -755,8 +793,8 @@ pub fn random_forest_classifier_model_predict(
         const row_offset = i * model.n_features;
         var positive_votes: usize = 0;
         var tree_index: usize = 0;
-        while (tree_index < active_tree_count) : (tree_index += 1) {
-            const tree = tree_ptrs[tree_index];
+        while (tree_index < model.active_tree_count) : (tree_index += 1) {
+            const tree = model.active_tree_handles[tree_index];
             var node_index = tree.root_index;
             while (true) {
                 const node = tree.nodes.items[node_index];
@@ -768,7 +806,7 @@ pub fn random_forest_classifier_model_predict(
                 node_index = if (value <= node.threshold) node.left_index else node.right_index;
             }
         }
-        out_labels_ptr[i] = if (positive_votes * 2 >= active_tree_count) 1 else 0;
+        out_labels_ptr[i] = if (positive_votes * 2 >= model.active_tree_count) 1 else 0;
     }
 
     return 1;

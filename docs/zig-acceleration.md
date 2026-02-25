@@ -5,6 +5,8 @@ Current coverage:
 
 - `LinearRegression` (`solver: "normal"`) native model handle (`fit` + `predict`)
 - `LogisticRegression` native model handle (`fit` + `predict` / `predictProba`)
+- `DecisionTreeClassifier` native fit/predict path by default (`BUN_SCIKIT_TREE_BACKEND=zig`)
+- `RandomForestClassifier` native fit/predict path by default (`BUN_SCIKIT_TREE_BACKEND=zig`)
 
 ## Build Native Kernels
 
@@ -46,6 +48,7 @@ After `fit`, inspect:
 - `BUN_SCIKIT_ZIG_LIB=/absolute/path/to/bun_scikit_kernels.<ext>` forces a specific native library path.
 - `BUN_SCIKIT_NATIVE_BRIDGE=node-api|ffi` controls bridge choice (`node-api` preferred when present).
 - `BUN_SCIKIT_NODE_ADDON=/absolute/path/to/bun_scikit_node_addon.node` forces a specific Node-API addon path.
+- `BUN_SCIKIT_TREE_BACKEND=zig|js` controls tree/forest backend selection (`zig` default).
 
 ## Build Node-API Bridge (Experimental)
 

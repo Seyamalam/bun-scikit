@@ -24,12 +24,15 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-function isTruthy(value: string | undefined): boolean {
-  if (!value) {
+function isZigTreeBackendEnabled(): boolean {
+  const mode = process.env.BUN_SCIKIT_TREE_BACKEND?.trim().toLowerCase();
+  if (!mode || mode === "auto" || mode === "zig" || mode === "native") {
+    return true;
+  }
+  if (mode === "js" || mode === "off" || mode === "false" || mode === "0" || mode === "ts") {
     return false;
   }
-  const normalized = value.trim().toLowerCase();
-  return !(normalized === "0" || normalized === "false" || normalized === "off");
+  return true;
 }
 
 export class RandomForestClassifier implements ClassificationModel {
@@ -71,7 +74,10 @@ export class RandomForestClassifier implements ClassificationModel {
     const yBinary = this.buildBinaryTargets(y);
     const sampleIndices = new Uint32Array(sampleCount);
     this.trees = [];
-    if (this.tryFitNativeForest(flattenedX, yBinary, sampleCount, featureCount)) {
+    if (
+      isZigTreeBackendEnabled() &&
+      this.tryFitNativeForest(flattenedX, yBinary, sampleCount, featureCount)
+    ) {
       this.fitBackend_ = "zig";
       return this;
     }
@@ -190,12 +196,6 @@ export class RandomForestClassifier implements ClassificationModel {
     sampleCount: number,
     featureCount: number,
   ): boolean {
-    if (!isTruthy(process.env.BUN_SCIKIT_EXPERIMENTAL_NATIVE_FOREST)) {
-      return false;
-    }
-    if (process.env.BUN_SCIKIT_TREE_BACKEND?.trim().toLowerCase() !== "zig") {
-      return false;
-    }
     const kernels = getZigKernels();
     const create = kernels?.randomForestClassifierModelCreate;
     const fit = kernels?.randomForestClassifierModelFit;

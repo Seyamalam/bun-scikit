@@ -88,16 +88,18 @@ Optional env vars:
 - `BUN_SCIKIT_NATIVE_BRIDGE=node-api|ffi`
 - `BUN_SCIKIT_NODE_ADDON=/absolute/path/to/bun_scikit_node_addon.node`
 - `BUN_SCIKIT_ZIG_LIB=/absolute/path/to/bun_scikit_kernels.<ext>`
-- `BUN_SCIKIT_TREE_BACKEND=zig` (opt-in native tree/forest training path; default keeps JS-fast tree splitter)
+- `BUN_SCIKIT_TREE_BACKEND=zig|js` (default is `zig`; set `js` to force JS tree/forest fallback)
 
 ## Performance Snapshot
 
 Latest CI snapshot on `test_data/heart.csv` vs Python scikit-learn:
 
-- Regression: fit `1.67x`, predict `1.84x`
-- Classification: fit `1.78x`, predict `2.66x`
-- DecisionTree (`js-fast`): fit `1.54x`, predict `4.06x`
-- RandomForest (`js-fast`): fit `2.59x`, predict `1.29x`
+- Regression: fit `2.396x`, predict `3.342x` (MSE delta `6.363e-14`, R2 delta `-2.540e-13`)
+- Classification: fit `2.503x`, predict `3.313x` (accuracy delta `0.000e+0`, F1 delta `1.106e-3`)
+- DecisionTree (`js-fast`): fit `1.621x`, predict `6.739x`
+- RandomForest (`js-fast`): fit `3.206x`, predict `4.349x`
+- Tree backend matrix: DecisionTree `zig/js` fit `0.898x`, predict `1.420x`; RandomForest `zig/js` fit `0.992x`, predict `0.969x`
+- Snapshot generated at `2026-02-25T17:03:54.242Z`
 - Tree backend matrix (`js-fast` vs `zig-tree` vs `sklearn`) is included in `bench/results/heart-ci-latest.md`
 - Synthetic tree/forest hot-path benchmark command: `bun run bench:hotpaths`
 

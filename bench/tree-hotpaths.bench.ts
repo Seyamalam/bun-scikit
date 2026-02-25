@@ -15,14 +15,6 @@ interface BenchResult {
   predictMedianMs: number;
 }
 
-function isTruthy(value: string | undefined): boolean {
-  if (!value) {
-    return false;
-  }
-  const normalized = value.trim().toLowerCase();
-  return !(normalized === "0" || normalized === "false" || normalized === "off");
-}
-
 function median(values: number[]): number {
   const sorted = [...values].sort((a, b) => a - b);
   const middle = Math.floor(sorted.length / 2);
@@ -81,7 +73,7 @@ function withTreeBackend<T>(backend: TreeBackendMode, fn: () => T): T {
   if (backend === "zig-tree") {
     process.env.BUN_SCIKIT_TREE_BACKEND = "zig";
   } else {
-    delete process.env.BUN_SCIKIT_TREE_BACKEND;
+    process.env.BUN_SCIKIT_TREE_BACKEND = "js";
   }
   try {
     return fn();
@@ -150,7 +142,6 @@ const warmup = Number(process.env.BENCH_WARMUP ?? "5");
 const samples = Number(process.env.BENCH_TREE_SAMPLES ?? "6000");
 const features = Number(process.env.BENCH_TREE_FEATURES ?? "24");
 const seed = Number(process.env.BENCH_SEED ?? "42");
-const enableExperimentalForest = isTruthy(process.env.BUN_SCIKIT_EXPERIMENTAL_NATIVE_FOREST);
 
 const { XTrain, yTrain, XTest } = generateSyntheticDataset(samples, features, seed);
 const results: BenchResult[] = [];
@@ -227,7 +218,7 @@ results.push(
 );
 
 console.log(
-  `tree hotpaths | samples=${samples} features=${features} train=${XTrain.length} test=${XTest.length} iterations=${iterations} warmup=${warmup} experimentalNativeForest=${enableExperimentalForest ? "on" : "off"}`,
+  `tree hotpaths | samples=${samples} features=${features} train=${XTrain.length} test=${XTest.length} iterations=${iterations} warmup=${warmup}`,
 );
 
 for (const result of results) {

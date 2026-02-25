@@ -52,6 +52,8 @@ pub const RandomForestClassifierModel = struct {
     random_state: u32,
     use_random_state: bool,
     tree_handles: []?*DecisionTreeModel,
+    active_tree_handles: []*DecisionTreeModel,
+    active_tree_count: usize,
     fitted_estimators: usize,
 };
 

@@ -29,6 +29,7 @@
   - `bun run bench:heart:tree`
 - Run synthetic tree/forest hot-path benchmark (`js-fast` vs `zig-tree`):
   - `bun run bench:hotpaths`
+  - The benchmark forces `BUN_SCIKIT_TREE_BACKEND=js` for `js-fast` and `BUN_SCIKIT_TREE_BACKEND=zig` for `zig-tree`.
 - Verify README benchmark section is synced:
   - `bun run bench:readme:check`
 - Build benchmark runner with Bun bytecode + minify (startup optimization):

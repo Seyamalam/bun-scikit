@@ -41,7 +41,13 @@ const MAX_THRESHOLD_BINS = 128;
 
 function isZigTreeBackendEnabled(): boolean {
   const mode = process.env.BUN_SCIKIT_TREE_BACKEND?.trim().toLowerCase();
-  return mode === "zig" || mode === "native";
+  if (!mode || mode === "auto" || mode === "zig" || mode === "native") {
+    return true;
+  }
+  if (mode === "js" || mode === "off" || mode === "false" || mode === "0" || mode === "ts") {
+    return false;
+  }
+  return true;
 }
 
 function mulberry32(seed: number): () => number {
