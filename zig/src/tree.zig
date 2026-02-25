@@ -17,26 +17,30 @@ fn resolveMaxFeatures(model: *const common.DecisionTreeModel) usize {
     }
 }
 
-fn selectCandidateFeatures(model: *common.DecisionTreeModel, rng: *common.Mulberry32) []const usize {
-    for (model.feature_scratch, 0..) |*entry, idx| {
+fn selectCandidateFeatures(
+    model: *common.DecisionTreeModel,
+    feature_scratch: []usize,
+    rng: *common.Mulberry32,
+) []const usize {
+    for (feature_scratch, 0..) |*entry, idx| {
         entry.* = idx;
     }
 
     const k = resolveMaxFeatures(model);
     if (k >= model.n_features) {
-        return model.feature_scratch[0..model.n_features];
+        return feature_scratch[0..model.n_features];
     }
 
     var i: usize = 0;
     while (i < k) : (i += 1) {
         const remaining = model.n_features - i;
         const j = i + rng.nextIndex(remaining);
-        const tmp = model.feature_scratch[i];
-        model.feature_scratch[i] = model.feature_scratch[j];
-        model.feature_scratch[j] = tmp;
+        const tmp = feature_scratch[i];
+        feature_scratch[i] = feature_scratch[j];
+        feature_scratch[j] = tmp;
     }
 
-    return model.feature_scratch[0..k];
+    return feature_scratch[0..k];
 }
 
 fn findBestSplitForFeature(
@@ -168,6 +172,7 @@ fn partitionIndicesForThreshold(
 
 fn buildDecisionTreeNode(
     model: *common.DecisionTreeModel,
+    feature_scratch: []usize,
     workspace: std.mem.Allocator,
     x_ptr: [*]const f64,
     y_ptr: [*]const u8,
@@ -199,7 +204,7 @@ fn buildDecisionTreeNode(
     }
 
     const parent_impurity = common.giniImpurity(positive_count, sample_count);
-    const candidate_features = selectCandidateFeatures(model, rng);
+    const candidate_features = selectCandidateFeatures(model, feature_scratch, rng);
 
     var best_feature: usize = 0;
     var best_split: ?common.SplitEvaluation = null;
@@ -274,6 +279,7 @@ fn buildDecisionTreeNode(
 
     const left_index = try buildDecisionTreeNode(
         model,
+        feature_scratch,
         workspace,
         x_ptr,
         y_ptr,
@@ -283,6 +289,7 @@ fn buildDecisionTreeNode(
     );
     const right_index = try buildDecisionTreeNode(
         model,
+        feature_scratch,
         workspace,
         x_ptr,
         y_ptr,
@@ -303,7 +310,7 @@ fn buildDecisionTreeNode(
     return node_index;
 }
 
-pub fn decision_tree_model_create(
+fn createDecisionTreeModelInternal(
     max_depth: usize,
     min_samples_split: usize,
     min_samples_leaf: usize,
@@ -312,18 +319,13 @@ pub fn decision_tree_model_create(
     random_state: u32,
     use_random_state: u8,
     n_features: usize,
-) usize {
+) ?*common.DecisionTreeModel {
     if (n_features == 0 or max_depth == 0) {
-        return 0;
+        return null;
     }
 
-    const model = common.allocator.create(common.DecisionTreeModel) catch return 0;
+    const model = common.allocator.create(common.DecisionTreeModel) catch return null;
     errdefer common.allocator.destroy(model);
-    const feature_scratch = common.allocator.alloc(usize, n_features) catch return 0;
-    errdefer common.allocator.free(feature_scratch);
-    for (feature_scratch, 0..) |*entry, idx| {
-        entry.* = idx;
-    }
     model.* = .{
         .n_features = n_features,
         .max_depth = max_depth,
@@ -335,17 +337,95 @@ pub fn decision_tree_model_create(
         .use_random_state = use_random_state != 0,
         .root_index = 0,
         .has_root = false,
-        .feature_scratch = feature_scratch,
         .nodes = .empty,
     };
+    return model;
+}
+
+fn destroyDecisionTreeModelInternal(model: *common.DecisionTreeModel) void {
+    model.nodes.deinit(common.allocator);
+    common.allocator.destroy(model);
+}
+
+fn fitDecisionTreeModelInternal(
+    model: *common.DecisionTreeModel,
+    x_ptr: [*]const f64,
+    y_ptr: [*]const u8,
+    n_samples: usize,
+    n_features: usize,
+    sample_indices_opt: ?[]const usize,
+) u8 {
+    if (n_samples == 0 or n_features == 0 or n_features != model.n_features) {
+        return 0;
+    }
+
+    model.nodes.clearRetainingCapacity();
+    model.has_root = false;
+
+    var arena = std.heap.ArenaAllocator.init(common.allocator);
+    defer arena.deinit();
+    const workspace = arena.allocator();
+    const feature_scratch = workspace.alloc(usize, model.n_features) catch return 0;
+
+    const root_indices = if (sample_indices_opt) |sample_indices| blk: {
+        if (sample_indices.len == 0) {
+            return 0;
+        }
+        for (sample_indices) |sample_index| {
+            if (sample_index >= n_samples) {
+                return 0;
+            }
+        }
+        break :blk sample_indices;
+    } else blk: {
+        const indices = workspace.alloc(usize, n_samples) catch return 0;
+        for (indices, 0..) |*entry, idx| {
+            entry.* = idx;
+        }
+        break :blk @as([]const usize, indices);
+    };
+
+    const rng_seed: u32 = if (model.use_random_state)
+        model.random_state
+    else
+        @as(u32, @truncate(@as(u64, @bitCast(std.time.microTimestamp()))));
+    var rng = common.Mulberry32.init(rng_seed);
+    const root_index = buildDecisionTreeNode(model, feature_scratch, workspace, x_ptr, y_ptr, root_indices, 0, &rng) catch {
+        model.nodes.clearRetainingCapacity();
+        model.has_root = false;
+        return 0;
+    };
+    model.root_index = root_index;
+    model.has_root = true;
+    return 1;
+}
+
+pub fn decision_tree_model_create(
+    max_depth: usize,
+    min_samples_split: usize,
+    min_samples_leaf: usize,
+    max_features_mode: u8,
+    max_features_value: usize,
+    random_state: u32,
+    use_random_state: u8,
+    n_features: usize,
+) usize {
+    const model = createDecisionTreeModelInternal(
+        max_depth,
+        min_samples_split,
+        min_samples_leaf,
+        max_features_mode,
+        max_features_value,
+        random_state,
+        use_random_state,
+        n_features,
+    ) orelse return 0;
     return @intFromPtr(model);
 }
 
 pub fn decision_tree_model_destroy(handle: usize) void {
     const model = common.asDecisionTreeModel(handle) orelse return;
-    common.allocator.free(model.feature_scratch);
-    model.nodes.deinit(common.allocator);
-    common.allocator.destroy(model);
+    destroyDecisionTreeModelInternal(model);
 }
 
 pub fn decision_tree_model_fit(
@@ -358,51 +438,24 @@ pub fn decision_tree_model_fit(
     sample_count: usize,
 ) u8 {
     const model = common.asDecisionTreeModel(handle) orelse return 0;
-    if (n_samples == 0 or n_features == 0 or n_features != model.n_features) {
-        return 0;
-    }
-
-    model.nodes.clearRetainingCapacity();
-    model.has_root = false;
-
-    const root_size = if (sample_count == 0) n_samples else sample_count;
-    if (root_size == 0) {
-        return 0;
-    }
-
-    var arena = std.heap.ArenaAllocator.init(common.allocator);
-    defer arena.deinit();
-    const workspace = arena.allocator();
-
-    const root_indices = workspace.alloc(usize, root_size) catch return 0;
-
     if (sample_count == 0) {
-        for (root_indices, 0..) |*entry, idx| {
-            entry.* = idx;
-        }
-    } else {
-        for (root_indices, 0..) |*entry, idx| {
-            const sample_index = @as(usize, sample_indices_ptr[idx]);
-            if (sample_index >= n_samples) {
-                return 0;
-            }
-            entry.* = sample_index;
-        }
+        return fitDecisionTreeModelInternal(model, x_ptr, y_ptr, n_samples, n_features, null);
     }
 
-    const rng_seed: u32 = if (model.use_random_state)
-        model.random_state
-    else
-        @as(u32, @truncate(@as(u64, @bitCast(std.time.microTimestamp()))));
-    var rng = common.Mulberry32.init(rng_seed);
-    const root_index = buildDecisionTreeNode(model, workspace, x_ptr, y_ptr, root_indices, 0, &rng) catch {
-        model.nodes.clearRetainingCapacity();
-        model.has_root = false;
-        return 0;
-    };
-    model.root_index = root_index;
-    model.has_root = true;
-    return 1;
+    const sample_indices = common.allocator.alloc(usize, sample_count) catch return 0;
+    defer common.allocator.free(sample_indices);
+    for (sample_indices, 0..) |*entry, idx| {
+        entry.* = @as(usize, sample_indices_ptr[idx]);
+    }
+
+    return fitDecisionTreeModelInternal(
+        model,
+        x_ptr,
+        y_ptr,
+        n_samples,
+        n_features,
+        sample_indices,
+    );
 }
 
 pub fn decision_tree_model_predict(
@@ -439,10 +492,9 @@ pub fn decision_tree_model_predict(
 fn resetRandomForestClassifierModel(model: *common.RandomForestClassifierModel) void {
     var i: usize = 0;
     while (i < model.fitted_estimators) : (i += 1) {
-        const tree_handle = model.tree_handles[i];
-        if (tree_handle != 0) {
-            decision_tree_model_destroy(tree_handle);
-            model.tree_handles[i] = 0;
+        if (model.tree_handles[i]) |tree_model| {
+            destroyDecisionTreeModelInternal(tree_model);
+            model.tree_handles[i] = null;
         }
     }
     model.fitted_estimators = 0;
@@ -466,9 +518,11 @@ pub fn random_forest_classifier_model_create(
 
     const model = common.allocator.create(common.RandomForestClassifierModel) catch return 0;
     errdefer common.allocator.destroy(model);
-    const tree_handles = common.allocator.alloc(usize, n_estimators) catch return 0;
+    const tree_handles = common.allocator.alloc(?*common.DecisionTreeModel, n_estimators) catch return 0;
     errdefer common.allocator.free(tree_handles);
-    @memset(tree_handles, 0);
+    for (tree_handles) |*entry| {
+        entry.* = null;
+    }
 
     model.* = .{
         .n_features = n_features,
@@ -508,8 +562,13 @@ pub fn random_forest_classifier_model_fit(
 
     resetRandomForestClassifierModel(model);
 
-    const sample_indices = common.allocator.alloc(u32, n_samples) catch return 0;
+    const sample_indices = common.allocator.alloc(usize, n_samples) catch return 0;
     defer common.allocator.free(sample_indices);
+    if (!model.bootstrap) {
+        for (sample_indices, 0..) |*entry, idx| {
+            entry.* = idx;
+        }
+    }
 
     const rng_seed: u32 = if (model.use_random_state)
         model.random_state
@@ -522,8 +581,8 @@ pub fn random_forest_classifier_model_fit(
         const tree_seed: u32 = if (model.use_random_state)
             model.random_state +% @as(u32, @truncate(estimator_index + 1))
         else
-            rng.state +% @as(u32, @truncate(estimator_index + 1));
-        const tree_handle = decision_tree_model_create(
+            rng.nextU32();
+        const tree_model = createDecisionTreeModelInternal(
             model.max_depth,
             model.min_samples_split,
             model.min_samples_leaf,
@@ -532,39 +591,33 @@ pub fn random_forest_classifier_model_fit(
             tree_seed,
             if (model.use_random_state) 1 else 0,
             model.n_features,
-        );
-        if (tree_handle == 0) {
+        ) orelse {
             resetRandomForestClassifierModel(model);
             return 0;
-        }
+        };
 
         if (model.bootstrap) {
             var i: usize = 0;
             while (i < n_samples) : (i += 1) {
-                sample_indices[i] = @as(u32, @truncate(rng.nextIndex(n_samples)));
-            }
-        } else {
-            for (sample_indices, 0..) |*entry, idx| {
-                entry.* = @as(u32, @truncate(idx));
+                sample_indices[i] = rng.nextIndex(n_samples);
             }
         }
 
-        const fit_status = decision_tree_model_fit(
-            tree_handle,
+        const fit_status = fitDecisionTreeModelInternal(
+            tree_model,
             x_ptr,
             y_ptr,
             n_samples,
             n_features,
-            sample_indices.ptr,
-            n_samples,
+            sample_indices,
         );
         if (fit_status != 1) {
-            decision_tree_model_destroy(tree_handle);
+            destroyDecisionTreeModelInternal(tree_model);
             resetRandomForestClassifierModel(model);
             return 0;
         }
 
-        model.tree_handles[estimator_index] = tree_handle;
+        model.tree_handles[estimator_index] = tree_model;
         model.fitted_estimators = estimator_index + 1;
     }
 
@@ -588,7 +641,7 @@ pub fn random_forest_classifier_model_predict(
     var active_tree_count: usize = 0;
     var preload_index: usize = 0;
     while (preload_index < model.fitted_estimators) : (preload_index += 1) {
-        const tree = common.asDecisionTreeModel(model.tree_handles[preload_index]) orelse continue;
+        const tree = model.tree_handles[preload_index] orelse continue;
         if (!tree.has_root) {
             continue;
         }

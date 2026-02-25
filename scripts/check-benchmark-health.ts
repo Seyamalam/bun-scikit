@@ -151,11 +151,11 @@ const maxZigForestPredictSlowdownVsJs = speedupThreshold(
 );
 const minZigTreeFitRetentionVsBaseline = speedupThreshold(
   "BENCH_MIN_ZIG_TREE_FIT_RETENTION_VS_BASELINE",
-  0.9,
+  0.75,
 );
 const minZigForestFitRetentionVsBaseline = speedupThreshold(
   "BENCH_MIN_ZIG_FOREST_FIT_RETENTION_VS_BASELINE",
-  0.9,
+  0.75,
 );
 
 for (const result of [

@@ -37,7 +37,6 @@ pub const DecisionTreeModel = struct {
     use_random_state: bool,
     root_index: usize,
     has_root: bool,
-    feature_scratch: []usize,
     nodes: std.ArrayListUnmanaged(TreeNode),
 };
 
@@ -52,7 +51,7 @@ pub const RandomForestClassifierModel = struct {
     bootstrap: bool,
     random_state: u32,
     use_random_state: bool,
-    tree_handles: []usize,
+    tree_handles: []?*DecisionTreeModel,
     fitted_estimators: usize,
 };
 
@@ -75,21 +74,23 @@ pub const Mulberry32 = struct {
         return .{ .state = seed };
     }
 
-    pub fn next(self: *Mulberry32) f64 {
+    pub fn nextU32(self: *Mulberry32) u32 {
         self.state +%= 0x6d2b79f5;
         var t = self.state ^ (self.state >> 15);
         t = @as(u32, @truncate(@as(u64, t) *% @as(u64, (1 | self.state))));
         t ^= t +% @as(u32, @truncate(@as(u64, (t ^ (t >> 7))) *% @as(u64, (61 | t))));
-        return @as(f64, @floatFromInt(t ^ (t >> 14))) / 4294967296.0;
+        return t ^ (t >> 14);
+    }
+
+    pub fn next(self: *Mulberry32) f64 {
+        return @as(f64, @floatFromInt(self.nextU32())) / 4294967296.0;
     }
 
     pub fn nextIndex(self: *Mulberry32, limit: usize) usize {
         if (limit <= 1) {
             return 0;
         }
-        const value = self.next();
-        const idx = @as(usize, @intFromFloat(@floor(value * @as(f64, @floatFromInt(limit)))));
-        return if (idx >= limit) limit - 1 else idx;
+        return @as(usize, @intCast(self.nextU32())) % limit;
     }
 };
 
