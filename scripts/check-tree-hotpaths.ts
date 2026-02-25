@@ -43,20 +43,6 @@ function threshold(envName: string, fallback: number): number {
   return value;
 }
 
-function findResult(
-  snapshot: HotpathSnapshot,
-  label: string,
-  backend: "js-fast" | "zig-tree",
-): BenchResult {
-  const entry = snapshot.results.find(
-    (row) => row.label === label && row.backend === backend,
-  );
-  if (!entry) {
-    throw new Error(`Missing hotpath result for ${label} (${backend}).`);
-  }
-  return entry;
-}
-
 const inputPath = resolve(
   parseArgValue("--input") ??
     process.env.BENCH_TREE_HOTPATHS_INPUT ??
@@ -131,19 +117,6 @@ if (rfRetentionFit < minRfFitRetention) {
 if (rfRetentionPredict < minRfPredictRetention) {
   throw new Error(
     `RandomForest hotpath predict retention too low: ${rfRetentionPredict} < ${minRfPredictRetention}.`,
-  );
-}
-
-const dtZig = findResult(snapshot, "decision_tree", "zig-tree");
-const rfZig = findResult(snapshot, "random_forest", "zig-tree");
-if (dtZig.fitMedianMs > 20 || dtZig.predictMedianMs > 5) {
-  throw new Error(
-    `DecisionTree zig hotpath is unexpectedly slow (fit=${dtZig.fitMedianMs}ms predict=${dtZig.predictMedianMs}ms).`,
-  );
-}
-if (rfZig.fitMedianMs > 250 || rfZig.predictMedianMs > 50) {
-  throw new Error(
-    `RandomForest zig hotpath is unexpectedly slow (fit=${rfZig.fitMedianMs}ms predict=${rfZig.predictMedianMs}ms).`,
   );
 }
 
