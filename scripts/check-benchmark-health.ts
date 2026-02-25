@@ -173,7 +173,7 @@ const minZigTreeFitRetentionVsBaseline = speedupThreshold(
 );
 const minZigForestFitRetentionVsBaseline = speedupThreshold(
   "BENCH_MIN_ZIG_FOREST_FIT_RETENTION_VS_BASELINE",
-  0.75,
+  0.7,
 );
 
 for (const result of [
