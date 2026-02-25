@@ -495,33 +495,6 @@ export function getZigKernels(): ZigKernels | null {
             args: ["usize", FFIType.ptr, "usize", "usize", FFIType.ptr],
             returns: FFIType.u8,
           },
-          random_forest_classifier_model_create: {
-            args: [
-              "usize",
-              "usize",
-              "usize",
-              "usize",
-              FFIType.u8,
-              "usize",
-              FFIType.u8,
-              FFIType.u32,
-              FFIType.u8,
-              "usize",
-            ],
-            returns: "usize",
-          },
-          random_forest_classifier_model_destroy: {
-            args: ["usize"],
-            returns: FFIType.void,
-          },
-          random_forest_classifier_model_fit: {
-            args: ["usize", FFIType.ptr, FFIType.ptr, "usize", "usize"],
-            returns: FFIType.u8,
-          },
-          random_forest_classifier_model_predict: {
-            args: ["usize", FFIType.ptr, "usize", "usize", FFIType.ptr],
-            returns: FFIType.u8,
-          },
           logistic_train_epoch: {
             args: [
               FFIType.ptr,
@@ -561,6 +534,49 @@ export function getZigKernels(): ZigKernels | null {
           continue;
         }
 
+        let rfCreate: RandomForestClassifierModelCreateFn | null = null;
+        let rfDestroy: RandomForestClassifierModelDestroyFn | null = null;
+        let rfFit: RandomForestClassifierModelFitFn | null = null;
+        let rfPredict: RandomForestClassifierModelPredictFn | null = null;
+        try {
+          const rfLibrary = dlopen(libraryPath, {
+            random_forest_classifier_model_create: {
+              args: [
+                "usize",
+                "usize",
+                "usize",
+                "usize",
+                FFIType.u8,
+                "usize",
+                FFIType.u8,
+                FFIType.u32,
+                FFIType.u8,
+                "usize",
+              ],
+              returns: "usize",
+            },
+            random_forest_classifier_model_destroy: {
+              args: ["usize"],
+              returns: FFIType.void,
+            },
+            random_forest_classifier_model_fit: {
+              args: ["usize", FFIType.ptr, FFIType.ptr, "usize", "usize"],
+              returns: FFIType.u8,
+            },
+            random_forest_classifier_model_predict: {
+              args: ["usize", FFIType.ptr, "usize", "usize", FFIType.ptr],
+              returns: FFIType.u8,
+            },
+          }) as ZigKernelLibrary;
+
+          rfCreate = rfLibrary.symbols.random_forest_classifier_model_create ?? null;
+          rfDestroy = rfLibrary.symbols.random_forest_classifier_model_destroy ?? null;
+          rfFit = rfLibrary.symbols.random_forest_classifier_model_fit ?? null;
+          rfPredict = rfLibrary.symbols.random_forest_classifier_model_predict ?? null;
+        } catch {
+          // Keep random forest symbols null for older prebuilt libraries.
+        }
+
         cachedKernels = {
           linearModelCreate: library.symbols.linear_model_create ?? null,
           linearModelDestroy: library.symbols.linear_model_destroy ?? null,
@@ -582,14 +598,10 @@ export function getZigKernels(): ZigKernels | null {
           decisionTreeModelDestroy: library.symbols.decision_tree_model_destroy ?? null,
           decisionTreeModelFit: library.symbols.decision_tree_model_fit ?? null,
           decisionTreeModelPredict: library.symbols.decision_tree_model_predict ?? null,
-          randomForestClassifierModelCreate:
-            library.symbols.random_forest_classifier_model_create ?? null,
-          randomForestClassifierModelDestroy:
-            library.symbols.random_forest_classifier_model_destroy ?? null,
-          randomForestClassifierModelFit:
-            library.symbols.random_forest_classifier_model_fit ?? null,
-          randomForestClassifierModelPredict:
-            library.symbols.random_forest_classifier_model_predict ?? null,
+          randomForestClassifierModelCreate: rfCreate,
+          randomForestClassifierModelDestroy: rfDestroy,
+          randomForestClassifierModelFit: rfFit,
+          randomForestClassifierModelPredict: rfPredict,
           logisticTrainEpoch: library.symbols.logistic_train_epoch ?? null,
           logisticTrainEpochs: library.symbols.logistic_train_epochs ?? null,
           abiVersion,
