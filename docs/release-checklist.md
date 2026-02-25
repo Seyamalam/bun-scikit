@@ -9,6 +9,7 @@ Use this checklist for each release.
   - tests
   - typecheck
   - Zig backend guard test
+  - tree hot-path microbench + `bench:hotpaths:check`
   - benchmark run + `bench:health`
   - `bench:readme:check`
   - `npm pack` consumer smoke test

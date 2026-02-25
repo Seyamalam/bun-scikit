@@ -10,6 +10,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 ### Added
 - Reusable `Release Prep` workflow (`.github/workflows/release-prep.yml`) that gates release pipelines with tests, typecheck, Zig guard checks, benchmark checks, README benchmark sync checks, and npm-pack smoke validation.
 - Zig backend smoke example for users: `examples/zig-backend-smoke.ts`.
+- Per-kernel tree hot-path regression guard (`bench:hotpaths:check`) using `bench/results/tree-hotpaths-baseline.json`.
 
 ### Changed
 - README install docs now include a post-install Zig backend smoke check for `DecisionTreeClassifier` and `RandomForestClassifier`.
@@ -17,10 +18,14 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 - `bench:snapshot` now also runs `bench:sync-readme`.
 - `Benchmark Snapshot` workflow now commits README benchmark updates.
 - CI benchmark gating now enforces tighter zig/js slowdown limits and README benchmark sync.
+- CI and release-prep now run tree hot-path microbench + regression checks.
 
 ### Improved
-- Zig tree predict path uses row-pointer traversal and compact `u32` node indices for better cache behavior.
-- Tree splitter threshold bin cap increased from 24 to 32 for improved split quality.
+- Zig tree codebase split into modules: `zig/src/tree/split.zig`, `zig/src/tree/fit.zig`, and `zig/src/tree/predict.zig`.
+- RandomForest Zig fit uses dynamic atomic work scheduling across threads instead of static chunking.
+- RandomForest Zig predict supports threaded row-chunk execution for larger inference batches.
+- DecisionTree Zig predict includes a SIMD threshold-compare traversal path for larger row batches.
+- Tree splitter threshold bin cap increased to `128` with exact-threshold fallback on small nodes.
 
 ## [0.1.6] - 2026-02-25
 

@@ -5,6 +5,8 @@ import {
   type Matrix,
   type Vector,
 } from "../src";
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
 
 type TreeBackendMode = "js-fast" | "zig-tree";
 
@@ -13,6 +15,38 @@ interface BenchResult {
   backend: TreeBackendMode;
   fitMedianMs: number;
   predictMedianMs: number;
+}
+
+interface HotpathSnapshot {
+  generatedAt: string;
+  meta: {
+    samples: number;
+    features: number;
+    trainSamples: number;
+    testSamples: number;
+    iterations: number;
+    warmup: number;
+    seed: number;
+  };
+  results: BenchResult[];
+  comparison: {
+    decisionTree: {
+      zigFitSpeedupVsJs: number;
+      zigPredictSpeedupVsJs: number;
+    };
+    randomForest: {
+      zigFitSpeedupVsJs: number;
+      zigPredictSpeedupVsJs: number;
+    };
+  };
+}
+
+function parseArgValue(flag: string): string | null {
+  const index = Bun.argv.indexOf(flag);
+  if (index === -1 || index + 1 >= Bun.argv.length) {
+    return null;
+  }
+  return Bun.argv[index + 1];
 }
 
 function median(values: number[]): number {
@@ -142,6 +176,11 @@ const warmup = Number(process.env.BENCH_WARMUP ?? "5");
 const samples = Number(process.env.BENCH_TREE_SAMPLES ?? "6000");
 const features = Number(process.env.BENCH_TREE_FEATURES ?? "24");
 const seed = Number(process.env.BENCH_SEED ?? "42");
+const outputPath = resolve(
+  parseArgValue("--output") ??
+    process.env.BENCH_TREE_HOTPATHS_OUTPUT ??
+    "bench/results/tree-hotpaths-current.json",
+);
 
 const { XTrain, yTrain, XTest } = generateSyntheticDataset(samples, features, seed);
 const results: BenchResult[] = [];
@@ -238,3 +277,31 @@ console.log(
 console.log(
   `speedup random_forest zig/js fit=${(rfJs.fitMedianMs / rfZig.fitMedianMs).toFixed(3)}x predict=${(rfJs.predictMedianMs / rfZig.predictMedianMs).toFixed(3)}x`,
 );
+
+const snapshot: HotpathSnapshot = {
+  generatedAt: new Date().toISOString(),
+  meta: {
+    samples,
+    features,
+    trainSamples: XTrain.length,
+    testSamples: XTest.length,
+    iterations,
+    warmup,
+    seed,
+  },
+  results,
+  comparison: {
+    decisionTree: {
+      zigFitSpeedupVsJs: dtJs.fitMedianMs / dtZig.fitMedianMs,
+      zigPredictSpeedupVsJs: dtJs.predictMedianMs / dtZig.predictMedianMs,
+    },
+    randomForest: {
+      zigFitSpeedupVsJs: rfJs.fitMedianMs / rfZig.fitMedianMs,
+      zigPredictSpeedupVsJs: rfJs.predictMedianMs / rfZig.predictMedianMs,
+    },
+  },
+};
+
+await mkdir(dirname(outputPath), { recursive: true });
+await writeFile(outputPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");
+console.log(`wrote hotpath snapshot: ${outputPath}`);

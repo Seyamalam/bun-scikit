@@ -43,6 +43,10 @@ jobs:
       BENCH_MAX_ZIG_FOREST_F1_DROP_VS_JS: "0.03"
       BENCH_MIN_ZIG_TREE_FIT_RETENTION_VS_BASELINE: "0.75"
       BENCH_MIN_ZIG_FOREST_FIT_RETENTION_VS_BASELINE: "0.70"
+      BENCH_MIN_DT_HOTPATH_FIT_RETENTION: "0.60"
+      BENCH_MIN_DT_HOTPATH_PREDICT_RETENTION: "0.60"
+      BENCH_MIN_RF_HOTPATH_FIT_RETENTION: "0.60"
+      BENCH_MIN_RF_HOTPATH_PREDICT_RETENTION: "0.60"
       BUN_SCIKIT_REQUIRE_ZIG_BACKEND: "1"
     steps:
       - name: Checkout
@@ -93,6 +97,17 @@ jobs:
 
       - name: Run benchmark suite (release gate)
         run: bun run bench:ci
+
+      - name: Run tree hot-path microbench
+        env:
+          BENCH_ITERATIONS: "12"
+          BENCH_WARMUP: "3"
+          BENCH_TREE_SAMPLES: "4000"
+          BENCH_TREE_FEATURES: "24"
+        run: bun run bench:hotpaths
+
+      - name: Validate tree hot-path microbench regressions
+        run: bun run bench:hotpaths:check
 
       - name: Run benchmark health checks
         run: bun run bench:health
