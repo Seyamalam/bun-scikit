@@ -30,6 +30,13 @@ export * from "./tree/DecisionTreeClassifier";
 export * from "./tree/DecisionTreeRegressor";
 export * from "./ensemble/RandomForestClassifier";
 export * from "./ensemble/RandomForestRegressor";
+export * from "./ensemble/VotingClassifier";
+export * from "./ensemble/StackingClassifier";
+export * from "./cluster/KMeans";
+export * from "./cluster/DBSCAN";
+export * from "./cluster/AgglomerativeClustering";
+export * from "./decomposition/PCA";
+export * from "./calibration/CalibratedClassifierCV";
 
 // Model selection
 export * from "./model_selection/trainTestSplit";

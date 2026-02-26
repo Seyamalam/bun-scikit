@@ -11,6 +11,11 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 - Reusable `Release Prep` workflow (`.github/workflows/release-prep.yml`) that gates release pipelines with tests, typecheck, Zig guard checks, benchmark checks, README benchmark sync checks, and npm-pack smoke validation.
 - Zig backend smoke example for users: `examples/zig-backend-smoke.ts`.
 - Per-kernel tree hot-path regression guard (`bench:hotpaths:check`) using `bench/results/tree-hotpaths-baseline.json`.
+- `KMeans` clustering estimator with deterministic `randomState`, `fitPredict`, `transform`, and `score`.
+- `PCA` decomposition estimator with explained-variance attributes, `fitTransform`, `transform`, and `inverseTransform`.
+- `DBSCAN` and `AgglomerativeClustering` for density-based and hierarchical clustering parity.
+- `CalibratedClassifierCV` with `sigmoid` and `isotonic` calibration methods.
+- `VotingClassifier` (hard/soft) and `StackingClassifier` baseline meta-estimators.
 
 ### Changed
 - README install docs now include a post-install Zig backend smoke check for `DecisionTreeClassifier` and `RandomForestClassifier`.
