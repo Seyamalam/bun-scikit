@@ -3,9 +3,15 @@ const common = @import("../common.zig");
 
 const SIMD_LANES: usize = 4;
 const MIN_SIMD_TREE_ROWS: usize = 1024;
-const RF_PREDICT_CHUNK_SIZE: usize = 64;
+const RF_PREDICT_CHUNK_SIZE: usize = 128;
+const RF_MAX_ACTIVE_ROWS: usize = RF_PREDICT_CHUNK_SIZE;
 
-fn predictTreeLabelScalar(
+const ForestPredictTreeRef = struct {
+    nodes: []const common.TreeNode,
+    root_index: usize,
+};
+
+inline fn predictTreeLabelScalar(
     nodes: []const common.TreeNode,
     root_index: usize,
     row_ptr: [*]const f64,
@@ -120,7 +126,9 @@ pub fn decision_tree_model_predict(
 }
 
 const ForestPredictShared = struct {
-    active_trees: []const *common.DecisionTreeModel,
+    tree_refs: []const ForestPredictTreeRef,
+    tree_count: usize,
+    positive_threshold: usize,
     x_ptr: [*]const f64,
     n_samples: usize,
     feature_count: usize,
@@ -137,11 +145,109 @@ fn predictForestRange(shared: *ForestPredictShared, start_row: usize, end_row: u
     var row = start_row;
     while (row < end_row) : (row += 1) {
         const row_ptr = shared.x_ptr + row * shared.feature_count;
+        const threshold = shared.positive_threshold;
+        const tree_count = shared.tree_count;
+        const tree_refs = shared.tree_refs;
+
         var positive_votes: usize = 0;
-        for (shared.active_trees) |tree| {
-            positive_votes += if (predictTreeLabelScalar(tree.nodes.items, tree.root_index, row_ptr) == 1) 1 else 0;
+        var tree_index: usize = 0;
+        var finalized = false;
+
+        while (tree_index < tree_count) : (tree_index += 1) {
+            const tree_ref = tree_refs[tree_index];
+            if (predictTreeLabelScalar(tree_ref.nodes, tree_ref.root_index, row_ptr) == 1) {
+                positive_votes += 1;
+            }
+
+            const remaining_trees = tree_count - tree_index - 1;
+            if (positive_votes >= threshold) {
+                shared.out_labels_ptr[row] = 1;
+                finalized = true;
+                break;
+            }
+            if (positive_votes + remaining_trees < threshold) {
+                shared.out_labels_ptr[row] = 0;
+                finalized = true;
+                break;
+            }
         }
-        shared.out_labels_ptr[row] = if (positive_votes * 2 >= shared.active_trees.len) 1 else 0;
+
+        if (!finalized) {
+            shared.out_labels_ptr[row] = if (positive_votes >= threshold) 1 else 0;
+        }
+    }
+    return true;
+}
+
+fn predictForestRangeTreeMajor(shared: *ForestPredictShared, start_row: usize, end_row: usize) bool {
+    const row_count = end_row - start_row;
+    if (row_count == 0) {
+        return true;
+    }
+    if (row_count > RF_MAX_ACTIVE_ROWS) {
+        return false;
+    }
+
+    var row = start_row;
+    const threshold = shared.positive_threshold;
+    const tree_count = shared.tree_count;
+    const tree_refs = shared.tree_refs;
+    const feature_count = shared.feature_count;
+    const x_ptr = shared.x_ptr;
+    const out_ptr = shared.out_labels_ptr;
+
+    var positive_votes: [RF_MAX_ACTIVE_ROWS]u16 = [_]u16{0} ** RF_MAX_ACTIVE_ROWS;
+    var open_rows: [RF_MAX_ACTIVE_ROWS]bool = [_]bool{true} ** RF_MAX_ACTIVE_ROWS;
+    var open_row_count: usize = row_count;
+
+    var tree_index: usize = 0;
+    while (tree_index < tree_count and open_row_count > 0) : (tree_index += 1) {
+        const tree_ref = tree_refs[tree_index];
+        const trees_after = tree_count - tree_index - 1;
+
+        var offset: usize = 0;
+        while (offset < row_count) : (offset += 1) {
+            if (!open_rows[offset]) {
+                continue;
+            }
+
+            const sample_row = row + offset;
+            const sample_ptr = x_ptr + sample_row * feature_count;
+            if (predictTreeLabelScalar(tree_ref.nodes, tree_ref.root_index, sample_ptr) == 1) {
+                positive_votes[offset] += 1;
+            }
+
+            const votes = positive_votes[offset];
+            if (votes >= threshold) {
+                out_ptr[sample_row] = 1;
+                open_rows[offset] = false;
+                if (open_row_count > 0) {
+                    open_row_count -= 1;
+                }
+                continue;
+            }
+
+            if (votes + trees_after < threshold) {
+                out_ptr[sample_row] = 0;
+                open_rows[offset] = false;
+                if (open_row_count > 0) {
+                    open_row_count -= 1;
+                }
+            }
+        }
+    }
+
+    if (open_row_count == 0) {
+        return true;
+    }
+
+    while (row < end_row) : (row += 1) {
+        const idx = row - start_row;
+        if (!open_rows[idx]) {
+            continue;
+        }
+        const votes = positive_votes[idx];
+        out_ptr[row] = if (votes * 2 >= @as(u16, @intCast(tree_count))) 1 else 0;
     }
     return true;
 }
@@ -153,7 +259,12 @@ fn forestPredictWorker(context: *ForestPredictWorkerContext) void {
             break;
         }
         const end_row = @min(start_row + RF_PREDICT_CHUNK_SIZE, context.shared.n_samples);
-        if (!predictForestRange(context.shared, start_row, end_row)) {
+        const use_tree_major = context.shared.tree_count >= 32 and (end_row - start_row) > 16;
+        const ok = if (use_tree_major)
+            predictForestRangeTreeMajor(context.shared, start_row, end_row)
+        else
+            predictForestRange(context.shared, start_row, end_row);
+        if (!ok) {
             context.shared.status.store(0, .seq_cst);
             break;
         }
@@ -183,8 +294,26 @@ pub fn random_forest_classifier_model_predict(
     }
 
     const active_trees = model.active_tree_handles[0..model.active_tree_count];
+    const active_tree_count = active_trees.len;
+    if (active_tree_count == 0) {
+        return 0;
+    }
+
+    var tree_refs = common.allocator.alloc(ForestPredictTreeRef, active_tree_count) catch return 0;
+    defer common.allocator.free(tree_refs);
+    for (active_trees, 0..) |tree, idx| {
+        tree_refs[idx] = .{
+            .nodes = tree.nodes.items,
+            .root_index = tree.root_index,
+        };
+    }
+
+    const positive_threshold = (active_tree_count + 1) / 2;
+
     var shared = ForestPredictShared{
-        .active_trees = active_trees,
+        .tree_refs = tree_refs,
+        .tree_count = active_tree_count,
+        .positive_threshold = positive_threshold,
         .x_ptr = x_ptr,
         .n_samples = n_samples,
         .feature_count = model.n_features,
@@ -193,7 +322,7 @@ pub fn random_forest_classifier_model_predict(
         .status = std.atomic.Value(u8).init(1),
     };
 
-    const worker_count = resolveForestPredictWorkerCount(active_trees.len, n_samples);
+    const worker_count = resolveForestPredictWorkerCount(shared.tree_count, n_samples);
     const contexts = common.allocator.alloc(ForestPredictWorkerContext, worker_count) catch return 0;
     defer common.allocator.free(contexts);
     for (contexts) |*context| {
