@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-25T21:25:10.225Z",
+  "generatedAt": "2026-02-27T07:32:38.579Z",
   "meta": {
     "samples": 4000,
     "features": 24,
@@ -13,36 +13,36 @@
     {
       "label": "decision_tree",
       "backend": "js-fast",
-      "fitMedianMs": 7.529399999999995,
-      "predictMedianMs": 0.09389999999999077
+      "fitMedianMs": 13.227,
+      "predictMedianMs": 0.088
     },
     {
       "label": "decision_tree",
       "backend": "zig-tree",
-      "fitMedianMs": 7.5137499999999875,
-      "predictMedianMs": 0.17225000000000534
+      "fitMedianMs": 22.137,
+      "predictMedianMs": 0.216
     },
     {
       "label": "random_forest",
       "backend": "js-fast",
-      "fitMedianMs": 185.89085,
-      "predictMedianMs": 9.235950000000003
+      "fitMedianMs": 309.032,
+      "predictMedianMs": 10.711
     },
     {
       "label": "random_forest",
       "backend": "zig-tree",
-      "fitMedianMs": 107.42350000000033,
-      "predictMedianMs": 8.33640000000014
+      "fitMedianMs": 511.461,
+      "predictMedianMs": 23.514
     }
   ],
   "comparison": {
     "decisionTree": {
-      "zigFitSpeedupVsJs": 1.002082848111796,
-      "zigPredictSpeedupVsJs": 0.5451378809868671
+      "zigFitSpeedupVsJs": 0.5975046302561414,
+      "zigPredictSpeedupVsJs": 0.4074074074074074
     },
     "randomForest": {
-      "zigFitSpeedupVsJs": 1.7304486448495853,
-      "zigPredictSpeedupVsJs": 1.1079062904850832
+      "zigFitSpeedupVsJs": 0.6042109449219975,
+      "zigPredictSpeedupVsJs": 0.455345751467211
     }
   }
 }
