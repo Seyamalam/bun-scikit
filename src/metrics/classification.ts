@@ -1,3 +1,5 @@
+import type { Matrix, Vector } from "../types";
+
 function validateInputs(yTrue: number[], yPred: number[]): void {
   if (yTrue.length === 0 || yPred.length === 0) {
     throw new Error("yTrue and yPred must be non-empty.");
@@ -133,7 +135,7 @@ export function confusionMatrix(
   const resolvedLabels =
     labels && labels.length > 0
       ? labels.slice()
-      : Array.from(new Set([...yTrue, ...yPred])).sort((a, b) => a - b);
+      : uniqueSorted([...yTrue, ...yPred]);
   if (resolvedLabels.length === 0) {
     throw new Error("confusionMatrix requires at least one label.");
   }
@@ -161,16 +163,46 @@ export function confusionMatrix(
   return { labels: resolvedLabels, matrix };
 }
 
-export function logLoss(yTrue: number[], yPredProb: number[], eps = 1e-15): number {
-  validateInputs(yTrue, yPredProb);
-  validateBinaryTargets(yTrue);
+export function logLoss(yTrue: number[], yPredProb: number[] | Matrix, eps = 1e-15): number {
   if (!Number.isFinite(eps) || eps <= 0 || eps >= 0.5) {
     throw new Error(`eps must be finite and in (0, 0.5). Got ${eps}.`);
   }
 
+  if (Array.isArray(yPredProb[0])) {
+    const probabilities = yPredProb as Matrix;
+    if (yTrue.length === 0 || probabilities.length === 0 || yTrue.length !== probabilities.length) {
+      throw new Error("yTrue and yPredProb must be non-empty and equal-length.");
+    }
+    const labels = uniqueSorted(yTrue);
+    const classToIndex = labelToIndex(labels);
+    if (labels.length < 2) {
+      throw new Error("logLoss requires at least two classes.");
+    }
+
+    let total = 0;
+    for (let i = 0; i < yTrue.length; i += 1) {
+      if (probabilities[i].length < labels.length) {
+        throw new Error(
+          `Each probability row must have at least ${labels.length} classes. Got ${probabilities[i].length}.`,
+        );
+      }
+      const idx = classToIndex.get(yTrue[i]);
+      if (idx === undefined) {
+        throw new Error(`Unknown label '${yTrue[i]}' in yTrue.`);
+      }
+      const p = clampProbability(probabilities[i][idx], eps);
+      total += -Math.log(p);
+    }
+    return total / yTrue.length;
+  }
+
+  const probabilities = yPredProb as number[];
+  validateInputs(yTrue, probabilities);
+  validateBinaryTargets(yTrue);
+
   let total = 0;
   for (let i = 0; i < yTrue.length; i += 1) {
-    const p1 = clampProbability(yPredProb[i], eps);
+    const p1 = clampProbability(probabilities[i], eps);
     const p0 = 1 - p1;
     total += -(yTrue[i] * Math.log(p1) + (1 - yTrue[i]) * Math.log(p0));
   }
@@ -293,6 +325,18 @@ export function classificationReport(
   };
 }
 
+function uniqueSorted(values: Vector): Vector {
+  return Array.from(new Set(values)).sort((a, b) => a - b);
+}
+
+function labelToIndex(labels: Vector): Map<number, number> {
+  const map = new Map<number, number>();
+  for (let i = 0; i < labels.length; i += 1) {
+    map.set(labels[i], i);
+  }
+  return map;
+}
+
 export function balancedAccuracyScore(yTrue: number[], yPred: number[]): number {
   const report = classificationReport(yTrue, yPred);
   return report.macroAvg.recall;
@@ -303,6 +347,43 @@ export function matthewsCorrcoef(
   yPred: number[],
   positiveLabel = 1,
 ): number {
+  const labels = uniqueSorted([...yTrue, ...yPred]);
+  if (labels.length > 2) {
+    const { matrix } = confusionMatrix(yTrue, yPred, labels);
+    const k = labels.length;
+    let c = 0;
+    let s = 0;
+    let sumPkTk = 0;
+    let sumPkSq = 0;
+    let sumTkSq = 0;
+
+    const rowSums = new Array<number>(k).fill(0);
+    const colSums = new Array<number>(k).fill(0);
+    for (let i = 0; i < k; i += 1) {
+      for (let j = 0; j < k; j += 1) {
+        const value = matrix[i][j];
+        s += value;
+        rowSums[i] += value;
+        colSums[j] += value;
+        if (i === j) {
+          c += value;
+        }
+      }
+    }
+    for (let i = 0; i < k; i += 1) {
+      sumPkTk += colSums[i] * rowSums[i];
+      sumPkSq += colSums[i] * colSums[i];
+      sumTkSq += rowSums[i] * rowSums[i];
+    }
+
+    const numerator = c * s - sumPkTk;
+    const denominator = Math.sqrt((s * s - sumPkSq) * (s * s - sumTkSq));
+    if (denominator === 0) {
+      return 0;
+    }
+    return numerator / denominator;
+  }
+
   const { tp, fp, fn, tn } = confusionCounts(yTrue, yPred, positiveLabel);
   const numerator = tp * tn - fp * fn;
   const denominator = Math.sqrt((tp + fp) * (tp + fn) * (tn + fp) * (tn + fn));
@@ -312,12 +393,41 @@ export function matthewsCorrcoef(
   return numerator / denominator;
 }
 
-export function brierScoreLoss(yTrue: number[], yPredProb: number[]): number {
-  validateInputs(yTrue, yPredProb);
+export function brierScoreLoss(yTrue: number[], yPredProb: number[] | Matrix): number {
+  if (Array.isArray(yPredProb[0])) {
+    const probabilities = yPredProb as Matrix;
+    if (yTrue.length === 0 || probabilities.length === 0 || yTrue.length !== probabilities.length) {
+      throw new Error("yTrue and yPredProb must be non-empty and equal-length.");
+    }
+    const labels = uniqueSorted(yTrue);
+    const classToIndex = labelToIndex(labels);
+
+    let total = 0;
+    for (let i = 0; i < yTrue.length; i += 1) {
+      if (probabilities[i].length < labels.length) {
+        throw new Error(
+          `Each probability row must have at least ${labels.length} classes. Got ${probabilities[i].length}.`,
+        );
+      }
+      const yi = classToIndex.get(yTrue[i]);
+      if (yi === undefined) {
+        throw new Error(`Unknown label '${yTrue[i]}' in yTrue.`);
+      }
+      for (let classIndex = 0; classIndex < labels.length; classIndex += 1) {
+        const target = classIndex === yi ? 1 : 0;
+        const diff = probabilities[i][classIndex] - target;
+        total += diff * diff;
+      }
+    }
+    return total / yTrue.length;
+  }
+
+  const probabilities = yPredProb as number[];
+  validateInputs(yTrue, probabilities);
   validateBinaryTargets(yTrue);
   let total = 0;
   for (let i = 0; i < yTrue.length; i += 1) {
-    const diff = yPredProb[i] - yTrue[i];
+    const diff = probabilities[i] - yTrue[i];
     total += diff * diff;
   }
   return total / yTrue.length;

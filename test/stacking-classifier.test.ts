@@ -6,6 +6,16 @@ import {
   StackingClassifier,
 } from "../src";
 
+class LabelOnlyEstimator {
+  fit(): this {
+    return this;
+  }
+
+  predict(X: number[][]): number[] {
+    return X.map((row) => (row[0] >= 3 ? 1 : 0));
+  }
+}
+
 test("StackingClassifier fits base estimators and final estimator", () => {
   const X = [
     [0.0, 0.0],
@@ -45,7 +55,7 @@ test("StackingClassifier validates stackMethod predictProba", () => {
   const X = [[0], [1], [2], [3], [4], [5]];
   const y = [0, 0, 0, 1, 1, 1];
   const model = new StackingClassifier(
-    [["knn", () => new KNeighborsClassifier({ nNeighbors: 1 })]],
+    [["label_only", () => new LabelOnlyEstimator()]],
     () => new GaussianNB(),
     { cv: 3, stackMethod: "predictProba" },
   );
@@ -65,4 +75,32 @@ test("StackingClassifier enforces unique base estimator names", () => {
     { cv: 3 },
   );
   expect(() => model.fit(X, y)).toThrow(/must be unique/i);
+});
+
+test("StackingClassifier supports multiclass stacking", () => {
+  const X = [
+    [0.0, 0.0],
+    [0.1, 0.2],
+    [0.2, -0.1],
+    [2.0, 2.1],
+    [2.2, 1.9],
+    [1.8, 2.0],
+    [4.0, 4.2],
+    [3.9, 4.1],
+    [4.1, 3.8],
+  ];
+  const y = [0, 0, 0, 1, 1, 1, 2, 2, 2];
+
+  const model = new StackingClassifier(
+    [
+      ["gnb", () => new GaussianNB()],
+      ["knn", () => new KNeighborsClassifier({ nNeighbors: 3 })],
+    ],
+    () => new GaussianNB(),
+    { cv: 3, stackMethod: "auto", randomState: 17 },
+  ).fit(X, y);
+
+  expect(model.score(X, y)).toBeGreaterThan(0.9);
+  const proba = model.predictProba(X);
+  expect(proba[0].length).toBe(3);
 });

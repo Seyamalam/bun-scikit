@@ -1,7 +1,7 @@
 import type { ClassificationModel, Matrix, Vector } from "../types";
 import { accuracyScore } from "../metrics/classification";
 import { DecisionTreeClassifier, type MaxFeaturesOption } from "../tree/DecisionTreeClassifier";
-import { assertFiniteVector, validateClassificationInputs } from "../utils/validation";
+import { assertFiniteVector, validateBinaryClassificationInputs } from "../utils/validation";
 import { getZigKernels } from "../native/zigKernels";
 
 export interface RandomForestClassifierOptions {
@@ -65,7 +65,7 @@ export class RandomForestClassifier implements ClassificationModel {
 
   fit(X: Matrix, y: Vector): this {
     this.disposeNativeModel();
-    validateClassificationInputs(X, y);
+    validateBinaryClassificationInputs(X, y);
 
     const sampleCount = X.length;
     const featureCount = X[0].length;

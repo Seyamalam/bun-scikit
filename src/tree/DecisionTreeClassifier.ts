@@ -3,7 +3,7 @@ import {
   assertConsistentRowSize,
   assertFiniteMatrix,
   assertFiniteVector,
-  validateClassificationInputs,
+  validateBinaryClassificationInputs,
 } from "../utils/validation";
 import { accuracyScore } from "../metrics/classification";
 import { getZigKernels } from "../native/zigKernels";
@@ -108,7 +108,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
     this.destroyZigModel();
 
     if (!skipValidation) {
-      validateClassificationInputs(X, y);
+      validateBinaryClassificationInputs(X, y);
     }
     this.featureCount = X[0].length;
     this.flattenedXTrain = flattenedXTrain ?? this.flattenTrainingMatrix(X);

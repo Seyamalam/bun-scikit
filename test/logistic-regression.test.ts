@@ -81,3 +81,37 @@ test("LogisticRegression zig lbfgs solver behavior is deterministic", () => {
   expect(model.fitBackend_).toBe("zig");
   expect(model.predict([[-1], [6]])).toEqual([0, 1]);
 });
+
+test("LogisticRegression supports multiclass OvR", () => {
+  const X = [
+    [0, 0],
+    [0.1, 0.2],
+    [0.2, -0.1],
+    [2.0, 2.1],
+    [2.2, 1.9],
+    [1.8, 2.0],
+    [4.0, 4.2],
+    [3.9, 4.1],
+    [4.2, 3.8],
+  ];
+  const y = [0, 0, 0, 1, 1, 1, 2, 2, 2];
+  const kernels = getZigKernels();
+
+  const model = new LogisticRegression({
+    solver: "lbfgs",
+    maxIter: 60,
+    tolerance: 1e-6,
+    l2: 0.01,
+  });
+
+  if (!kernels) {
+    expect(() => model.fit(X, y)).toThrow(/requires native zig kernels/i);
+    return;
+  }
+
+  model.fit(X, y);
+  expect(model.fitBackend_).toBe("zig");
+  expect(model.score(X, y)).toBeGreaterThan(0.95);
+  const proba = model.predictProba([[0.1, 0.1], [2.1, 2.0], [4.1, 4.0]]);
+  expect(proba[0].length).toBe(3);
+});

@@ -1,13 +1,16 @@
 import type { Matrix, Vector } from "../types";
 import { accuracyScore } from "../metrics/classification";
 import {
-  assertFiniteVector,
-  validateClassificationInputs,
-} from "../utils/validation";
+  argmax,
+  buildLabelIndex,
+  uniqueSortedLabels,
+} from "../utils/classification";
+import { assertFiniteVector, validateClassificationInputs } from "../utils/validation";
 
 export type VotingStrategy = "hard" | "soft";
 
 type ClassifierLike = {
+  classes_?: Vector | null;
   fit(X: Matrix, y: Vector): unknown;
   predict(X: Matrix): Vector;
   predictProba?: (X: Matrix) => Matrix;
@@ -40,6 +43,7 @@ export class VotingClassifier {
   private readonly voting: VotingStrategy;
   private readonly weights?: number[];
   private isFitted = false;
+  private labelToIndex: Map<number, number> = new Map<number, number>();
 
   constructor(estimators: VotingEstimatorSpec[], options: VotingClassifierOptions = {}) {
     if (!Array.isArray(estimators) || estimators.length === 0) {
@@ -58,6 +62,9 @@ export class VotingClassifier {
 
   fit(X: Matrix, y: Vector): this {
     validateClassificationInputs(X, y);
+    this.classes_ = uniqueSortedLabels(y);
+    this.labelToIndex = buildLabelIndex(this.classes_);
+
     const seenNames = new Set<string>();
     const estimators: Array<[string, ClassifierLike]> = [];
 
@@ -81,7 +88,9 @@ export class VotingClassifier {
   predictProba(X: Matrix): Matrix {
     this.assertFitted();
 
-    const probabilities = new Array<number>(X.length).fill(0);
+    const probabilities: Matrix = Array.from({ length: X.length }, () =>
+      new Array<number>(this.classes_.length).fill(0),
+    );
     let weightTotal = 0;
 
     for (let i = 0; i < this.estimators_.length; i += 1) {
@@ -93,41 +102,57 @@ export class VotingClassifier {
       }
       const weight = this.weights?.[i] ?? 1;
       const estProba = estimator.predictProba(X);
-      for (let j = 0; j < estProba.length; j += 1) {
-        probabilities[j] += weight * estProba[j][1];
+      const estClasses = estimator.classes_ && estimator.classes_.length > 0
+        ? estimator.classes_
+        : this.classes_;
+      const estLabelToIndex = buildLabelIndex(estClasses);
+
+      for (let sampleIndex = 0; sampleIndex < estProba.length; sampleIndex += 1) {
+        for (let classIndex = 0; classIndex < this.classes_.length; classIndex += 1) {
+          const label = this.classes_[classIndex];
+          const sourceIndex = estLabelToIndex.get(label);
+          if (sourceIndex === undefined || sourceIndex >= estProba[sampleIndex].length) {
+            continue;
+          }
+          probabilities[sampleIndex][classIndex] += weight * estProba[sampleIndex][sourceIndex];
+        }
       }
       weightTotal += weight;
     }
 
     for (let i = 0; i < probabilities.length; i += 1) {
-      probabilities[i] /= weightTotal;
+      for (let j = 0; j < probabilities[i].length; j += 1) {
+        probabilities[i][j] /= weightTotal;
+      }
     }
 
-    return probabilities.map((prob) => [1 - prob, prob]);
+    return probabilities;
   }
 
   predict(X: Matrix): Vector {
     this.assertFitted();
 
     if (this.voting === "soft") {
-      return this.predictProba(X).map((pair) => (pair[1] >= 0.5 ? 1 : 0));
+      return this.predictProba(X).map((row) => this.classes_[argmax(row)]);
     }
 
-    const votes = new Array<number>(X.length).fill(0);
-    let weightTotal = 0;
+    const voteTotals: Matrix = Array.from({ length: X.length }, () =>
+      new Array<number>(this.classes_.length).fill(0),
+    );
+
     for (let i = 0; i < this.estimators_.length; i += 1) {
       const estimator = this.estimators_[i][1];
       const weight = this.weights?.[i] ?? 1;
       const pred = estimator.predict(X);
-      for (let j = 0; j < pred.length; j += 1) {
-        if (pred[j] === 1) {
-          votes[j] += weight;
+      for (let sampleIndex = 0; sampleIndex < pred.length; sampleIndex += 1) {
+        const classIndex = this.labelToIndex.get(pred[sampleIndex]);
+        if (classIndex !== undefined) {
+          voteTotals[sampleIndex][classIndex] += weight;
         }
       }
-      weightTotal += weight;
     }
 
-    return votes.map((weightedPositiveVotes) => (weightedPositiveVotes * 2 >= weightTotal ? 1 : 0));
+    return voteTotals.map((row) => this.classes_[argmax(row)]);
   }
 
   score(X: Matrix, y: Vector): number {

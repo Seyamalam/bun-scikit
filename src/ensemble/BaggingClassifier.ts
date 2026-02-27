@@ -1,6 +1,11 @@
 import type { Matrix, Vector } from "../types";
 import { accuracyScore } from "../metrics/classification";
 import {
+  argmax,
+  buildLabelIndex,
+  uniqueSortedLabels,
+} from "../utils/classification";
+import {
   assertConsistentRowSize,
   assertFiniteMatrix,
   assertFiniteVector,
@@ -9,6 +14,7 @@ import {
 } from "../utils/validation";
 
 type ClassifierLike = {
+  classes_?: Vector | null;
   fit(X: Matrix, y: Vector): unknown;
   predict(X: Matrix): Vector;
   predictProba?: (X: Matrix) => Matrix;
@@ -115,17 +121,11 @@ function sampleWithoutReplacement(
   return pool.slice(0, size);
 }
 
-function hasBothClasses(y: Vector, indices: number[]): boolean {
-  let hasZero = false;
-  let hasOne = false;
+function hasAllClasses(y: Vector, indices: number[], classCount: number): boolean {
+  const seen = new Set<number>();
   for (let i = 0; i < indices.length; i += 1) {
-    const label = y[indices[i]];
-    if (label === 0) {
-      hasZero = true;
-    } else if (label === 1) {
-      hasOne = true;
-    }
-    if (hasZero && hasOne) {
+    seen.add(y[indices[i]]);
+    if (seen.size === classCount) {
       return true;
     }
   }
@@ -145,6 +145,7 @@ export class BaggingClassifier {
   private readonly bootstrapFeatures: boolean;
   private readonly randomState?: number;
   private nFeaturesIn_: number | null = null;
+  private classToIndex: Map<number, number> = new Map<number, number>();
 
   constructor(
     estimatorFactory: (() => ClassifierLike) | ClassifierLike,
@@ -165,12 +166,14 @@ export class BaggingClassifier {
 
   fit(X: Matrix, y: Vector): this {
     validateClassificationInputs(X, y);
+    this.classes_ = uniqueSortedLabels(y);
+    this.classToIndex = buildLabelIndex(this.classes_);
 
     const nSamples = X.length;
     const nFeatures = X[0].length;
     const sampleCount = resolveSubsetSize(this.maxSamples, nSamples, "maxSamples");
     const featureCount = resolveSubsetSize(this.maxFeatures, nFeatures, "maxFeatures");
-    const trainingHasBothClasses = y.some((value) => value === 0) && y.some((value) => value === 1);
+    const trainingHasAllClasses = this.classes_.length > 1;
 
     const random =
       this.randomState === undefined
@@ -187,12 +190,16 @@ export class BaggingClassifier {
       let sampleIndices = this.bootstrap
         ? sampleWithReplacement(sampleCount, nSamples, random)
         : sampleWithoutReplacement(sampleCount, nSamples, random);
-      if (trainingHasBothClasses && sampleCount >= 2 && !hasBothClasses(y, sampleIndices)) {
+      if (
+        trainingHasAllClasses &&
+        sampleCount >= this.classes_.length &&
+        !hasAllClasses(y, sampleIndices, this.classes_.length)
+      ) {
         for (let retry = 0; retry < 16; retry += 1) {
           sampleIndices = this.bootstrap
             ? sampleWithReplacement(sampleCount, nSamples, random)
             : sampleWithoutReplacement(sampleCount, nSamples, random);
-          if (hasBothClasses(y, sampleIndices)) {
+          if (hasAllClasses(y, sampleIndices, this.classes_.length)) {
             break;
           }
         }
@@ -227,21 +234,23 @@ export class BaggingClassifier {
       throw new Error(`Feature size mismatch. Expected ${this.nFeaturesIn_}, got ${X[0].length}.`);
     }
 
-    const voteCounts = new Array<number>(X.length).fill(0);
+    const voteCounts: Matrix = Array.from({ length: X.length }, () =>
+      new Array<number>(this.classes_.length).fill(0),
+    );
     for (let estimatorIndex = 0; estimatorIndex < this.estimators_.length; estimatorIndex += 1) {
       const estimator = this.estimators_[estimatorIndex];
       const featureIndices = this.estimatorsFeatures_[estimatorIndex];
       const XProjected = subsetColumns(X, featureIndices);
       const predictions = estimator.predict(XProjected);
       for (let i = 0; i < predictions.length; i += 1) {
-        if (predictions[i] === 1) {
-          voteCounts[i] += 1;
+        const classIndex = this.classToIndex.get(predictions[i]);
+        if (classIndex !== undefined) {
+          voteCounts[i][classIndex] += 1;
         }
       }
     }
 
-    const threshold = this.estimators_.length;
-    return voteCounts.map((votes) => (votes * 2 >= threshold ? 1 : 0));
+    return voteCounts.map((row) => this.classes_[argmax(row)]);
   }
 
   predictProba(X: Matrix): Matrix {
@@ -254,28 +263,38 @@ export class BaggingClassifier {
       throw new Error(`Feature size mismatch. Expected ${this.nFeaturesIn_}, got ${X[0].length}.`);
     }
 
-    const positive = new Array<number>(X.length).fill(0);
+    const totals: Matrix = Array.from({ length: X.length }, () =>
+      new Array<number>(this.classes_.length).fill(0),
+    );
     for (let estimatorIndex = 0; estimatorIndex < this.estimators_.length; estimatorIndex += 1) {
       const estimator = this.estimators_[estimatorIndex];
       const featureIndices = this.estimatorsFeatures_[estimatorIndex];
       const XProjected = subsetColumns(X, featureIndices);
       if (typeof estimator.predictProba === "function") {
         const proba = estimator.predictProba(XProjected);
+        const estClasses =
+          estimator.classes_ && estimator.classes_.length > 0 ? estimator.classes_ : this.classes_;
+        const estClassToIndex = buildLabelIndex(estClasses);
         for (let i = 0; i < proba.length; i += 1) {
-          positive[i] += proba[i][1];
+          for (let classIndex = 0; classIndex < this.classes_.length; classIndex += 1) {
+            const sourceIndex = estClassToIndex.get(this.classes_[classIndex]);
+            if (sourceIndex !== undefined && sourceIndex < proba[i].length) {
+              totals[i][classIndex] += proba[i][sourceIndex];
+            }
+          }
         }
       } else {
         const pred = estimator.predict(XProjected);
         for (let i = 0; i < pred.length; i += 1) {
-          positive[i] += pred[i];
+          const classIndex = this.classToIndex.get(pred[i]);
+          if (classIndex !== undefined) {
+            totals[i][classIndex] += 1;
+          }
         }
       }
     }
 
-    return positive.map((sum) => {
-      const p = sum / this.estimators_.length;
-      return [1 - p, p];
-    });
+    return totals.map((row) => row.map((value) => value / this.estimators_.length));
   }
 
   score(X: Matrix, y: Vector): number {

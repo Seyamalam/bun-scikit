@@ -8,6 +8,11 @@ import {
 } from "../utils/validation";
 import { accuracyScore } from "../metrics/classification";
 import { getZigKernels } from "../native/zigKernels";
+import {
+  argmax,
+  normalizeProbabilitiesInPlace,
+  uniqueSortedLabels,
+} from "../utils/classification";
 
 export interface LogisticRegressionOptions {
   fitIntercept?: boolean;
@@ -28,9 +33,16 @@ function sigmoid(z: number): number {
   return expPos / (1 + expPos);
 }
 
+interface BinaryFitResult {
+  coef: Vector;
+  intercept: number;
+  fitBackend: "zig";
+  fitBackendLibrary: string | null;
+}
+
 export class LogisticRegression implements ClassificationModel {
-  coef_: Vector = [];
-  intercept_ = 0;
+  coef_: Vector | Matrix = [];
+  intercept_: number | Vector = 0;
   classes_: Vector = [0, 1];
   fitBackend_: "zig" = "zig";
   fitBackendLibrary_: string | null = null;
@@ -43,6 +55,9 @@ export class LogisticRegression implements ClassificationModel {
   private readonly l2: number;
   private readonly lbfgsMemory: number;
   private isFitted = false;
+  private featureCount = 0;
+  private coefMatrix_: Matrix = [];
+  private interceptVector_: Vector = [];
 
   constructor(options: LogisticRegressionOptions = {}) {
     this.fitIntercept = options.fitIntercept ?? true;
@@ -57,10 +72,84 @@ export class LogisticRegression implements ClassificationModel {
   fit(X: Matrix, y: Vector): this {
     validateClassificationInputs(X, y);
 
+    this.classes_ = uniqueSortedLabels(y);
+    if (this.classes_.length < 2) {
+      throw new Error("LogisticRegression requires at least two classes.");
+    }
+
     const nSamples = X.length;
     const nFeatures = X[0].length;
+    this.featureCount = nFeatures;
     const flattenedX = this.flattenMatrix(X);
-    const yBuffer = this.toFloat64Vector(y);
+
+    this.coefMatrix_ = new Array<Matrix[number]>(this.classes_.length);
+    this.interceptVector_ = new Array<number>(this.classes_.length).fill(0);
+
+    for (let classIndex = 0; classIndex < this.classes_.length; classIndex += 1) {
+      const positiveLabel = this.classes_[classIndex];
+      const binaryTargets = new Float64Array(nSamples);
+      for (let i = 0; i < nSamples; i += 1) {
+        binaryTargets[i] = y[i] === positiveLabel ? 1 : 0;
+      }
+      const fitResult = this.fitBinary(flattenedX, binaryTargets, nSamples, nFeatures);
+      this.coefMatrix_[classIndex] = fitResult.coef;
+      this.interceptVector_[classIndex] = fitResult.intercept;
+      this.fitBackend_ = fitResult.fitBackend;
+      this.fitBackendLibrary_ = fitResult.fitBackendLibrary;
+    }
+
+    if (this.classes_.length === 2) {
+      this.coef_ = this.coefMatrix_[1].slice();
+      this.intercept_ = this.interceptVector_[1];
+    } else {
+      this.coef_ = this.coefMatrix_.map((row) => row.slice());
+      this.intercept_ = this.interceptVector_.slice();
+    }
+
+    this.isFitted = true;
+    return this;
+  }
+
+  predictProba(X: Matrix): Matrix {
+    this.assertFitted();
+    assertConsistentRowSize(X);
+    assertFiniteMatrix(X);
+
+    if (X[0].length !== this.featureCount) {
+      throw new Error(
+        `Feature size mismatch. Expected ${this.featureCount}, got ${X[0].length}.`,
+      );
+    }
+
+    const out: Matrix = new Array(X.length);
+    for (let i = 0; i < X.length; i += 1) {
+      const rowScores = new Array<number>(this.classes_.length);
+      for (let classIndex = 0; classIndex < this.classes_.length; classIndex += 1) {
+        rowScores[classIndex] = sigmoid(
+          this.interceptVector_[classIndex] + dot(X[i], this.coefMatrix_[classIndex]),
+        );
+      }
+      normalizeProbabilitiesInPlace(rowScores);
+      out[i] = rowScores;
+    }
+    return out;
+  }
+
+  predict(X: Matrix): Vector {
+    return this.predictProba(X).map((row) => this.classes_[argmax(row)]);
+  }
+
+  score(X: Matrix, y: Vector): number {
+    assertFiniteVector(y);
+    return accuracyScore(y, this.predict(X));
+  }
+
+  private fitBinary(
+    flattenedX: Float64Array,
+    yBuffer: Float64Array,
+    nSamples: number,
+    nFeatures: number,
+  ): BinaryFitResult {
     const coefficients = new Float64Array(nFeatures);
     const gradients = new Float64Array(nFeatures);
     const intercept = new Float64Array(1);
@@ -73,7 +162,7 @@ export class LogisticRegression implements ClassificationModel {
     }
 
     if (
-      kernels?.logisticModelCreate &&
+      kernels.logisticModelCreate &&
       kernels.logisticModelDestroy &&
       kernels.logisticModelCopyCoefficients &&
       kernels.logisticModelGetIntercept
@@ -92,9 +181,6 @@ export class LogisticRegression implements ClassificationModel {
       }
 
       try {
-        if (!fitNative) {
-          throw new Error("Native solver function is unavailable.");
-        }
         const epochsRan =
           this.solver === "lbfgs"
             ? kernels.logisticModelFitLbfgs!(
@@ -126,13 +212,14 @@ export class LogisticRegression implements ClassificationModel {
           throw new Error("Failed to copy native logistic coefficients.");
         }
 
-        this.fitBackend_ = "zig";
-        this.fitBackendLibrary_ = kernels.libraryPath;
-        this.coef_ = Array.from(coefficients);
-        this.intercept_ = kernels.logisticModelGetIntercept(handle);
-        this.isFitted = true;
+        const result: BinaryFitResult = {
+          coef: Array.from(coefficients),
+          intercept: kernels.logisticModelGetIntercept(handle),
+          fitBackend: "zig",
+          fitBackendLibrary: kernels.libraryPath,
+        };
         kernels.logisticModelDestroy(handle);
-        return this;
+        return result;
       } catch (error) {
         kernels.logisticModelDestroy(handle);
         throw error;
@@ -143,7 +230,7 @@ export class LogisticRegression implements ClassificationModel {
       throw new Error("LogisticRegression solver 'lbfgs' requires native model-handle kernels.");
     }
 
-    if (kernels?.logisticTrainEpoch) {
+    if (kernels.logisticTrainEpoch) {
       if (kernels.logisticTrainEpochs) {
         kernels.logisticTrainEpochs(
           flattenedX,
@@ -180,12 +267,12 @@ export class LogisticRegression implements ClassificationModel {
         }
       }
 
-      this.fitBackend_ = "zig";
-      this.fitBackendLibrary_ = kernels.libraryPath;
-      this.coef_ = Array.from(coefficients);
-      this.intercept_ = intercept[0];
-      this.isFitted = true;
-      return this;
+      return {
+        coef: Array.from(coefficients),
+        intercept: intercept[0],
+        fitBackend: "zig",
+        fitBackendLibrary: kernels.libraryPath,
+      };
     }
 
     throw new Error(
@@ -193,46 +280,10 @@ export class LogisticRegression implements ClassificationModel {
     );
   }
 
-  predictProba(X: Matrix): Matrix {
-    if (!this.isFitted) {
+  private assertFitted(): void {
+    if (!this.isFitted || this.coefMatrix_.length === 0) {
       throw new Error("LogisticRegression has not been fitted.");
     }
-
-    assertConsistentRowSize(X);
-    assertFiniteMatrix(X);
-
-    if (X[0].length !== this.coef_.length) {
-      throw new Error(
-        `Feature size mismatch. Expected ${this.coef_.length}, got ${X[0].length}.`,
-      );
-    }
-
-    return X.map((row) => {
-      const positive = sigmoid(this.intercept_ + dot(row, this.coef_));
-      return [1 - positive, positive];
-    });
-  }
-
-  predict(X: Matrix): Vector {
-    if (!this.isFitted) {
-      throw new Error("LogisticRegression has not been fitted.");
-    }
-
-    assertConsistentRowSize(X);
-    assertFiniteMatrix(X);
-
-    if (X[0].length !== this.coef_.length) {
-      throw new Error(
-        `Feature size mismatch. Expected ${this.coef_.length}, got ${X[0].length}.`,
-      );
-    }
-
-    return this.predictProba(X).map((pair) => (pair[1] >= 0.5 ? 1 : 0));
-  }
-
-  score(X: Matrix, y: Vector): number {
-    assertFiniteVector(y);
-    return accuracyScore(y, this.predict(X));
   }
 
   private flattenMatrix(X: Matrix): Float64Array {
@@ -248,13 +299,4 @@ export class LogisticRegression implements ClassificationModel {
     }
     return flattenedX;
   }
-
-  private toFloat64Vector(y: Vector): Float64Array {
-    const yBuffer = new Float64Array(y.length);
-    for (let i = 0; i < y.length; i += 1) {
-      yBuffer[i] = y[i];
-    }
-    return yBuffer;
-  }
-
 }

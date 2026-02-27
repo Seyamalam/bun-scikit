@@ -74,5 +74,9 @@ export function validateClassificationInputs(X: Matrix, y: Vector): void {
   assertFiniteMatrix(X);
   assertVectorLength(y, X.length);
   assertFiniteVector(y);
+}
+
+export function validateBinaryClassificationInputs(X: Matrix, y: Vector): void {
+  validateClassificationInputs(X, y);
   assertBinaryVector(y);
 }

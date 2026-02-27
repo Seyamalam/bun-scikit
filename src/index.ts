@@ -30,6 +30,9 @@ export * from "./tree/DecisionTreeClassifier";
 export * from "./tree/DecisionTreeRegressor";
 export * from "./ensemble/RandomForestClassifier";
 export * from "./ensemble/RandomForestRegressor";
+export * from "./ensemble/AdaBoostClassifier";
+export * from "./ensemble/GradientBoostingClassifier";
+export * from "./ensemble/GradientBoostingRegressor";
 export * from "./ensemble/VotingClassifier";
 export * from "./ensemble/StackingClassifier";
 export * from "./ensemble/VotingRegressor";
@@ -41,6 +44,7 @@ export * from "./cluster/AgglomerativeClustering";
 export * from "./decomposition/PCA";
 export * from "./decomposition/TruncatedSVD";
 export * from "./decomposition/FastICA";
+export * from "./decomposition/NMF";
 export * from "./calibration/CalibratedClassifierCV";
 
 // Model selection

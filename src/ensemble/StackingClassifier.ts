@@ -1,9 +1,15 @@
 import type { Matrix, Vector } from "../types";
 import { accuracyScore } from "../metrics/classification";
 import { StratifiedKFold } from "../model_selection/StratifiedKFold";
+import {
+  argmax,
+  buildLabelIndex,
+  uniqueSortedLabels,
+} from "../utils/classification";
 import { assertFiniteVector, validateClassificationInputs } from "../utils/validation";
 
 type ClassifierLike = {
+  classes_?: Vector | null;
   fit(X: Matrix, y: Vector): unknown;
   predict(X: Matrix): Vector;
   predictProba?: (X: Matrix) => Matrix;
@@ -58,6 +64,7 @@ export class StackingClassifier {
   private readonly stackMethod: StackingMethod;
   private readonly randomState: number;
   private isFitted = false;
+  private classToIndex: Map<number, number> = new Map<number, number>();
 
   constructor(
     estimators: StackingEstimatorSpec[],
@@ -85,6 +92,8 @@ export class StackingClassifier {
       throw new Error(`cv (${this.cv}) cannot exceed sample count (${X.length}).`);
     }
 
+    this.classes_ = uniqueSortedLabels(y);
+    this.classToIndex = buildLabelIndex(this.classes_);
     const seen = new Set<string>();
     for (let i = 0; i < this.estimatorSpecs.length; i += 1) {
       const name = this.estimatorSpecs[i][0];
@@ -100,23 +109,30 @@ export class StackingClassifier {
       randomState: this.randomState,
     });
     const folds = splitter.split(X, y);
-    const metaFeatures = Array.from({ length: X.length }, () =>
-      new Array<number>(this.estimatorSpecs.length).fill(0),
-    );
+    const metaBlocks: Matrix[] = new Array(this.estimatorSpecs.length);
 
     for (let estimatorIndex = 0; estimatorIndex < this.estimatorSpecs.length; estimatorIndex += 1) {
       const [, estimatorFactory] = this.estimatorSpecs[estimatorIndex];
+      let blockWidth = -1;
+      let block: Matrix = [];
+
       for (let foldIndex = 0; foldIndex < folds.length; foldIndex += 1) {
         const fold = folds[foldIndex];
         const estimator = resolveEstimator(estimatorFactory);
         estimator.fit(subsetMatrix(X, fold.trainIndices), subsetVector(y, fold.trainIndices));
-        const stackValues = this.stackValues(estimator, subsetMatrix(X, fold.testIndices));
+        const stackBlock = this.stackBlock(estimator, subsetMatrix(X, fold.testIndices));
+        if (blockWidth === -1) {
+          blockWidth = stackBlock[0].length;
+          block = Array.from({ length: X.length }, () => new Array<number>(blockWidth).fill(0));
+        }
         for (let i = 0; i < fold.testIndices.length; i += 1) {
-          metaFeatures[fold.testIndices[i]][estimatorIndex] = stackValues[i];
+          block[fold.testIndices[i]] = stackBlock[i];
         }
       }
+      metaBlocks[estimatorIndex] = block;
     }
 
+    const metaFeatures = this.hstack(metaBlocks);
     this.estimators_ = this.estimatorSpecs.map(([name, estimatorFactory]) => {
       const estimator = resolveEstimator(estimatorFactory);
       estimator.fit(X, y);
@@ -132,43 +148,31 @@ export class StackingClassifier {
 
   predictProba(X: Matrix): Matrix {
     this.assertFitted();
+    const metaBlocks = this.estimators_.map(([, estimator]) => this.stackBlock(estimator, X));
+    const finalX = this.buildFinalFeatures(this.hstack(metaBlocks), X);
 
-    const metaFeatures: Matrix = Array.from({ length: X.length }, () =>
-      new Array<number>(this.estimators_.length).fill(0),
-    );
-    for (let estimatorIndex = 0; estimatorIndex < this.estimators_.length; estimatorIndex += 1) {
-      const estimator = this.estimators_[estimatorIndex][1];
-      const values = this.stackValues(estimator, X);
-      for (let sampleIndex = 0; sampleIndex < X.length; sampleIndex += 1) {
-        metaFeatures[sampleIndex][estimatorIndex] = values[sampleIndex];
+    if (typeof this.finalEstimator_!.predictProba === "function") {
+      const proba = this.finalEstimator_!.predictProba(finalX);
+      if (proba.length > 0 && proba[0].length === this.classes_.length) {
+        return proba;
       }
     }
 
-    const finalX = this.buildFinalFeatures(metaFeatures, X);
-    if (typeof this.finalEstimator_!.predictProba === "function") {
-      return this.finalEstimator_!.predictProba(finalX);
-    }
     const labels = this.finalEstimator_!.predict(finalX);
-    return labels.map((label) => [1 - label, label]);
+    return labels.map((label) => {
+      const row = new Array<number>(this.classes_.length).fill(0);
+      const classIndex = this.classToIndex.get(label);
+      if (classIndex !== undefined) {
+        row[classIndex] = 1;
+      }
+      return row;
+    });
   }
 
   predict(X: Matrix): Vector {
     this.assertFitted();
-    if (typeof this.finalEstimator_!.predict === "function") {
-      const metaFeatures: Matrix = Array.from({ length: X.length }, () =>
-        new Array<number>(this.estimators_.length).fill(0),
-      );
-      for (let estimatorIndex = 0; estimatorIndex < this.estimators_.length; estimatorIndex += 1) {
-        const estimator = this.estimators_[estimatorIndex][1];
-        const values = this.stackValues(estimator, X);
-        for (let sampleIndex = 0; sampleIndex < X.length; sampleIndex += 1) {
-          metaFeatures[sampleIndex][estimatorIndex] = values[sampleIndex];
-        }
-      }
-      const finalX = this.buildFinalFeatures(metaFeatures, X);
-      return this.finalEstimator_!.predict(finalX);
-    }
-    return this.predictProba(X).map((pair) => (pair[1] >= 0.5 ? 1 : 0));
+    const proba = this.predictProba(X);
+    return proba.map((row) => this.classes_[argmax(row)]);
   }
 
   score(X: Matrix, y: Vector): number {
@@ -176,22 +180,53 @@ export class StackingClassifier {
     return accuracyScore(y, this.predict(X));
   }
 
-  private stackValues(estimator: ClassifierLike, X: Matrix): Vector {
+  private stackBlock(estimator: ClassifierLike, X: Matrix): Matrix {
     if (this.stackMethod === "predict") {
-      return estimator.predict(X);
+      return estimator.predict(X).map((value) => [value]);
     }
 
     if (this.stackMethod === "predictProba") {
       if (typeof estimator.predictProba !== "function") {
         throw new Error("stackMethod='predictProba' requires base estimators with predictProba().");
       }
-      return estimator.predictProba(X).map((pair) => pair[1]);
+      return this.alignEstimatorProba(estimator, estimator.predictProba(X));
     }
 
     if (typeof estimator.predictProba === "function") {
-      return estimator.predictProba(X).map((pair) => pair[1]);
+      return this.alignEstimatorProba(estimator, estimator.predictProba(X));
     }
-    return estimator.predict(X);
+    return estimator.predict(X).map((value) => [value]);
+  }
+
+  private alignEstimatorProba(estimator: ClassifierLike, proba: Matrix): Matrix {
+    const estimatorClasses =
+      estimator.classes_ && estimator.classes_.length > 0 ? estimator.classes_ : this.classes_;
+    const estimatorClassToIndex = buildLabelIndex(estimatorClasses);
+    const out: Matrix = new Array(proba.length);
+    for (let i = 0; i < proba.length; i += 1) {
+      const row = new Array<number>(this.classes_.length).fill(0);
+      for (let classIndex = 0; classIndex < this.classes_.length; classIndex += 1) {
+        const sourceIndex = estimatorClassToIndex.get(this.classes_[classIndex]);
+        if (sourceIndex !== undefined && sourceIndex < proba[i].length) {
+          row[classIndex] = proba[i][sourceIndex];
+        }
+      }
+      out[i] = row;
+    }
+    return out;
+  }
+
+  private hstack(blocks: Matrix[]): Matrix {
+    const rows = blocks[0].length;
+    const out: Matrix = new Array(rows);
+    for (let i = 0; i < rows; i += 1) {
+      const row: number[] = [];
+      for (let b = 0; b < blocks.length; b += 1) {
+        row.push(...blocks[b][i]);
+      }
+      out[i] = row;
+    }
+    return out;
   }
 
   private buildFinalFeatures(metaFeatures: Matrix, X: Matrix): Matrix {

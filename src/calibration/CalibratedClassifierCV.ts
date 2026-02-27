@@ -2,9 +2,12 @@ import type { Matrix, Vector } from "../types";
 import { accuracyScore } from "../metrics/classification";
 import { StratifiedKFold, type StratifiedKFoldOptions } from "../model_selection/StratifiedKFold";
 import {
-  assertFiniteVector,
-  validateClassificationInputs,
-} from "../utils/validation";
+  argmax,
+  buildLabelIndex,
+  normalizeProbabilitiesInPlace,
+  uniqueSortedLabels,
+} from "../utils/classification";
+import { assertFiniteVector, validateClassificationInputs } from "../utils/validation";
 
 export type CalibrationMethod = "sigmoid" | "isotonic";
 
@@ -16,10 +19,11 @@ export interface CalibratedClassifierCVOptions {
 }
 
 type ProbaLikeEstimator = {
+  classes_?: Vector | null;
   fit(X: Matrix, y: Vector): unknown;
   predict(X: Matrix): Vector;
   predictProba?: (X: Matrix) => Matrix;
-  decisionFunction?: (X: Matrix) => Vector;
+  decisionFunction?: (X: Matrix) => Vector | Matrix;
 };
 
 interface BinaryCalibrator {
@@ -227,22 +231,59 @@ function resolveStratifiedFolds(
   return splitter.split(X, y);
 }
 
-function estimatorScores(estimator: ProbaLikeEstimator, X: Matrix): Vector {
-  if (typeof estimator.decisionFunction === "function") {
-    return estimator.decisionFunction(X);
-  }
-  if (typeof estimator.predictProba === "function") {
-    const probabilities = estimator.predictProba(X);
-    return probabilities.map((row) => row[1]);
-  }
-  return estimator.predict(X);
-}
-
 function makeCalibrator(method: CalibrationMethod): BinaryCalibrator {
   if (method === "sigmoid") {
     return new SigmoidCalibrator();
   }
   return new IsotonicCalibrator();
+}
+
+function alignEstimatorProba(estimator: ProbaLikeEstimator, classes: Vector, proba: Matrix): Matrix {
+  const estimatorClasses = estimator.classes_ && estimator.classes_.length > 0
+    ? estimator.classes_
+    : classes;
+  const estimatorClassToIndex = buildLabelIndex(estimatorClasses);
+  const out: Matrix = new Array(proba.length);
+  for (let i = 0; i < proba.length; i += 1) {
+    const row = new Array<number>(classes.length).fill(0);
+    for (let classIndex = 0; classIndex < classes.length; classIndex += 1) {
+      const sourceIndex = estimatorClassToIndex.get(classes[classIndex]);
+      if (sourceIndex !== undefined && sourceIndex < proba[i].length) {
+        row[classIndex] = proba[i][sourceIndex];
+      }
+    }
+    out[i] = row;
+  }
+  return out;
+}
+
+function estimatorScores(estimator: ProbaLikeEstimator, X: Matrix, classes: Vector): Matrix {
+  if (typeof estimator.predictProba === "function") {
+    return alignEstimatorProba(estimator, classes, estimator.predictProba(X));
+  }
+  if (typeof estimator.decisionFunction === "function") {
+    const decision = estimator.decisionFunction(X);
+    if (Array.isArray(decision[0])) {
+      return alignEstimatorProba(estimator, classes, decision as Matrix);
+    }
+    const scores = decision as Vector;
+    return scores.map((value) => [-value, value]);
+  }
+  const classToIndex = buildLabelIndex(classes);
+  return estimator.predict(X).map((label) => {
+    const row = new Array<number>(classes.length).fill(0);
+    const classIndex = classToIndex.get(label);
+    if (classIndex !== undefined) {
+      row[classIndex] = 1;
+    }
+    return row;
+  });
+}
+
+function normalizeRowsInPlace(X: Matrix): void {
+  for (let i = 0; i < X.length; i += 1) {
+    normalizeProbabilitiesInPlace(X[i]);
+  }
 }
 
 export class CalibratedClassifierCV {
@@ -253,10 +294,10 @@ export class CalibratedClassifierCV {
   private readonly method: CalibrationMethod;
   private readonly ensemble: boolean;
   private readonly randomState: number;
-  private ensembleEstimators: Array<{ estimator: ProbaLikeEstimator; calibrator: BinaryCalibrator }> =
+  private ensembleEstimators: Array<{ estimator: ProbaLikeEstimator; calibrators: BinaryCalibrator[] }> =
     [];
   private finalEstimator: ProbaLikeEstimator | null = null;
-  private finalCalibrator: BinaryCalibrator | null = null;
+  private finalCalibrators: BinaryCalibrator[] = [];
   private isFitted = false;
 
   constructor(
@@ -275,6 +316,7 @@ export class CalibratedClassifierCV {
 
   fit(X: Matrix, y: Vector): this {
     validateClassificationInputs(X, y);
+    this.classes_ = uniqueSortedLabels(y);
 
     const folds = resolveStratifiedFolds(X, y, this.cv, this.randomState);
     if (folds.length < 2) {
@@ -283,26 +325,33 @@ export class CalibratedClassifierCV {
 
     this.ensembleEstimators = [];
     this.finalEstimator = null;
-    this.finalCalibrator = null;
+    this.finalCalibrators = [];
 
     if (this.ensemble) {
       for (let foldIndex = 0; foldIndex < folds.length; foldIndex += 1) {
         const fold = folds[foldIndex];
         const estimator = this.estimatorFactory();
         estimator.fit(subsetMatrix(X, fold.trainIndices), subsetVector(y, fold.trainIndices));
-        const foldScores = estimatorScores(estimator, subsetMatrix(X, fold.testIndices));
+        const foldScores = estimatorScores(estimator, subsetMatrix(X, fold.testIndices), this.classes_);
         const foldTargets = subsetVector(y, fold.testIndices);
-        const calibrator = makeCalibrator(this.method);
-        calibrator.fit(foldScores, foldTargets);
-        this.ensembleEstimators.push({ estimator, calibrator });
+        const calibrators = new Array<BinaryCalibrator>(this.classes_.length);
+        for (let classIndex = 0; classIndex < this.classes_.length; classIndex += 1) {
+          const classLabel = this.classes_[classIndex];
+          const binaryY = foldTargets.map((label) => (label === classLabel ? 1 : 0));
+          const classScores = foldScores.map((row) => row[classIndex]);
+          calibrators[classIndex] = makeCalibrator(this.method).fit(classScores, binaryY);
+        }
+        this.ensembleEstimators.push({ estimator, calibrators });
       }
     } else {
-      const oofScores = new Array<number>(X.length).fill(0);
+      const oofScores: Matrix = Array.from({ length: X.length }, () =>
+        new Array<number>(this.classes_.length).fill(0),
+      );
       for (let foldIndex = 0; foldIndex < folds.length; foldIndex += 1) {
         const fold = folds[foldIndex];
         const estimator = this.estimatorFactory();
         estimator.fit(subsetMatrix(X, fold.trainIndices), subsetVector(y, fold.trainIndices));
-        const foldScores = estimatorScores(estimator, subsetMatrix(X, fold.testIndices));
+        const foldScores = estimatorScores(estimator, subsetMatrix(X, fold.testIndices), this.classes_);
         for (let i = 0; i < fold.testIndices.length; i += 1) {
           oofScores[fold.testIndices[i]] = foldScores[i];
         }
@@ -310,9 +359,13 @@ export class CalibratedClassifierCV {
 
       this.finalEstimator = this.estimatorFactory();
       this.finalEstimator.fit(X, y);
-      const calibrator = makeCalibrator(this.method);
-      calibrator.fit(oofScores, y);
-      this.finalCalibrator = calibrator;
+      this.finalCalibrators = new Array<BinaryCalibrator>(this.classes_.length);
+      for (let classIndex = 0; classIndex < this.classes_.length; classIndex += 1) {
+        const classLabel = this.classes_[classIndex];
+        const binaryY = y.map((label) => (label === classLabel ? 1 : 0));
+        const classScores = oofScores.map((row) => row[classIndex]);
+        this.finalCalibrators[classIndex] = makeCalibrator(this.method).fit(classScores, binaryY);
+      }
     }
 
     this.isFitted = true;
@@ -323,27 +376,55 @@ export class CalibratedClassifierCV {
     this.assertFitted();
 
     if (this.ensemble) {
-      const aggregate = new Array<number>(X.length).fill(0);
+      const aggregate: Matrix = Array.from({ length: X.length }, () =>
+        new Array<number>(this.classes_.length).fill(0),
+      );
       for (let i = 0; i < this.ensembleEstimators.length; i += 1) {
         const pair = this.ensembleEstimators[i];
-        const probabilities = pair.calibrator.predict(estimatorScores(pair.estimator, X));
-        for (let j = 0; j < probabilities.length; j += 1) {
-          aggregate[j] += probabilities[j];
+        const scores = estimatorScores(pair.estimator, X, this.classes_);
+        const calibrated: Matrix = Array.from({ length: X.length }, () =>
+          new Array<number>(this.classes_.length).fill(0),
+        );
+        for (let classIndex = 0; classIndex < this.classes_.length; classIndex += 1) {
+          const classScores = scores.map((row) => row[classIndex]);
+          const classProba = pair.calibrators[classIndex].predict(classScores);
+          for (let rowIndex = 0; rowIndex < classProba.length; rowIndex += 1) {
+            calibrated[rowIndex][classIndex] = classProba[rowIndex];
+          }
+        }
+        normalizeRowsInPlace(calibrated);
+        for (let rowIndex = 0; rowIndex < calibrated.length; rowIndex += 1) {
+          for (let classIndex = 0; classIndex < this.classes_.length; classIndex += 1) {
+            aggregate[rowIndex][classIndex] += calibrated[rowIndex][classIndex];
+          }
         }
       }
-      for (let i = 0; i < aggregate.length; i += 1) {
-        aggregate[i] /= this.ensembleEstimators.length;
+      for (let rowIndex = 0; rowIndex < aggregate.length; rowIndex += 1) {
+        for (let classIndex = 0; classIndex < this.classes_.length; classIndex += 1) {
+          aggregate[rowIndex][classIndex] /= this.ensembleEstimators.length;
+        }
       }
-      return aggregate.map((prob) => [1 - prob, prob]);
+      return aggregate;
     }
 
-    const rawScores = estimatorScores(this.finalEstimator!, X);
-    const calibrated = this.finalCalibrator!.predict(rawScores);
-    return calibrated.map((prob) => [1 - prob, prob]);
+    const scores = estimatorScores(this.finalEstimator!, X, this.classes_);
+    const calibrated: Matrix = Array.from({ length: X.length }, () =>
+      new Array<number>(this.classes_.length).fill(0),
+    );
+    for (let classIndex = 0; classIndex < this.classes_.length; classIndex += 1) {
+      const classScores = scores.map((row) => row[classIndex]);
+      const classProba = this.finalCalibrators[classIndex].predict(classScores);
+      for (let rowIndex = 0; rowIndex < classProba.length; rowIndex += 1) {
+        calibrated[rowIndex][classIndex] = classProba[rowIndex];
+      }
+    }
+    normalizeRowsInPlace(calibrated);
+    return calibrated;
   }
 
   predict(X: Matrix): Vector {
-    return this.predictProba(X).map((pair) => (pair[1] >= 0.5 ? 1 : 0));
+    const proba = this.predictProba(X);
+    return proba.map((row) => this.classes_[argmax(row)]);
   }
 
   score(X: Matrix, y: Vector): number {
@@ -358,7 +439,7 @@ export class CalibratedClassifierCV {
     if (this.ensemble && this.ensembleEstimators.length === 0) {
       throw new Error("CalibratedClassifierCV has not been fitted.");
     }
-    if (!this.ensemble && (!this.finalEstimator || !this.finalCalibrator)) {
+    if (!this.ensemble && (!this.finalEstimator || this.finalCalibrators.length === 0)) {
       throw new Error("CalibratedClassifierCV has not been fitted.");
     }
   }

@@ -6,6 +6,11 @@ import {
   validateClassificationInputs,
 } from "../utils/validation";
 import { accuracyScore } from "../metrics/classification";
+import {
+  argmax,
+  buildLabelIndex,
+  uniqueSortedLabels,
+} from "../utils/classification";
 
 const DEFAULT_VAR_SMOOTHING = 1e-9;
 
@@ -36,7 +41,12 @@ export class GaussianNB implements ClassificationModel {
     const sampleCount = X.length;
     const featureCount = X[0].length;
     this.fittedFeatureCount = featureCount;
-    this.classes_ = [0, 1];
+    this.classes_ = uniqueSortedLabels(y);
+    const classCount = this.classes_.length;
+    const labelToIndex = buildLabelIndex(this.classes_);
+    if (classCount < 2) {
+      throw new Error("GaussianNB requires at least two classes.");
+    }
 
     let maxVariance = 0;
     for (let j = 0; j < featureCount; j += 1) {
@@ -55,22 +65,25 @@ export class GaussianNB implements ClassificationModel {
     }
     this.epsilon = this.varSmoothing * maxVariance;
 
-    const priors = new Array<number>(2).fill(0);
-    const means = Array.from({ length: 2 }, () => new Array<number>(featureCount).fill(0));
-    const variances = Array.from({ length: 2 }, () => new Array<number>(featureCount).fill(0));
-    const counts = new Array<number>(2).fill(0);
+    const priors = new Array<number>(classCount).fill(0);
+    const means = Array.from({ length: classCount }, () => new Array<number>(featureCount).fill(0));
+    const variances = Array.from({ length: classCount }, () => new Array<number>(featureCount).fill(0));
+    const counts = new Array<number>(classCount).fill(0);
 
     for (let i = 0; i < sampleCount; i += 1) {
-      const label = y[i];
-      counts[label] += 1;
+      const classIndex = labelToIndex.get(y[i]);
+      if (classIndex === undefined) {
+        throw new Error(`Unknown label '${y[i]}' in fit targets.`);
+      }
+      counts[classIndex] += 1;
       for (let j = 0; j < featureCount; j += 1) {
-        means[label][j] += X[i][j];
+        means[classIndex][j] += X[i][j];
       }
     }
 
-    for (let cls = 0; cls < 2; cls += 1) {
+    for (let cls = 0; cls < classCount; cls += 1) {
       if (counts[cls] === 0) {
-        throw new Error(`GaussianNB requires both classes to be present. Missing class ${cls}.`);
+        throw new Error(`GaussianNB requires all classes to be present. Missing class ${this.classes_[cls]}.`);
       }
       priors[cls] = counts[cls] / sampleCount;
       for (let j = 0; j < featureCount; j += 1) {
@@ -79,14 +92,17 @@ export class GaussianNB implements ClassificationModel {
     }
 
     for (let i = 0; i < sampleCount; i += 1) {
-      const label = y[i];
+      const classIndex = labelToIndex.get(y[i]);
+      if (classIndex === undefined) {
+        throw new Error(`Unknown label '${y[i]}' in fit targets.`);
+      }
       for (let j = 0; j < featureCount; j += 1) {
-        const diff = X[i][j] - means[label][j];
-        variances[label][j] += diff * diff;
+        const diff = X[i][j] - means[classIndex][j];
+        variances[classIndex][j] += diff * diff;
       }
     }
 
-    for (let cls = 0; cls < 2; cls += 1) {
+    for (let cls = 0; cls < classCount; cls += 1) {
       for (let j = 0; j < featureCount; j += 1) {
         variances[cls][j] = variances[cls][j] / counts[cls] + this.epsilon;
       }
@@ -114,8 +130,8 @@ export class GaussianNB implements ClassificationModel {
     const outputs = new Array<number[]>(X.length);
     for (let i = 0; i < X.length; i += 1) {
       const row = X[i];
-      const logProb = new Array<number>(2).fill(0);
-      for (let cls = 0; cls < 2; cls += 1) {
+      const logProb = new Array<number>(this.classes_.length).fill(0);
+      for (let cls = 0; cls < this.classes_.length; cls += 1) {
         let sum = Math.log(this.classPrior_[cls]);
         for (let j = 0; j < this.fittedFeatureCount; j += 1) {
           const variance = this.var_[cls][j];
@@ -126,11 +142,23 @@ export class GaussianNB implements ClassificationModel {
         logProb[cls] = sum;
       }
 
-      const maxLog = Math.max(logProb[0], logProb[1]);
-      const exp0 = Math.exp(logProb[0] - maxLog);
-      const exp1 = Math.exp(logProb[1] - maxLog);
-      const denom = exp0 + exp1;
-      outputs[i] = [exp0 / denom, exp1 / denom];
+      let maxLog = logProb[0];
+      for (let cls = 1; cls < logProb.length; cls += 1) {
+        if (logProb[cls] > maxLog) {
+          maxLog = logProb[cls];
+        }
+      }
+      const probs = new Array<number>(this.classes_.length).fill(0);
+      let denom = 0;
+      for (let cls = 0; cls < this.classes_.length; cls += 1) {
+        const value = Math.exp(logProb[cls] - maxLog);
+        probs[cls] = value;
+        denom += value;
+      }
+      for (let cls = 0; cls < this.classes_.length; cls += 1) {
+        probs[cls] = probs[cls] / denom;
+      }
+      outputs[i] = probs;
     }
 
     return outputs;
@@ -138,7 +166,7 @@ export class GaussianNB implements ClassificationModel {
 
   predict(X: Matrix): Vector {
     const probabilities = this.predictProba(X);
-    return probabilities.map((pair) => (pair[1] >= 0.5 ? 1 : 0));
+    return probabilities.map((row) => this.classes_[argmax(row)]);
   }
 
   score(X: Matrix, y: Vector): number {

@@ -59,3 +59,29 @@ test("CalibratedClassifierCV throws before fit", () => {
   const model = new CalibratedClassifierCV(() => new GaussianNB());
   expect(() => model.predict([[0]])).toThrow(/has not been fitted/i);
 });
+
+test("CalibratedClassifierCV supports multiclass calibration", () => {
+  const X = [
+    [0.0, 0.0],
+    [0.2, 0.1],
+    [0.1, -0.2],
+    [2.0, 2.1],
+    [2.2, 1.8],
+    [1.8, 2.2],
+    [4.0, 4.1],
+    [4.1, 3.9],
+    [3.8, 4.0],
+  ];
+  const y = [0, 0, 0, 1, 1, 1, 2, 2, 2];
+
+  const model = new CalibratedClassifierCV(() => new GaussianNB(), {
+    cv: 3,
+    method: "sigmoid",
+    ensemble: false,
+    randomState: 21,
+  }).fit(X, y);
+
+  const proba = model.predictProba(X);
+  expect(proba[0].length).toBe(3);
+  expect(model.score(X, y)).toBeGreaterThan(0.9);
+});

@@ -88,8 +88,9 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 ## Included APIs
 
 - Models: `LinearRegression`, `LogisticRegression`, `KNeighborsClassifier`, `DecisionTreeClassifier`, `RandomForestClassifier`, plus additional parity models (`LinearSVC`, `GaussianNB`, `SGDClassifier`, `SGDRegressor`, regressors for tree/forest).
-- Clustering / decomposition: `KMeans`, `DBSCAN`, `AgglomerativeClustering`, `PCA`, `TruncatedSVD`, `FastICA`.
+- Clustering / decomposition: `KMeans`, `DBSCAN`, `AgglomerativeClustering`, `PCA`, `TruncatedSVD`, `FastICA`, `NMF`.
 - Calibration / meta-estimators: `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier`.
+- Boosting: `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor`.
 - Baselines: `DummyClassifier`, `DummyRegressor`.
 - Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`.
 - Composition: `Pipeline`, `ColumnTransformer`, `FeatureUnion`.
@@ -102,10 +103,10 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 | Area | Status |
 | --- | --- |
 | Linear models | `LinearRegression`, `LogisticRegression`, `SGDClassifier`, `SGDRegressor`, `LinearSVC` |
-| Tree/ensemble | `DecisionTreeClassifier`, `DecisionTreeRegressor`, `RandomForestClassifier`, `RandomForestRegressor` |
+| Tree/ensemble | `DecisionTreeClassifier`, `DecisionTreeRegressor`, `RandomForestClassifier`, `RandomForestRegressor`, `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor` |
 | Neighbors / Bayes | `KNeighborsClassifier`, `GaussianNB` |
 | Clustering | `KMeans`, `DBSCAN`, `AgglomerativeClustering` |
-| Decomposition | `PCA`, `TruncatedSVD`, `FastICA` |
+| Decomposition | `PCA`, `TruncatedSVD`, `FastICA`, `NMF` |
 | Calibration / Meta | `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier` |
 | Baselines | `DummyClassifier`, `DummyRegressor` |
 | Preprocessing | `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder` |
@@ -114,7 +115,9 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 | Metrics (regression) | `meanSquaredError`, `meanAbsoluteError`, `r2Score`, `meanAbsolutePercentageError`, `explainedVarianceScore` |
 | Metrics (classification) | `accuracyScore`, `precisionScore`, `recallScore`, `f1Score`, `balancedAccuracyScore`, `matthewsCorrcoef`, `logLoss`, `brierScoreLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport` |
 
-Near-term parity gaps vs scikit-learn include clustering breadth (e.g. spectral), advanced feature selection, inspection/manifold modules, boosting/adaboost families, and decomposition variants beyond the current PCA/SVD/ICA baseline (e.g. NMF/kernel PCA).
+Near-term parity gaps vs scikit-learn include clustering breadth (e.g. spectral), advanced feature selection, inspection/manifold modules, richer boosting variants (hist-gradient/extra trees), and decomposition breadth beyond the current PCA/SVD/ICA/NMF baseline (e.g. kernel PCA/sparse coding).
+
+Multiclass support is available for `GaussianNB`, `KNeighborsClassifier`, `LogisticRegression`, `SGDClassifier`, `LinearSVC`, `VotingClassifier`, `StackingClassifier`, `BaggingClassifier`, and `CalibratedClassifierCV`.
 
 ## Native Runtime
 

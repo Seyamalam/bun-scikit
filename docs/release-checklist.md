@@ -7,6 +7,7 @@ Use this checklist for each release.
 - Ensure `main` CI is green.
 - Run `Release Prep` workflow (or rely on release-triggered `release-prep` gate) and confirm it passes:
   - tests
+  - sklearn snapshot parity tests (`test/sklearn-snapshots.test.ts`)
   - typecheck
   - Zig backend guard test
   - tree hot-path microbench + `bench:hotpaths:check`

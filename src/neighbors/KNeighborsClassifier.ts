@@ -6,6 +6,11 @@ import {
   validateClassificationInputs,
 } from "../utils/validation";
 import { accuracyScore } from "../metrics/classification";
+import {
+  argmax,
+  buildLabelIndex,
+  uniqueSortedLabels,
+} from "../utils/classification";
 
 export interface KNeighborsClassifierOptions {
   nNeighbors?: number;
@@ -25,6 +30,7 @@ export class KNeighborsClassifier implements ClassificationModel {
   private readonly nNeighbors: number;
   private XTrain: Matrix | null = null;
   private yTrain: Vector | null = null;
+  private labelToIndex: Map<number, number> = new Map<number, number>();
 
   constructor(options: KNeighborsClassifierOptions = {}) {
     const nNeighbors = options.nNeighbors ?? 5;
@@ -44,10 +50,12 @@ export class KNeighborsClassifier implements ClassificationModel {
 
     this.XTrain = X.map((row) => [...row]);
     this.yTrain = [...y];
+    this.classes_ = uniqueSortedLabels(y);
+    this.labelToIndex = buildLabelIndex(this.classes_);
     return this;
   }
 
-  predict(X: Matrix): Vector {
+  predictProba(X: Matrix): Matrix {
     if (!this.XTrain || !this.yTrain) {
       throw new Error("KNeighborsClassifier has not been fitted.");
     }
@@ -67,15 +75,22 @@ export class KNeighborsClassifier implements ClassificationModel {
       }));
       distances.sort((a, b) => a.distance - b.distance);
 
-      let positiveVotes = 0;
+      const counts = new Array<number>(this.classes_.length).fill(0);
       for (let i = 0; i < this.nNeighbors; i += 1) {
-        if (distances[i].label === 1) {
-          positiveVotes += 1;
+        const classIndex = this.labelToIndex.get(distances[i].label);
+        if (classIndex !== undefined) {
+          counts[classIndex] += 1;
         }
       }
-
-      return positiveVotes * 2 >= this.nNeighbors ? 1 : 0;
+      for (let i = 0; i < counts.length; i += 1) {
+        counts[i] /= this.nNeighbors;
+      }
+      return counts;
     });
+  }
+
+  predict(X: Matrix): Vector {
+    return this.predictProba(X).map((row) => this.classes_[argmax(row)]);
   }
 
   score(X: Matrix, y: Vector): number {

@@ -69,6 +69,7 @@ jobs:
           bun run index.ts
 
   native-addon-matrix:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -103,6 +104,7 @@ jobs:
         run: bun test test/linear-regression.test.ts test/logistic-regression.test.ts
 
   zig-tree-smoke:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       BUN_SCIKIT_TREE_BACKEND: "zig"
@@ -132,6 +134,7 @@ jobs:
         run: bun test test/zig-backend-guard.test.ts test/decision-tree-classifier.test.ts test/random-forest-classifier.test.ts
 
   benchmarks:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
       BENCH_ITERATIONS: 50
