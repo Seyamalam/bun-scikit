@@ -1,13 +1,23 @@
 import { expect, test } from "bun:test";
 import {
   AdaBoostRegressor,
+  BaggingRegressor,
+  Birch,
   ExtraTreesClassifier,
   ExtraTreesRegressor,
   KNNImputer,
+  KNeighborsRegressor,
   LinearSVR,
+  OneVsOneClassifier,
+  OneVsRestClassifier,
+  OPTICS,
   NuSVC,
   NuSVR,
   OrdinalEncoder,
+  RFECV,
+  RFE,
+  SelectFromModel,
+  SpectralClustering,
   SVC,
   SVR,
 } from "../src";
@@ -31,6 +41,19 @@ test("new estimators expose stable getParams/setParams roundtrip", () => {
     new AdaBoostRegressor(null, { nEstimators: 10 }),
     new ExtraTreesClassifier({ nEstimators: 10 }),
     new ExtraTreesRegressor({ nEstimators: 10 }),
+    new BaggingRegressor(() => new AdaBoostRegressor(null, { nEstimators: 3 }), {
+      nEstimators: 3,
+      randomState: 7,
+    }),
+    new KNeighborsRegressor({ nNeighbors: 2, weights: "distance" }),
+    new SpectralClustering({ nClusters: 2, randomState: 7 }),
+    new Birch({ nClusters: 2, threshold: 0.3 }),
+    new OPTICS({ minSamples: 2, maxEps: 0.5 }),
+    new SelectFromModel(() => new ExtraTreesClassifier({ nEstimators: 5 }), { threshold: "mean" }),
+    new RFE(() => new ExtraTreesClassifier({ nEstimators: 5 }), { nFeaturesToSelect: 1 }),
+    new RFECV(() => new ExtraTreesClassifier({ nEstimators: 5 }), { minFeaturesToSelect: 1 }),
+    new OneVsRestClassifier(() => new SVC({ kernel: "linear" }), { normalizeProba: true }),
+    new OneVsOneClassifier(() => new SVC({ kernel: "linear" })),
   ];
 
   for (const estimator of estimators) {

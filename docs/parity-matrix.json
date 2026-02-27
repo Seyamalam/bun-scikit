@@ -10,8 +10,10 @@
     "AdaBoostRegressor",
     "AgglomerativeClustering",
     "BaggingClassifier",
+    "BaggingRegressor",
     "balancedAccuracyScore",
     "Binarizer",
+    "Birch",
     "brierScoreLoss",
     "CalibratedClassifierCV",
     "chi2",
@@ -46,6 +48,7 @@
     "KFold",
     "KMeans",
     "KNeighborsClassifier",
+    "KNeighborsRegressor",
     "KNNImputer",
     "LabelEncoder",
     "learningCurve",
@@ -60,12 +63,18 @@
     "meanAbsolutePercentageError",
     "meanSquaredError",
     "MinMaxScaler",
+    "mutualInfoClassif",
+    "mutualInfoRegression",
     "NMF",
     "Normalizer",
     "NuSVC",
     "NuSVR",
     "OneHotEncoder",
+    "OneVsOneClassifier",
+    "OneVsRestClassifier",
+    "OPTICS",
     "OrdinalEncoder",
+    "partialDependence",
     "PCA",
     "permutationImportance",
     "Pipeline",
@@ -78,13 +87,17 @@
     "recallScore",
     "RepeatedKFold",
     "RepeatedStratifiedKFold",
+    "RFE",
+    "RFECV",
     "RobustScaler",
     "rocAucScore",
+    "SelectFromModel",
     "SelectKBest",
     "SelectPercentile",
     "SGDClassifier",
     "SGDRegressor",
     "SimpleImputer",
+    "SpectralClustering",
     "StackingClassifier",
     "StackingRegressor",
     "StandardScaler",
@@ -124,7 +137,21 @@
         ]
       },
       {
+        "name": "BaggingRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "Binarizer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "Birch",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -286,6 +313,13 @@
         ]
       },
       {
+        "name": "KNeighborsRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "KNNImputer",
         "requiredMethods": [
           "getParams",
@@ -350,6 +384,29 @@
       },
       {
         "name": "OneHotEncoder",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "OneVsOneClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setFitRequest",
+          "setParams"
+        ]
+      },
+      {
+        "name": "OneVsRestClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setFitRequest",
+          "setParams"
+        ]
+      },
+      {
+        "name": "OPTICS",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -425,7 +482,28 @@
         ]
       },
       {
+        "name": "RFE",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "RFECV",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "RobustScaler",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "SelectFromModel",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -461,6 +539,13 @@
       },
       {
         "name": "SimpleImputer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "SpectralClustering",
         "requiredMethods": [
           "getParams",
           "setParams"

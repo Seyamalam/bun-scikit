@@ -28,6 +28,7 @@ export * from "./linear_model/SGDRegressor";
 
 // Other estimators
 export * from "./neighbors/KNeighborsClassifier";
+export * from "./neighbors/KNeighborsRegressor";
 export * from "./naive_bayes/GaussianNB";
 export * from "./svm/LinearSVC";
 export * from "./svm/SVC";
@@ -50,11 +51,15 @@ export * from "./ensemble/StackingClassifier";
 export * from "./ensemble/VotingRegressor";
 export * from "./ensemble/StackingRegressor";
 export * from "./ensemble/BaggingClassifier";
+export * from "./ensemble/BaggingRegressor";
 export * from "./ensemble/ExtraTreesClassifier";
 export * from "./ensemble/ExtraTreesRegressor";
 export * from "./cluster/KMeans";
 export * from "./cluster/DBSCAN";
 export * from "./cluster/AgglomerativeClustering";
+export * from "./cluster/SpectralClustering";
+export * from "./cluster/Birch";
+export * from "./cluster/OPTICS";
 export * from "./decomposition/PCA";
 export * from "./decomposition/TruncatedSVD";
 export * from "./decomposition/FastICA";
@@ -83,6 +88,7 @@ export * from "./model_selection/RandomizedSearchCV";
 // Feature selection
 export * from "./feature_selection/VarianceThreshold";
 export * from "./feature_selection/univariateSelection";
+export * from "./feature_selection/modelBasedSelection";
 
 // Composition
 export * from "./pipeline/Pipeline";
@@ -95,3 +101,8 @@ export * from "./metrics/classification";
 
 // Inspection
 export * from "./inspection/permutationImportance";
+export * from "./inspection/partialDependence";
+
+// Multiclass
+export * from "./multiclass/OneVsRestClassifier";
+export * from "./multiclass/OneVsOneClassifier";

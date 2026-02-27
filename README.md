@@ -94,10 +94,10 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 - Baselines: `DummyClassifier`, `DummyRegressor`.
 - Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`.
 - Composition: `Pipeline`, `ColumnTransformer`, `FeatureUnion`.
-- Feature selection: `VarianceThreshold`, `SelectKBest`, `SelectPercentile`, `chi2`, `f_classif`, `f_regression`.
+- Feature selection: `VarianceThreshold`, `SelectKBest`, `SelectPercentile`, `SelectFromModel`, `RFE`, `RFECV`, `chi2`, `f_classif`, `f_regression`, `mutualInfoClassif`, `mutualInfoRegression`.
 - Model selection: `trainTestSplit`, `KFold`, `GroupKFold`, `GroupShuffleSplit`, `StratifiedKFold`, `StratifiedGroupKFold`, stratified/repeated splitters, `crossValScore`, `crossValidate`, `crossValPredict`, `learningCurve`, `validationCurve`, `GridSearchCV`, `RandomizedSearchCV`.
 - Metrics: regression and classification metrics, including `logLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport`, `balancedAccuracyScore`, `matthewsCorrcoef`, `brierScoreLoss`, `meanAbsolutePercentageError`, and `explainedVarianceScore`.
-- Inspection: `permutationImportance`.
+- Inspection: `permutationImportance`, `partialDependence`.
 
 ## Scikit Parity Matrix
 
@@ -105,18 +105,18 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 | --- | --- |
 | Linear models | `LinearRegression`, `LogisticRegression`, `SGDClassifier`, `SGDRegressor`, `LinearSVC` |
 | Tree/ensemble | `DecisionTreeClassifier`, `DecisionTreeRegressor`, `RandomForestClassifier`, `RandomForestRegressor`, `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor` |
-| Neighbors / Bayes | `KNeighborsClassifier`, `GaussianNB` |
-| Clustering | `KMeans`, `DBSCAN`, `AgglomerativeClustering` |
+| Neighbors / Bayes | `KNeighborsClassifier`, `KNeighborsRegressor`, `GaussianNB` |
+| Clustering | `KMeans`, `DBSCAN`, `AgglomerativeClustering`, `SpectralClustering`, `Birch`, `OPTICS` |
 | Decomposition | `PCA`, `TruncatedSVD`, `FastICA`, `NMF`, `KernelPCA` |
-| Calibration / Meta | `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier` |
+| Calibration / Meta | `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier`, `BaggingRegressor`, `OneVsRestClassifier`, `OneVsOneClassifier` |
 | Baselines | `DummyClassifier`, `DummyRegressor` |
 | Preprocessing | `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder` |
-| Feature selection | `VarianceThreshold` |
+| Feature selection | `VarianceThreshold`, `SelectKBest`, `SelectPercentile`, `SelectFromModel`, `RFE`, `RFECV`, `chi2`, `f_classif`, `f_regression`, `mutualInfoClassif`, `mutualInfoRegression` |
 | Model selection | `trainTestSplit`, `KFold`, `StratifiedKFold`, `StratifiedShuffleSplit`, `RepeatedKFold`, `RepeatedStratifiedKFold`, `crossValScore`, `GridSearchCV`, `RandomizedSearchCV` |
 | Metrics (regression) | `meanSquaredError`, `meanAbsoluteError`, `r2Score`, `meanAbsolutePercentageError`, `explainedVarianceScore` |
 | Metrics (classification) | `accuracyScore`, `precisionScore`, `recallScore`, `f1Score`, `balancedAccuracyScore`, `matthewsCorrcoef`, `logLoss`, `brierScoreLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport` |
 
-Near-term parity gaps vs scikit-learn include clustering breadth (e.g. spectral), advanced feature selection, inspection/manifold modules, richer boosting variants (hist-gradient/extra trees), and decomposition breadth beyond the current PCA/SVD/ICA/NMF baseline (e.g. kernel PCA/sparse coding).
+Near-term parity gaps vs scikit-learn include manifold learning APIs (e.g. t-SNE/Isomap/LLE), richer inspection/interpretability modules, anomaly detection breadth (e.g. isolation forest/lof), and broader decomposition/feature extraction coverage beyond the current PCA/SVD/ICA/NMF/KernelPCA baseline.
 
 Multiclass support is available for `GaussianNB`, `KNeighborsClassifier`, `LogisticRegression`, `SGDClassifier`, `LinearSVC`, `DecisionTreeClassifier`, `RandomForestClassifier`, `VotingClassifier`, `StackingClassifier`, `BaggingClassifier`, and `CalibratedClassifierCV`.
 

@@ -1,7 +1,10 @@
 import { CalibratedClassifierCV } from "../calibration/CalibratedClassifierCV";
 import { AgglomerativeClustering } from "../cluster/AgglomerativeClustering";
+import { Birch } from "../cluster/Birch";
 import { DBSCAN } from "../cluster/DBSCAN";
 import { KMeans } from "../cluster/KMeans";
+import { OPTICS } from "../cluster/OPTICS";
+import { SpectralClustering } from "../cluster/SpectralClustering";
 import { FastICA } from "../decomposition/FastICA";
 import { KernelPCA } from "../decomposition/KernelPCA";
 import { NMF } from "../decomposition/NMF";
@@ -11,6 +14,7 @@ import { DummyClassifier } from "../dummy/DummyClassifier";
 import { DummyRegressor } from "../dummy/DummyRegressor";
 import { AdaBoostClassifier } from "../ensemble/AdaBoostClassifier";
 import { BaggingClassifier } from "../ensemble/BaggingClassifier";
+import { BaggingRegressor } from "../ensemble/BaggingRegressor";
 import { GradientBoostingClassifier } from "../ensemble/GradientBoostingClassifier";
 import { GradientBoostingRegressor } from "../ensemble/GradientBoostingRegressor";
 import { HistGradientBoostingClassifier } from "../ensemble/HistGradientBoostingClassifier";
@@ -26,6 +30,7 @@ import {
   SelectKBest,
   SelectPercentile,
 } from "../feature_selection/univariateSelection";
+import { RFECV, RFE, SelectFromModel } from "../feature_selection/modelBasedSelection";
 import { LinearRegression } from "../linear_model/LinearRegression";
 import { LogisticRegression } from "../linear_model/LogisticRegression";
 import { SGDClassifier } from "../linear_model/SGDClassifier";
@@ -42,6 +47,7 @@ import { StratifiedKFold } from "../model_selection/StratifiedKFold";
 import { StratifiedShuffleSplit } from "../model_selection/StratifiedShuffleSplit";
 import { GaussianNB } from "../naive_bayes/GaussianNB";
 import { KNeighborsClassifier } from "../neighbors/KNeighborsClassifier";
+import { KNeighborsRegressor } from "../neighbors/KNeighborsRegressor";
 import { Binarizer } from "../preprocessing/Binarizer";
 import { KNNImputer } from "../preprocessing/KNNImputer";
 import { LabelEncoder } from "../preprocessing/LabelEncoder";
@@ -57,6 +63,8 @@ import { StandardScaler } from "../preprocessing/StandardScaler";
 import { LinearSVC } from "../svm/LinearSVC";
 import { DecisionTreeClassifier } from "../tree/DecisionTreeClassifier";
 import { DecisionTreeRegressor } from "../tree/DecisionTreeRegressor";
+import { OneVsOneClassifier } from "../multiclass/OneVsOneClassifier";
+import { OneVsRestClassifier } from "../multiclass/OneVsRestClassifier";
 
 type Constructor = { prototype: object };
 
@@ -133,6 +141,7 @@ installParamsApi(LinearSVC, {
   params: ["fitIntercept", "C", "learningRate", "maxIter", "tolerance"],
 });
 installParamsApi(KNeighborsClassifier, { params: ["nNeighbors"] });
+installParamsApi(KNeighborsRegressor, { params: ["nNeighbors", "weights"] });
 installParamsApi(GaussianNB, { params: ["varSmoothing"] });
 installParamsApi(DecisionTreeClassifier, {
   params: ["maxDepth", "minSamplesSplit", "minSamplesLeaf", "maxFeatures", "randomState"],
@@ -220,15 +229,25 @@ installParamsApi(HistGradientBoostingRegressor, {
 installParamsApi(BaggingClassifier, {
   params: ["nEstimators", "maxSamples", "maxFeatures", "bootstrap", "bootstrapFeatures", "randomState"],
 });
+installParamsApi(BaggingRegressor, {
+  params: ["nEstimators", "maxSamples", "maxFeatures", "bootstrap", "bootstrapFeatures", "randomState"],
+});
 installParamsApi(VotingClassifier, { params: ["voting", "weights"] });
 installParamsApi(VotingRegressor, { params: ["weights"] });
 installParamsApi(StackingClassifier, { params: ["cv", "passthrough", "stackMethod", "randomState"] });
 installParamsApi(StackingRegressor, { params: ["cv", "passthrough", "randomState"] });
+installParamsApi(OneVsRestClassifier, { params: ["normalizeProba"] });
+installParamsApi(OneVsOneClassifier, { params: [] });
 installParamsApi(CalibratedClassifierCV, { params: ["cv", "method", "ensemble", "randomState"] });
 
 installParamsApi(KMeans, { params: ["nClusters", "nInit", "maxIter", "tolerance", "randomState"] });
 installParamsApi(DBSCAN, { params: ["eps", "minSamples"] });
 installParamsApi(AgglomerativeClustering, { params: ["nClusters", "linkage", "metric"] });
+installParamsApi(SpectralClustering, {
+  params: ["nClusters", "affinity", "gamma", "nNeighbors", "nInit", "maxIter", "randomState"],
+});
+installParamsApi(Birch, { params: ["threshold", "branchingFactor", "nClusters", "computeLabels"] });
+installParamsApi(OPTICS, { params: ["minSamples", "maxEps", "eps", "clusterMethod"] });
 
 installParamsApi(PCA, { params: ["nComponents", "whiten", "tolerance", "maxIter"] });
 installParamsApi(TruncatedSVD, { params: ["nComponents", "nIter", "tolerance", "randomState"] });
@@ -241,6 +260,13 @@ installParamsApi(KernelPCA, {
 installParamsApi(VarianceThreshold, { params: ["threshold"] });
 installParamsApi(SelectKBest, { params: ["scoreFunc", "k"] });
 installParamsApi(SelectPercentile, { params: ["scoreFunc", "percentile"] });
+installParamsApi(SelectFromModel, {
+  params: ["threshold", "maxFeatures", "prefit", "importanceGetter"],
+});
+installParamsApi(RFE, { params: ["nFeaturesToSelect", "step", "importanceGetter"] });
+installParamsApi(RFECV, {
+  params: ["cv", "scoring", "minFeaturesToSelect", "step", "importanceGetter"],
+});
 
 installParamsApi(DummyClassifier, {
   params: ["strategy", "constant", "randomState"],
