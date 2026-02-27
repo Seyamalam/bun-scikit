@@ -89,10 +89,22 @@ jobs:
         run: bun run typecheck
 
       - name: Validate parity matrix coverage
+        env:
+          PARITY_MATRIX_REPORT_PATH: "bench/results/parity/parity-matrix-report.json"
         run: bun run parity:matrix:check
 
       - name: Run sklearn snapshot parity checks
+        env:
+          PARITY_SKLEARN_REPORT_PATH: "bench/results/parity/parity-sklearn-report.json"
         run: bun run parity:check
+
+      - name: Build parity report bundle
+        env:
+          PARITY_REPORT_DIR: "bench/results/parity"
+          PARITY_MATRIX_REPORT_PATH: "bench/results/parity/parity-matrix-report.json"
+          PARITY_SKLEARN_REPORT_PATH: "bench/results/parity/parity-sklearn-report.json"
+          PARITY_HISTORY_PATH: "bench/results/history/parity-history.jsonl"
+        run: bun run parity:report
 
       - name: Run Zig backend guard test
         env:

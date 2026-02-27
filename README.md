@@ -95,8 +95,9 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 - Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`.
 - Composition: `Pipeline`, `ColumnTransformer`, `FeatureUnion`.
 - Feature selection: `VarianceThreshold`.
-- Model selection: `trainTestSplit`, `KFold`, stratified/repeated splitters, `crossValScore`, `crossValidate`, `crossValPredict`, `learningCurve`, `validationCurve`, `GridSearchCV`, `RandomizedSearchCV`.
+- Model selection: `trainTestSplit`, `KFold`, `GroupKFold`, `GroupShuffleSplit`, `StratifiedKFold`, `StratifiedGroupKFold`, stratified/repeated splitters, `crossValScore`, `crossValidate`, `crossValPredict`, `learningCurve`, `validationCurve`, `GridSearchCV`, `RandomizedSearchCV`.
 - Metrics: regression and classification metrics, including `logLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport`, `balancedAccuracyScore`, `matthewsCorrcoef`, `brierScoreLoss`, `meanAbsolutePercentageError`, and `explainedVarianceScore`.
+- Inspection: `permutationImportance`.
 
 ## Scikit Parity Matrix
 
@@ -139,6 +140,7 @@ Optional env vars:
 Parity checks are enforced in CI using:
 - API parity matrix coverage (`bun run parity:matrix:check`)
 - sklearn snapshot fixtures with multi-seed drift checks (`bun run parity:check`)
+- versioned parity report artifacts (`bun run parity:report`)
 
 ## Performance Snapshot
 

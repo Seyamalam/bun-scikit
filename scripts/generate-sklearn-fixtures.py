@@ -21,7 +21,8 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import KFold, cross_val_predict
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
 
@@ -105,6 +106,27 @@ def build_fixtures(seed: int, seeds: list[int]) -> dict:
         cv=KFold(n_splits=4, shuffle=False),
         method="predict",
     )
+
+    X_composition = np.array(
+        [
+            [1.0, 10.0, 100.0],
+            [2.0, 20.0, 200.0],
+            [3.0, 10.0, 300.0],
+            [4.0, 30.0, 400.0],
+        ],
+        dtype=float,
+    )
+
+    pipeline_scaler_transform = Pipeline(
+        steps=[("scaler", StandardScaler())]
+    ).fit_transform(X_composition)
+    column_transformer_transform = ColumnTransformer(
+        transformers=[
+            ("scale_col0", MinMaxScaler(), [0]),
+            ("encode_col1", OneHotEncoder(sparse_output=False, handle_unknown="ignore"), [1]),
+        ],
+        remainder="passthrough",
+    ).fit_transform(X_composition)
 
     hgb_clf = HistGradientBoostingClassifier(
         max_iter=120,
@@ -193,6 +215,8 @@ def build_fixtures(seed: int, seeds: list[int]) -> dict:
             "pipeline_logreg_probe_proba_mad": 0.15,
             "pipeline_logreg_train_mismatch": 0.12,
             "pipeline_cv_predict_mismatch": 0.2,
+            "composition_pipeline_transform_mse": 1e-10,
+            "composition_column_transformer_mse": 1e-10,
         },
         "multiclass": {
             "X": X_multi.tolist(),
@@ -217,6 +241,11 @@ def build_fixtures(seed: int, seeds: list[int]) -> dict:
             "probe_proba": pipeline_logreg_probe_proba.tolist(),
             "train_pred": pipeline_logreg_train_pred.tolist(),
             "cv_predict_kfold4": pipeline_cv_pred.tolist(),
+        },
+        "composition": {
+            "X": X_composition.tolist(),
+            "pipeline_scaler_transform": pipeline_scaler_transform.tolist(),
+            "column_transformer_transform": column_transformer_transform.tolist(),
         },
         "hist_gradient_boosting": {
             "X_binary": X_binary.tolist(),

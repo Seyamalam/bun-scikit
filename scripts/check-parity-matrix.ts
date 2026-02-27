@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import * as api from "../src";
 
 interface ClassContract {
@@ -65,6 +65,8 @@ const missingInRuntime = matrixExports.filter((name) => !(name in api));
 const missingInMatrix = runtimeExports.filter((name) => !matrix.requiredExports.includes(name));
 
 let failed = false;
+const classContractFailures: string[] = [];
+const interfaceContractFailures: string[] = [];
 
 if (missingInRuntime.length > 0) {
   failed = true;
@@ -94,6 +96,7 @@ for (const contract of matrix.contracts.classes) {
   for (const method of contract.requiredMethods) {
     if (typeof prototype[method] !== "function") {
       failed = true;
+      classContractFailures.push(`${contract.name}.${method}`);
       console.error(`Class '${contract.name}' is missing required method '${method}'.`);
     }
   }
@@ -106,11 +109,37 @@ for (const contract of matrix.contracts.interfaces) {
   for (const field of contract.requiredFields) {
     if (!fields.includes(field)) {
       failed = true;
+      interfaceContractFailures.push(`${contract.name}.${field}`);
       console.error(
         `Interface '${contract.name}' (${contract.sourceFile}) is missing required field '${field}'.`,
       );
     }
   }
+}
+
+const reportPath = process.env.PARITY_MATRIX_REPORT_PATH;
+if (reportPath) {
+  const absoluteReportPath = resolve(reportPath);
+  mkdirSync(dirname(absoluteReportPath), { recursive: true });
+  writeFileSync(
+    absoluteReportPath,
+    JSON.stringify(
+      {
+        generatedAt: new Date().toISOString(),
+        targetSklearnVersion: matrix.metadata.targetSklearnVersion,
+        runtimeExportCount: runtimeExports.length,
+        requiredExportCount: matrix.requiredExports.length,
+        missingInRuntime,
+        missingInMatrix,
+        classContractFailures,
+        interfaceContractFailures,
+        failed,
+      },
+      null,
+      2,
+    ),
+    "utf-8",
+  );
 }
 
 if (failed) {

@@ -8,3 +8,5 @@ prebuilt_tmp/
 bench/results/heart-ci-current.json
 bench/results/heart-ci-current.md
 bench/results/tree-hotpaths-current.json
+bench/results/parity/
+bench/results/history/parity-history.jsonl

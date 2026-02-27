@@ -1,3 +1,5 @@
+import "./utils/installParamsApi";
+
 export * from "./types";
 
 // Baselines
@@ -65,6 +67,8 @@ export * from "./model_selection/trainTestSplit";
 export * from "./model_selection/KFold";
 export * from "./model_selection/StratifiedKFold";
 export * from "./model_selection/GroupKFold";
+export * from "./model_selection/GroupShuffleSplit";
+export * from "./model_selection/StratifiedGroupKFold";
 export * from "./model_selection/StratifiedShuffleSplit";
 export * from "./model_selection/RepeatedKFold";
 export * from "./model_selection/RepeatedStratifiedKFold";
@@ -87,3 +91,6 @@ export * from "./pipeline/FeatureUnion";
 // Metrics
 export * from "./metrics/regression";
 export * from "./metrics/classification";
+
+// Inspection
+export * from "./inspection/permutationImportance";

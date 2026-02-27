@@ -25,7 +25,9 @@
     "multi_seed_random_forest_mismatch_avg": 0.12,
     "pipeline_logreg_probe_proba_mad": 0.15,
     "pipeline_logreg_train_mismatch": 0.12,
-    "pipeline_cv_predict_mismatch": 0.2
+    "pipeline_cv_predict_mismatch": 0.2,
+    "composition_pipeline_transform_mse": 1e-10,
+    "composition_column_transformer_mse": 1e-10
   },
   "multiclass": {
     "X": [
@@ -345,6 +347,82 @@
       1,
       1,
       1
+    ]
+  },
+  "composition": {
+    "X": [
+      [
+        1.0,
+        10.0,
+        100.0
+      ],
+      [
+        2.0,
+        20.0,
+        200.0
+      ],
+      [
+        3.0,
+        10.0,
+        300.0
+      ],
+      [
+        4.0,
+        30.0,
+        400.0
+      ]
+    ],
+    "pipeline_scaler_transform": [
+      [
+        -1.3416407864998738,
+        -0.9045340337332908,
+        -1.3416407864998738
+      ],
+      [
+        -0.4472135954999579,
+        0.3015113445777636,
+        -0.4472135954999579
+      ],
+      [
+        0.4472135954999579,
+        -0.9045340337332908,
+        0.4472135954999579
+      ],
+      [
+        1.3416407864998738,
+        1.507556722888818,
+        1.3416407864998738
+      ]
+    ],
+    "column_transformer_transform": [
+      [
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        100.0
+      ],
+      [
+        0.3333333333333333,
+        0.0,
+        1.0,
+        0.0,
+        200.0
+      ],
+      [
+        0.6666666666666667,
+        1.0,
+        0.0,
+        0.0,
+        300.0
+      ],
+      [
+        1.0,
+        0.0,
+        0.0,
+        1.0,
+        400.0
+      ]
     ]
   },
   "hist_gradient_boosting": {

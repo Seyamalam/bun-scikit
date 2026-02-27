@@ -1,7 +1,8 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import {
   CalibratedClassifierCV,
+  ColumnTransformer,
   DecisionTreeClassifier,
   GaussianNB,
   HistGradientBoostingClassifier,
@@ -10,7 +11,9 @@ import {
   KFold,
   KNeighborsClassifier,
   LogisticRegression,
+  MinMaxScaler,
   NMF,
+  OneHotEncoder,
   Pipeline,
   RandomForestClassifier,
   StandardScaler,
@@ -273,6 +276,29 @@ const metrics: Record<string, number> = {};
 }
 
 {
+  const section = fixture.composition;
+  const pipeline = new Pipeline([["scaler", new StandardScaler()]]);
+  const pipelineOut = pipeline.fitTransform(section.X);
+  metrics.composition_pipeline_transform_mse = meanSquaredErrorMatrix(
+    pipelineOut,
+    section.pipeline_scaler_transform,
+  );
+
+  const ct = new ColumnTransformer(
+    [
+      ["scale_col0", new MinMaxScaler(), [0]],
+      ["encode_col1", new OneHotEncoder(), [1]],
+    ],
+    { remainder: "passthrough" },
+  );
+  const ctOut = ct.fitTransform(section.X);
+  metrics.composition_column_transformer_mse = meanSquaredErrorMatrix(
+    ctOut,
+    section.column_transformer_transform,
+  );
+}
+
+{
   const seeds: number[] = fixture.multi_seed.seeds;
   const previousTreeBackend = process.env.BUN_SCIKIT_TREE_BACKEND;
   process.env.BUN_SCIKIT_TREE_BACKEND = "js";
@@ -371,9 +397,18 @@ const limits: Record<string, number> = {
     "PARITY_MAX_PIPELINE_CV_PREDICT_MISMATCH",
     fixtureThresholds.pipeline_cv_predict_mismatch ?? 0.2,
   ),
+  composition_pipeline_transform_mse: threshold(
+    "PARITY_MAX_COMPOSITION_PIPELINE_TRANSFORM_MSE",
+    fixtureThresholds.composition_pipeline_transform_mse ?? 1e-10,
+  ),
+  composition_column_transformer_mse: threshold(
+    "PARITY_MAX_COMPOSITION_COLUMN_TRANSFORMER_MSE",
+    fixtureThresholds.composition_column_transformer_mse ?? 1e-10,
+  ),
 };
 
 let failed = false;
+const failures: string[] = [];
 for (const [name, value] of Object.entries(metrics)) {
   const limit = limits[name];
   const pass = value <= limit;
@@ -381,7 +416,29 @@ for (const [name, value] of Object.entries(metrics)) {
   console.log(`${status} ${name}: value=${value} limit=${limit}`);
   if (!pass) {
     failed = true;
+    failures.push(name);
   }
+}
+
+const reportPath = process.env.PARITY_SKLEARN_REPORT_PATH;
+if (reportPath) {
+  const absoluteReportPath = resolve(reportPath);
+  mkdirSync(dirname(absoluteReportPath), { recursive: true });
+  writeFileSync(
+    absoluteReportPath,
+    JSON.stringify(
+      {
+        generatedAt: new Date().toISOString(),
+        failed,
+        failures,
+        metrics,
+        limits,
+      },
+      null,
+      2,
+    ),
+    "utf-8",
+  );
 }
 
 if (failed) {

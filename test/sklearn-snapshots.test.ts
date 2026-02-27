@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   CalibratedClassifierCV,
+  ColumnTransformer,
   DecisionTreeClassifier,
   GaussianNB,
   HistGradientBoostingClassifier,
@@ -11,7 +12,9 @@ import {
   KernelPCA,
   KNeighborsClassifier,
   LogisticRegression,
+  MinMaxScaler,
   NMF,
+  OneHotEncoder,
   Pipeline,
   RandomForestClassifier,
   StandardScaler,
@@ -244,4 +247,24 @@ test("crossValPredict matches sklearn fixture within mismatch tolerance", () => 
     }
   }
   expect(mismatch / pred.length).toBeLessThan(0.2);
+});
+
+test("Pipeline transformer-only output stays close to sklearn snapshot", () => {
+  const section = fixture.composition;
+  const model = new Pipeline([["scaler", new StandardScaler()]]);
+  const transformed = model.fitTransform(section.X);
+  expect(meanSquaredError(transformed, section.pipeline_scaler_transform)).toBeLessThan(1e-10);
+});
+
+test("ColumnTransformer output stays close to sklearn snapshot", () => {
+  const section = fixture.composition;
+  const model = new ColumnTransformer(
+    [
+      ["scale_col0", new MinMaxScaler(), [0]],
+      ["encode_col1", new OneHotEncoder(), [1]],
+    ],
+    { remainder: "passthrough" },
+  );
+  const transformed = model.fitTransform(section.X);
+  expect(meanSquaredError(transformed, section.column_transformer_transform)).toBeLessThan(1e-10);
 });

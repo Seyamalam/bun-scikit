@@ -26,6 +26,7 @@
     "GradientBoostingRegressor",
     "GridSearchCV",
     "GroupKFold",
+    "GroupShuffleSplit",
     "HistGradientBoostingClassifier",
     "HistGradientBoostingRegressor",
     "KFold",
@@ -86,24 +87,49 @@
     "meanAbsolutePercentageError",
     "meanSquaredError",
     "precisionScore",
+    "permutationImportance",
     "r2Score",
     "recallScore",
     "rocAucScore",
+    "StratifiedGroupKFold",
     "trainTestSplit",
     "validationCurve"
   ],
   "contracts": {
     "classes": [
       {
-        "name": "Pipeline",
+        "name": "AdaBoostClassifier",
         "requiredMethods": [
-          "fit",
-          "predict",
-          "transform",
-          "fitTransform",
           "getParams",
-          "setParams",
-          "score"
+          "setParams"
+        ]
+      },
+      {
+        "name": "AgglomerativeClustering",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "BaggingClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "Binarizer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "CalibratedClassifierCV",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
         ]
       },
       {
@@ -117,11 +143,373 @@
         ]
       },
       {
+        "name": "DBSCAN",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "DecisionTreeClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "DecisionTreeRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "DummyClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "DummyRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "FastICA",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "FeatureUnion",
         "requiredMethods": [
           "fit",
           "transform",
           "fitTransform",
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "GaussianNB",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "GradientBoostingClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "GradientBoostingRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "GridSearchCV",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "GroupKFold",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "GroupShuffleSplit",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "HistGradientBoostingClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "HistGradientBoostingRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "KernelPCA",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "KFold",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "KMeans",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "KNeighborsClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "KNNImputer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "LabelEncoder",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "LinearRegression",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "LinearSVC",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "LogisticRegression",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MaxAbsScaler",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MinMaxScaler",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "NMF",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "Normalizer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "OneHotEncoder",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "OrdinalEncoder",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "PCA",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "Pipeline",
+        "requiredMethods": [
+          "fit",
+          "predict",
+          "transform",
+          "fitTransform",
+          "getParams",
+          "setParams",
+          "score"
+        ]
+      },
+      {
+        "name": "PolynomialFeatures",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "RandomForestClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "RandomForestRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "RandomizedSearchCV",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "RepeatedKFold",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "RepeatedStratifiedKFold",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "RobustScaler",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "SGDClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "SGDRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "SimpleImputer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "StackingClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "StackingRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "StandardScaler",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "StratifiedGroupKFold",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "StratifiedKFold",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "StratifiedShuffleSplit",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "TruncatedSVD",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "VarianceThreshold",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "VotingClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "VotingRegressor",
+        "requiredMethods": [
           "getParams",
           "setParams"
         ]
