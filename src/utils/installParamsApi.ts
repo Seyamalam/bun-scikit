@@ -1,4 +1,6 @@
 import { CalibratedClassifierCV } from "../calibration/CalibratedClassifierCV";
+import { IsolationForest } from "../anomaly/IsolationForest";
+import { LocalOutlierFactor } from "../anomaly/LocalOutlierFactor";
 import { AgglomerativeClustering } from "../cluster/AgglomerativeClustering";
 import { Birch } from "../cluster/Birch";
 import { DBSCAN } from "../cluster/DBSCAN";
@@ -31,10 +33,21 @@ import {
   SelectPercentile,
 } from "../feature_selection/univariateSelection";
 import { RFECV, RFE, SelectFromModel } from "../feature_selection/modelBasedSelection";
+import {
+  GenericUnivariateSelect,
+  SelectFdr,
+  SelectFpr,
+  SelectFwe,
+  SequentialFeatureSelector,
+} from "../feature_selection/statisticalSelection";
 import { LinearRegression } from "../linear_model/LinearRegression";
 import { LogisticRegression } from "../linear_model/LogisticRegression";
 import { SGDClassifier } from "../linear_model/SGDClassifier";
 import { SGDRegressor } from "../linear_model/SGDRegressor";
+import { Isomap } from "../manifold/Isomap";
+import { LocallyLinearEmbedding } from "../manifold/LocallyLinearEmbedding";
+import { MDS } from "../manifold/MDS";
+import { TSNE } from "../manifold/TSNE";
 import { GridSearchCV } from "../model_selection/GridSearchCV";
 import { GroupKFold } from "../model_selection/GroupKFold";
 import { GroupShuffleSplit } from "../model_selection/GroupShuffleSplit";
@@ -61,6 +74,7 @@ import { RobustScaler } from "../preprocessing/RobustScaler";
 import { SimpleImputer } from "../preprocessing/SimpleImputer";
 import { StandardScaler } from "../preprocessing/StandardScaler";
 import { LinearSVC } from "../svm/LinearSVC";
+import { OneClassSVM } from "../svm/OneClassSVM";
 import { DecisionTreeClassifier } from "../tree/DecisionTreeClassifier";
 import { DecisionTreeRegressor } from "../tree/DecisionTreeRegressor";
 import { OneVsOneClassifier } from "../multiclass/OneVsOneClassifier";
@@ -140,6 +154,7 @@ installParamsApi(SGDRegressor, {
 installParamsApi(LinearSVC, {
   params: ["fitIntercept", "C", "learningRate", "maxIter", "tolerance"],
 });
+installParamsApi(OneClassSVM, { params: ["nu", "kernel", "gamma"] });
 installParamsApi(KNeighborsClassifier, { params: ["nNeighbors"] });
 installParamsApi(KNeighborsRegressor, { params: ["nNeighbors", "weights"] });
 installParamsApi(GaussianNB, { params: ["varSmoothing"] });
@@ -248,6 +263,10 @@ installParamsApi(SpectralClustering, {
 });
 installParamsApi(Birch, { params: ["threshold", "branchingFactor", "nClusters", "computeLabels"] });
 installParamsApi(OPTICS, { params: ["minSamples", "maxEps", "eps", "clusterMethod"] });
+installParamsApi(IsolationForest, {
+  params: ["nEstimators", "maxSamples", "contamination", "randomState"],
+});
+installParamsApi(LocalOutlierFactor, { params: ["nNeighbors", "contamination", "novelty"] });
 
 installParamsApi(PCA, { params: ["nComponents", "whiten", "tolerance", "maxIter"] });
 installParamsApi(TruncatedSVD, { params: ["nComponents", "nIter", "tolerance", "randomState"] });
@@ -256,6 +275,12 @@ installParamsApi(NMF, { params: ["nComponents", "maxIter", "tolerance", "randomS
 installParamsApi(KernelPCA, {
   params: ["nComponents", "kernel", "gamma", "degree", "coef0", "tolerance", "maxIter"],
 });
+installParamsApi(TSNE, {
+  params: ["nComponents", "perplexity", "learningRate", "maxIter", "randomState"],
+});
+installParamsApi(Isomap, { params: ["nNeighbors", "nComponents"] });
+installParamsApi(LocallyLinearEmbedding, { params: ["nNeighbors", "nComponents", "reg"] });
+installParamsApi(MDS, { params: ["nComponents", "dissimilarity", "randomState", "maxIter"] });
 
 installParamsApi(VarianceThreshold, { params: ["threshold"] });
 installParamsApi(SelectKBest, { params: ["scoreFunc", "k"] });
@@ -266,6 +291,13 @@ installParamsApi(SelectFromModel, {
 installParamsApi(RFE, { params: ["nFeaturesToSelect", "step", "importanceGetter"] });
 installParamsApi(RFECV, {
   params: ["cv", "scoring", "minFeaturesToSelect", "step", "importanceGetter"],
+});
+installParamsApi(SelectFpr, { params: ["scoreFunc", "alpha"] });
+installParamsApi(SelectFdr, { params: ["scoreFunc", "alpha"] });
+installParamsApi(SelectFwe, { params: ["scoreFunc", "alpha"] });
+installParamsApi(GenericUnivariateSelect, { params: ["scoreFunc", "mode", "param"] });
+installParamsApi(SequentialFeatureSelector, {
+  params: ["nFeaturesToSelect", "direction", "scoring", "cv"],
 });
 
 installParamsApi(DummyClassifier, {

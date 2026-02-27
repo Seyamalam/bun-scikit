@@ -8,6 +8,7 @@
     "accuracyScore",
     "AdaBoostClassifier",
     "AdaBoostRegressor",
+    "adjustedRandScore",
     "AgglomerativeClustering",
     "BaggingClassifier",
     "BaggingRegressor",
@@ -16,6 +17,7 @@
     "Birch",
     "brierScoreLoss",
     "CalibratedClassifierCV",
+    "calinskiHarabaszScore",
     "chi2",
     "classificationReport",
     "ColumnTransformer",
@@ -23,6 +25,7 @@
     "crossValidate",
     "crossValPredict",
     "crossValScore",
+    "daviesBouldinScore",
     "DBSCAN",
     "DecisionTreeClassifier",
     "DecisionTreeRegressor",
@@ -37,6 +40,7 @@
     "FastICA",
     "FeatureUnion",
     "GaussianNB",
+    "GenericUnivariateSelect",
     "GradientBoostingClassifier",
     "GradientBoostingRegressor",
     "GridSearchCV",
@@ -44,6 +48,8 @@
     "GroupShuffleSplit",
     "HistGradientBoostingClassifier",
     "HistGradientBoostingRegressor",
+    "IsolationForest",
+    "Isomap",
     "KernelPCA",
     "KFold",
     "KMeans",
@@ -55,10 +61,13 @@
     "LinearRegression",
     "LinearSVC",
     "LinearSVR",
+    "LocallyLinearEmbedding",
+    "LocalOutlierFactor",
     "LogisticRegression",
     "logLoss",
     "matthewsCorrcoef",
     "MaxAbsScaler",
+    "MDS",
     "meanAbsoluteError",
     "meanAbsolutePercentageError",
     "meanSquaredError",
@@ -69,6 +78,7 @@
     "Normalizer",
     "NuSVC",
     "NuSVR",
+    "OneClassSVM",
     "OneHotEncoder",
     "OneVsOneClassifier",
     "OneVsRestClassifier",
@@ -77,6 +87,7 @@
     "partialDependence",
     "PCA",
     "permutationImportance",
+    "permutationTestScore",
     "Pipeline",
     "PolynomialFeatures",
     "precisionScore",
@@ -91,11 +102,16 @@
     "RFECV",
     "RobustScaler",
     "rocAucScore",
+    "SelectFdr",
+    "SelectFpr",
     "SelectFromModel",
+    "SelectFwe",
     "SelectKBest",
     "SelectPercentile",
+    "SequentialFeatureSelector",
     "SGDClassifier",
     "SGDRegressor",
+    "silhouetteScore",
     "SimpleImputer",
     "SpectralClustering",
     "StackingClassifier",
@@ -108,6 +124,7 @@
     "SVR",
     "trainTestSplit",
     "TruncatedSVD",
+    "TSNE",
     "validationCurve",
     "VarianceThreshold",
     "VotingClassifier",
@@ -236,6 +253,13 @@
         ]
       },
       {
+        "name": "GenericUnivariateSelect",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "GradientBoostingClassifier",
         "requiredMethods": [
           "getParams",
@@ -279,6 +303,20 @@
       },
       {
         "name": "HistGradientBoostingRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "IsolationForest",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "Isomap",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -348,6 +386,20 @@
         ]
       },
       {
+        "name": "LocallyLinearEmbedding",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "LocalOutlierFactor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "LogisticRegression",
         "requiredMethods": [
           "getParams",
@@ -356,6 +408,13 @@
       },
       {
         "name": "MaxAbsScaler",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MDS",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -377,6 +436,13 @@
       },
       {
         "name": "Normalizer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "OneClassSVM",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -503,7 +569,28 @@
         ]
       },
       {
+        "name": "SelectFdr",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "SelectFpr",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "SelectFromModel",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "SelectFwe",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -518,6 +605,13 @@
       },
       {
         "name": "SelectPercentile",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "SequentialFeatureSelector",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -597,6 +691,13 @@
       },
       {
         "name": "TruncatedSVD",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "TSNE",
         "requiredMethods": [
           "getParams",
           "setParams"

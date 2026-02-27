@@ -36,6 +36,7 @@ export * from "./svm/SVR";
 export * from "./svm/LinearSVR";
 export * from "./svm/NuSVC";
 export * from "./svm/NuSVR";
+export * from "./svm/OneClassSVM";
 export * from "./tree/DecisionTreeClassifier";
 export * from "./tree/DecisionTreeRegressor";
 export * from "./ensemble/RandomForestClassifier";
@@ -60,11 +61,17 @@ export * from "./cluster/AgglomerativeClustering";
 export * from "./cluster/SpectralClustering";
 export * from "./cluster/Birch";
 export * from "./cluster/OPTICS";
+export * from "./anomaly/IsolationForest";
+export * from "./anomaly/LocalOutlierFactor";
 export * from "./decomposition/PCA";
 export * from "./decomposition/TruncatedSVD";
 export * from "./decomposition/FastICA";
 export * from "./decomposition/NMF";
 export * from "./decomposition/KernelPCA";
+export * from "./manifold/TSNE";
+export * from "./manifold/Isomap";
+export * from "./manifold/LocallyLinearEmbedding";
+export * from "./manifold/MDS";
 export * from "./calibration/CalibratedClassifierCV";
 
 // Model selection
@@ -89,6 +96,7 @@ export * from "./model_selection/RandomizedSearchCV";
 export * from "./feature_selection/VarianceThreshold";
 export * from "./feature_selection/univariateSelection";
 export * from "./feature_selection/modelBasedSelection";
+export * from "./feature_selection/statisticalSelection";
 
 // Composition
 export * from "./pipeline/Pipeline";
@@ -98,10 +106,12 @@ export * from "./pipeline/FeatureUnion";
 // Metrics
 export * from "./metrics/regression";
 export * from "./metrics/classification";
+export * from "./metrics/clustering";
 
 // Inspection
 export * from "./inspection/permutationImportance";
 export * from "./inspection/partialDependence";
+export * from "./inspection/permutationTestScore";
 
 // Multiclass
 export * from "./multiclass/OneVsRestClassifier";

@@ -87,8 +87,9 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 
 ## Included APIs
 
-- Models: `LinearRegression`, `LogisticRegression`, `KNeighborsClassifier`, `DecisionTreeClassifier`, `RandomForestClassifier`, plus additional parity models (`LinearSVC`, `GaussianNB`, `SGDClassifier`, `SGDRegressor`, regressors for tree/forest).
-- Clustering / decomposition: `KMeans`, `DBSCAN`, `AgglomerativeClustering`, `PCA`, `TruncatedSVD`, `FastICA`, `NMF`, `KernelPCA`.
+- Models: `LinearRegression`, `LogisticRegression`, `KNeighborsClassifier`, `DecisionTreeClassifier`, `RandomForestClassifier`, plus additional parity models (`LinearSVC`, `GaussianNB`, `SGDClassifier`, `SGDRegressor`, regressors for tree/forest, `OneClassSVM`).
+- Clustering / decomposition / manifold: `KMeans`, `DBSCAN`, `AgglomerativeClustering`, `SpectralClustering`, `Birch`, `OPTICS`, `PCA`, `TruncatedSVD`, `FastICA`, `NMF`, `KernelPCA`, `TSNE`, `Isomap`, `LocallyLinearEmbedding`, `MDS`.
+- Anomaly detection: `IsolationForest`, `LocalOutlierFactor`, `OneClassSVM`.
 - Calibration / meta-estimators: `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier`.
 - Boosting: `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor`.
 - Baselines: `DummyClassifier`, `DummyRegressor`.
@@ -96,8 +97,8 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 - Composition: `Pipeline`, `ColumnTransformer`, `FeatureUnion`.
 - Feature selection: `VarianceThreshold`, `SelectKBest`, `SelectPercentile`, `SelectFromModel`, `RFE`, `RFECV`, `chi2`, `f_classif`, `f_regression`, `mutualInfoClassif`, `mutualInfoRegression`.
 - Model selection: `trainTestSplit`, `KFold`, `GroupKFold`, `GroupShuffleSplit`, `StratifiedKFold`, `StratifiedGroupKFold`, stratified/repeated splitters, `crossValScore`, `crossValidate`, `crossValPredict`, `learningCurve`, `validationCurve`, `GridSearchCV`, `RandomizedSearchCV`.
-- Metrics: regression and classification metrics, including `logLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport`, `balancedAccuracyScore`, `matthewsCorrcoef`, `brierScoreLoss`, `meanAbsolutePercentageError`, and `explainedVarianceScore`.
-- Inspection: `permutationImportance`, `partialDependence`.
+- Metrics: regression/classification metrics plus clustering metrics (`silhouetteScore`, `calinskiHarabaszScore`, `daviesBouldinScore`, `adjustedRandScore`).
+- Inspection: `permutationImportance`, `partialDependence`, `permutationTestScore`.
 
 ## Scikit Parity Matrix
 
@@ -107,7 +108,8 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 | Tree/ensemble | `DecisionTreeClassifier`, `DecisionTreeRegressor`, `RandomForestClassifier`, `RandomForestRegressor`, `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor` |
 | Neighbors / Bayes | `KNeighborsClassifier`, `KNeighborsRegressor`, `GaussianNB` |
 | Clustering | `KMeans`, `DBSCAN`, `AgglomerativeClustering`, `SpectralClustering`, `Birch`, `OPTICS` |
-| Decomposition | `PCA`, `TruncatedSVD`, `FastICA`, `NMF`, `KernelPCA` |
+| Decomposition / Manifold | `PCA`, `TruncatedSVD`, `FastICA`, `NMF`, `KernelPCA`, `TSNE`, `Isomap`, `LocallyLinearEmbedding`, `MDS` |
+| Anomaly detection | `IsolationForest`, `LocalOutlierFactor`, `OneClassSVM` |
 | Calibration / Meta | `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier`, `BaggingRegressor`, `OneVsRestClassifier`, `OneVsOneClassifier` |
 | Baselines | `DummyClassifier`, `DummyRegressor` |
 | Preprocessing | `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder` |
@@ -115,8 +117,10 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 | Model selection | `trainTestSplit`, `KFold`, `StratifiedKFold`, `StratifiedShuffleSplit`, `RepeatedKFold`, `RepeatedStratifiedKFold`, `crossValScore`, `GridSearchCV`, `RandomizedSearchCV` |
 | Metrics (regression) | `meanSquaredError`, `meanAbsoluteError`, `r2Score`, `meanAbsolutePercentageError`, `explainedVarianceScore` |
 | Metrics (classification) | `accuracyScore`, `precisionScore`, `recallScore`, `f1Score`, `balancedAccuracyScore`, `matthewsCorrcoef`, `logLoss`, `brierScoreLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport` |
+| Metrics (clustering) | `silhouetteScore`, `calinskiHarabaszScore`, `daviesBouldinScore`, `adjustedRandScore` |
+| Inspection | `permutationImportance`, `partialDependence`, `permutationTestScore` |
 
-Near-term parity gaps vs scikit-learn include manifold learning APIs (e.g. t-SNE/Isomap/LLE), richer inspection/interpretability modules, anomaly detection breadth (e.g. isolation forest/lof), and broader decomposition/feature extraction coverage beyond the current PCA/SVD/ICA/NMF/KernelPCA baseline.
+Near-term parity gaps vs scikit-learn include richer decomposition and covariance APIs, feature extraction/image modules, expanded anomaly/density estimators, and broader model-inspection display/reporting utilities.
 
 Multiclass support is available for `GaussianNB`, `KNeighborsClassifier`, `LogisticRegression`, `SGDClassifier`, `LinearSVC`, `DecisionTreeClassifier`, `RandomForestClassifier`, `VotingClassifier`, `StackingClassifier`, `BaggingClassifier`, and `CalibratedClassifierCV`.
 
