@@ -117,3 +117,20 @@ test("crossValScore accepts repeated stratified splitter objects", () => {
   }
   expect(meanScore).toBeGreaterThanOrEqual(0.9);
 });
+
+test("crossValScore accepts sampleWeight", () => {
+  const X = [[0], [1], [2], [3], [4], [5], [6], [7]];
+  const y = [0, 0, 0, 1, 1, 1, 1, 1];
+  const sampleWeight = [1, 1, 1, 2, 2, 2, 2, 2];
+  const scores = crossValScore(
+    () => new LogisticRegression({ solver: "gd", learningRate: 0.3, maxIter: 200, tolerance: 1e-6 }),
+    X,
+    y,
+    { cv: 3, scoring: "accuracy", sampleWeight },
+  );
+
+  expect(scores.length).toBe(3);
+  for (const score of scores) {
+    expect(score).toBeGreaterThanOrEqual(0.5);
+  }
+});

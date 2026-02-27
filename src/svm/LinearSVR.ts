@@ -61,7 +61,7 @@ export class LinearSVR implements RegressionModel {
     return this;
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateRegressionInputs(X, y);
     const nSamples = X.length;
     const nFeatures = X[0].length;
@@ -135,3 +135,4 @@ export class LinearSVR implements RegressionModel {
     }
   }
 }
+

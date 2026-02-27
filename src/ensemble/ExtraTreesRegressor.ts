@@ -37,7 +37,7 @@ export class ExtraTreesRegressor implements RegressionModel {
     return this;
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     this.forest.fit(X, y);
     this.featureImportances_ = this.forest.featureImportances_?.slice() ?? null;
     return this;
@@ -52,3 +52,4 @@ export class ExtraTreesRegressor implements RegressionModel {
     return r2Score(y, this.predict(X));
   }
 }
+

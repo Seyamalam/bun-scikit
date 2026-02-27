@@ -69,7 +69,7 @@ export class LogisticRegression implements ClassificationModel {
     this.lbfgsMemory = options.lbfgsMemory ?? 7;
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateClassificationInputs(X, y);
 
     this.classes_ = uniqueSortedLabels(y);
@@ -300,3 +300,4 @@ export class LogisticRegression implements ClassificationModel {
     return flattenedX;
   }
 }
+

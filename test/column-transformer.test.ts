@@ -42,3 +42,30 @@ test("ColumnTransformer transform is deterministic after fit", () => {
   const second = ct.transform(X);
   expect(first).toEqual(second);
 });
+
+test("ColumnTransformer supports drop/passthrough steps and named transformers", () => {
+  const X = [
+    [1, 10, 100],
+    [2, 20, 200],
+    [3, 30, 300],
+  ];
+  const ct = new ColumnTransformer([
+    ["scaled", new MinMaxScaler(), [0]],
+    ["dropped", "drop", [1]],
+    ["pass", "passthrough", [2]],
+  ]);
+  const transformed = ct.fitTransform(X);
+  expect(transformed[0]).toEqual([0, 100]);
+  expect(transformed[2]).toEqual([1, 300]);
+  expect(Object.keys(ct.namedTransformers_)).toEqual(["scaled", "dropped", "pass"]);
+});
+
+test("ColumnTransformer setParams updates nested estimator params", () => {
+  const ct = new ColumnTransformer([["scale", new MinMaxScaler(), [0]]]);
+  const params = ct.getParams();
+  expect(params).toHaveProperty("scale__columns");
+
+  ct.setParams({ scale__columns: [1] });
+  const next = ct.getParams();
+  expect(next["scale__columns"]).toEqual([1]);
+});

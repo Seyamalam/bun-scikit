@@ -35,7 +35,7 @@ export class SGDRegressor implements RegressionModel {
     this.l2 = options.l2 ?? 0;
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateRegressionInputs(X, y);
     const nSamples = X.length;
     const nFeatures = X[0].length;
@@ -102,3 +102,4 @@ export class SGDRegressor implements RegressionModel {
     return r2Score(y, this.predict(X));
   }
 }
+

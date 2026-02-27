@@ -54,7 +54,7 @@ export class DummyClassifier {
     this.randomState = options.randomState ?? 42;
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     assertNonEmptyMatrix(X);
     assertConsistentRowSize(X);
     assertFiniteMatrix(X);
@@ -188,3 +188,4 @@ export class DummyClassifier {
     return accuracyScore(y, this.predict(X));
   }
 }
+

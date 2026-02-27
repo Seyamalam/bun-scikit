@@ -141,7 +141,7 @@ export class HistGradientBoostingRegressor {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateRegressionInputs(X, y);
     const nSamples = X.length;
     const random = this.randomState === undefined ? Math.random : mulberry32(this.randomState);
@@ -266,3 +266,4 @@ export class HistGradientBoostingRegressor {
     }
   }
 }
+

@@ -1,0 +1,180 @@
+{
+  "metadata": {
+    "targetSklearnVersion": "1.5.x",
+    "updatedAt": "2026-02-27",
+    "policy": "runtime-exports-must-match-required-exports"
+  },
+  "requiredExports": [
+    "AdaBoostClassifier",
+    "AdaBoostRegressor",
+    "AgglomerativeClustering",
+    "BaggingClassifier",
+    "Binarizer",
+    "CalibratedClassifierCV",
+    "ColumnTransformer",
+    "DBSCAN",
+    "DecisionTreeClassifier",
+    "DecisionTreeRegressor",
+    "DummyClassifier",
+    "DummyRegressor",
+    "ExtraTreesClassifier",
+    "ExtraTreesRegressor",
+    "FastICA",
+    "FeatureUnion",
+    "GaussianNB",
+    "GradientBoostingClassifier",
+    "GradientBoostingRegressor",
+    "GridSearchCV",
+    "GroupKFold",
+    "HistGradientBoostingClassifier",
+    "HistGradientBoostingRegressor",
+    "KFold",
+    "KMeans",
+    "KNNImputer",
+    "KNeighborsClassifier",
+    "KernelPCA",
+    "LabelEncoder",
+    "LinearRegression",
+    "LinearSVC",
+    "LinearSVR",
+    "LogisticRegression",
+    "MaxAbsScaler",
+    "MinMaxScaler",
+    "NMF",
+    "Normalizer",
+    "NuSVC",
+    "NuSVR",
+    "OneHotEncoder",
+    "OrdinalEncoder",
+    "PCA",
+    "Pipeline",
+    "PolynomialFeatures",
+    "RandomForestClassifier",
+    "RandomForestRegressor",
+    "RandomizedSearchCV",
+    "RepeatedKFold",
+    "RepeatedStratifiedKFold",
+    "RobustScaler",
+    "SGDClassifier",
+    "SGDRegressor",
+    "SVC",
+    "SVR",
+    "SimpleImputer",
+    "StackingClassifier",
+    "StackingRegressor",
+    "StandardScaler",
+    "StratifiedKFold",
+    "StratifiedShuffleSplit",
+    "TruncatedSVD",
+    "VarianceThreshold",
+    "VotingClassifier",
+    "VotingRegressor",
+    "accuracyScore",
+    "balancedAccuracyScore",
+    "brierScoreLoss",
+    "classificationReport",
+    "confusionMatrix",
+    "crossValPredict",
+    "crossValScore",
+    "crossValidate",
+    "explainedVarianceScore",
+    "f1Score",
+    "learningCurve",
+    "logLoss",
+    "matthewsCorrcoef",
+    "meanAbsoluteError",
+    "meanAbsolutePercentageError",
+    "meanSquaredError",
+    "precisionScore",
+    "r2Score",
+    "recallScore",
+    "rocAucScore",
+    "trainTestSplit",
+    "validationCurve"
+  ],
+  "contracts": {
+    "classes": [
+      {
+        "name": "Pipeline",
+        "requiredMethods": [
+          "fit",
+          "predict",
+          "transform",
+          "fitTransform",
+          "getParams",
+          "setParams",
+          "score"
+        ]
+      },
+      {
+        "name": "ColumnTransformer",
+        "requiredMethods": [
+          "fit",
+          "transform",
+          "fitTransform",
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "FeatureUnion",
+        "requiredMethods": [
+          "fit",
+          "transform",
+          "fitTransform",
+          "getParams",
+          "setParams"
+        ]
+      }
+    ],
+    "interfaces": [
+      {
+        "sourceFile": "src/model_selection/crossValidate.ts",
+        "name": "CrossValidateOptions",
+        "requiredFields": [
+          "cv",
+          "scoring",
+          "groups",
+          "returnTrainScore",
+          "returnEstimator",
+          "sampleWeight"
+        ]
+      },
+      {
+        "sourceFile": "src/model_selection/crossValPredict.ts",
+        "name": "CrossValPredictOptions",
+        "requiredFields": [
+          "cv",
+          "groups",
+          "method",
+          "sampleWeight"
+        ]
+      },
+      {
+        "sourceFile": "src/model_selection/learningCurve.ts",
+        "name": "LearningCurveOptions",
+        "requiredFields": [
+          "cv",
+          "scoring",
+          "groups",
+          "trainSizes",
+          "shuffle",
+          "randomState",
+          "sampleWeight"
+        ]
+      },
+      {
+        "sourceFile": "src/model_selection/validationCurve.ts",
+        "name": "ValidationCurveOptions",
+        "requiredFields": [
+          "cv",
+          "scoring",
+          "groups",
+          "paramName",
+          "paramRange",
+          "sampleWeight"
+        ]
+      }
+    ]
+  }
+}

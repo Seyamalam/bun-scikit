@@ -94,7 +94,7 @@ export class GradientBoostingClassifier {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateBinaryClassificationInputs(X, y);
     const nSamples = X.length;
     const random = this.randomState === undefined ? Math.random : mulberry32(this.randomState);
@@ -195,3 +195,4 @@ export class GradientBoostingClassifier {
       sum > 0 ? raw.map((value) => value / sum) : new Array<number>(featureCount).fill(0);
   }
 }
+

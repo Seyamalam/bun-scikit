@@ -4,7 +4,7 @@ import { assertFiniteVector, validateRegressionInputs } from "../utils/validatio
 import { DecisionTreeRegressor } from "../tree/DecisionTreeRegressor";
 
 type RegressorLike = {
-  fit(X: Matrix, y: Vector): unknown;
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): unknown;
   predict(X: Matrix): Vector;
   featureImportances_?: Vector | null;
 };
@@ -109,7 +109,7 @@ export class AdaBoostRegressor {
     return this;
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateRegressionInputs(X, y);
     const nSamples = X.length;
     const random = this.randomState === undefined ? Math.random : mulberry32(this.randomState);
@@ -241,3 +241,4 @@ export class AdaBoostRegressor {
     }
   }
 }
+

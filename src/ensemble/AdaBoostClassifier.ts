@@ -4,7 +4,7 @@ import { assertFiniteVector, validateBinaryClassificationInputs } from "../utils
 import { DecisionTreeClassifier } from "../tree/DecisionTreeClassifier";
 
 type ClassifierLike = {
-  fit(X: Matrix, y: Vector): unknown;
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): unknown;
   predict(X: Matrix): Vector;
   featureImportances_?: Vector | null;
 };
@@ -101,7 +101,7 @@ export class AdaBoostClassifier {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateBinaryClassificationInputs(X, y);
     const nSamples = X.length;
     const random = this.randomState === undefined ? Math.random : mulberry32(this.randomState);
@@ -244,3 +244,4 @@ export class AdaBoostClassifier {
       sum > 0 ? raw.map((value) => value / sum) : new Array<number>(featureCount).fill(0);
   }
 }
+

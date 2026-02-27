@@ -67,7 +67,7 @@ export class RandomForestClassifier implements ClassificationModel {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     this.disposeNativeModel();
     validateClassificationInputs(X, y);
     this.classes_ = uniqueSortedLabels(y);
@@ -315,3 +315,4 @@ export class RandomForestClassifier implements ClassificationModel {
       total > 0 ? raw.map((value) => value / total) : new Array<number>(featureCount).fill(0);
   }
 }
+

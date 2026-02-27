@@ -84,7 +84,7 @@ export class GradientBoostingRegressor {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateRegressionInputs(X, y);
     const nSamples = X.length;
     const random = this.randomState === undefined ? Math.random : mulberry32(this.randomState);
@@ -173,3 +173,4 @@ export class GradientBoostingRegressor {
       sum > 0 ? raw.map((value) => value / sum) : new Array<number>(featureCount).fill(0);
   }
 }
+

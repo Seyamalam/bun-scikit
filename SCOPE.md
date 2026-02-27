@@ -18,6 +18,7 @@ Deliver practical scikit-learn parity for Bun/TypeScript without stalling releas
 - Keep API style aligned with existing estimator conventions (`fit`/`predict`/`transform`, learned attrs).
 - Maintain estimator introspection baseline via learned feature-importance attributes for tree/forest/boosting families.
 - Maintain parity guardrails with reproducible fixture generation and multi-seed thresholded drift checks.
+- Maintain machine-readable parity matrix coverage (`docs/parity-matrix.json`) enforced in CI/release gates.
 
 ## Explicitly Out of Scope (Current Wave)
 - Full scikit module parity in one release.

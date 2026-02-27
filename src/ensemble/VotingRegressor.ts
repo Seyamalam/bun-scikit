@@ -6,7 +6,7 @@ import {
 } from "../utils/validation";
 
 type RegressorLike = {
-  fit(X: Matrix, y: Vector): unknown;
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): unknown;
   predict(X: Matrix): Vector;
   score?(X: Matrix, y: Vector): number;
 };
@@ -49,7 +49,7 @@ export class VotingRegressor {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateRegressionInputs(X, y);
     const seenNames = new Set<string>();
     const estimators: Array<[string, RegressorLike]> = [];
@@ -104,3 +104,4 @@ export class VotingRegressor {
     }
   }
 }
+

@@ -15,7 +15,7 @@ import {
 
 type ClassifierLike = {
   classes_?: Vector | null;
-  fit(X: Matrix, y: Vector): unknown;
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): unknown;
   predict(X: Matrix): Vector;
   predictProba?: (X: Matrix) => Matrix;
 };
@@ -164,7 +164,7 @@ export class BaggingClassifier {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateClassificationInputs(X, y);
     this.classes_ = uniqueSortedLabels(y);
     this.classToIndex = buildLabelIndex(this.classes_);
@@ -308,3 +308,4 @@ export class BaggingClassifier {
     }
   }
 }
+

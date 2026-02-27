@@ -53,7 +53,7 @@ export class NuSVR implements RegressionModel {
     return this;
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     this.svr.fit(X, y);
     this.dualCoef_ = this.svr.dualCoef_.slice();
     this.intercept_ = this.svr.intercept_;
@@ -84,3 +84,4 @@ export class NuSVR implements RegressionModel {
     };
   }
 }
+

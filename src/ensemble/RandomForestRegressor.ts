@@ -49,7 +49,7 @@ export class RandomForestRegressor implements RegressionModel {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateRegressionInputs(X, y);
     this.featureImportances_ = null;
 
@@ -164,3 +164,4 @@ export class RandomForestRegressor implements RegressionModel {
       total > 0 ? raw.map((value) => value / total) : new Array<number>(featureCount).fill(0);
   }
 }
+

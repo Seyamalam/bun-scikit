@@ -1,6 +1,4 @@
 import type { Matrix, Vector } from "../types";
-import { accuracyScore, f1Score, precisionScore, recallScore } from "../metrics/classification";
-import { meanSquaredError, r2Score } from "../metrics/regression";
 import {
   crossValScore,
   type BuiltInScoring,
@@ -8,6 +6,7 @@ import {
   type CrossValSplitter,
   type ScoringFn,
 } from "./crossValScore";
+import { resolveBuiltInScorer } from "./shared";
 
 export type ParamGrid = Record<string, readonly unknown[]>;
 
@@ -47,29 +46,6 @@ function std(values: number[]): number {
     sum += diff * diff;
   }
   return Math.sqrt(sum / values.length);
-}
-
-function resolveBuiltInScorer(scoring: BuiltInScoring): ScoringFn {
-  switch (scoring) {
-    case "accuracy":
-      return accuracyScore;
-    case "f1":
-      return f1Score;
-    case "precision":
-      return precisionScore;
-    case "recall":
-      return recallScore;
-    case "r2":
-      return r2Score;
-    case "mean_squared_error":
-      return meanSquaredError;
-    case "neg_mean_squared_error":
-      return (yTrue, yPred) => -meanSquaredError(yTrue, yPred);
-    default: {
-      const exhaustive: never = scoring;
-      throw new Error(`Unsupported scoring metric: ${exhaustive}`);
-    }
-  }
 }
 
 function isLossMetric(scoring: BuiltInScoring | ScoringFn | undefined): boolean {
@@ -140,7 +116,7 @@ export class GridSearchCV<TEstimator extends CrossValEstimator> {
     this.errorScore = options.errorScore ?? "raise";
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     const candidates = cartesianProduct(this.paramGrid);
     const minimize = isLossMetric(this.scoring);
     const rows: GridSearchResultRow[] = [];
@@ -153,7 +129,7 @@ export class GridSearchCV<TEstimator extends CrossValEstimator> {
           () => this.estimatorFactory(params),
           X,
           y,
-          { cv: this.cv, scoring: this.scoring },
+          { cv: this.cv, scoring: this.scoring, sampleWeight },
         );
         const meanTestScore = mean(splitScores);
         rows.push({
@@ -201,7 +177,7 @@ export class GridSearchCV<TEstimator extends CrossValEstimator> {
 
     if (this.refit) {
       const estimator = this.estimatorFactory(this.bestParams_);
-      estimator.fit(X, y);
+      estimator.fit(X, y, sampleWeight);
       this.bestEstimator_ = estimator;
     } else {
       this.bestEstimator_ = null;
@@ -242,3 +218,4 @@ export class GridSearchCV<TEstimator extends CrossValEstimator> {
     throw new Error("No scoring function available. Provide scoring in GridSearchCV options.");
   }
 }
+

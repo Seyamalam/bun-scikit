@@ -66,6 +66,7 @@
     "native:package:assets": "bun run scripts/package-native-artifacts.ts",
     "docs:api:generate": "typedoc --entryPointStrategy resolve --entryPoints src/index.ts --out docs/api-reference --readme none",
     "docs:coverage:check": "bun run scripts/check-api-docs-coverage.ts",
+    "parity:matrix:check": "bun run scripts/check-parity-matrix.ts",
     "parity:check": "bun run scripts/check-sklearn-parity.ts",
     "build:bench:bytecode": "bun build ./bench/run-ci-benchmarks.ts --target=bun --bytecode --minify --outdir=./dist/bench",
     "build:bench:compiled": "bun build ./bench/run-ci-benchmarks.ts --target=bun --compile --bytecode --minify --outfile=./dist/bench/bench-ci"

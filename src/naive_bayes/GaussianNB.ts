@@ -35,7 +35,7 @@ export class GaussianNB implements ClassificationModel {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateClassificationInputs(X, y);
 
     const sampleCount = X.length;
@@ -174,3 +174,4 @@ export class GaussianNB implements ClassificationModel {
     return accuracyScore(y, this.predict(X));
   }
 }
+

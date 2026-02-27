@@ -16,8 +16,12 @@ from sklearn.ensemble import (
     RandomForestClassifier,
     VotingClassifier,
 )
+from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import KFold, cross_val_predict
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
 
@@ -80,6 +84,27 @@ def build_fixtures(seed: int, seeds: list[int]) -> dict:
     X_binary = np.array([[-4], [-3], [-2], [-1], [1], [2], [3], [4], [5], [6]], dtype=float)
     y_binary = np.array([0, 0, 0, 0, 1, 1, 1, 1, 1, 1], dtype=int)
     probe_binary = np.array([[-3], [5]], dtype=float)
+
+    pipeline_logreg = Pipeline(
+        steps=[
+            ("scaler", StandardScaler()),
+            ("clf", LogisticRegression(max_iter=400, random_state=seed)),
+        ]
+    ).fit(X_binary, y_binary)
+    pipeline_logreg_probe_proba = pipeline_logreg.predict_proba(probe_binary)
+    pipeline_logreg_train_pred = pipeline_logreg.predict(X_binary)
+    pipeline_cv_pred = cross_val_predict(
+        Pipeline(
+            steps=[
+                ("scaler", StandardScaler()),
+                ("clf", LogisticRegression(max_iter=400, random_state=seed)),
+            ]
+        ),
+        X_binary,
+        y_binary,
+        cv=KFold(n_splits=4, shuffle=False),
+        method="predict",
+    )
 
     hgb_clf = HistGradientBoostingClassifier(
         max_iter=120,
@@ -165,6 +190,9 @@ def build_fixtures(seed: int, seeds: list[int]) -> dict:
             "kernel_pca_probe_distance_mse": 0.2,
             "multi_seed_decision_tree_mismatch_avg": 0.08,
             "multi_seed_random_forest_mismatch_avg": 0.12,
+            "pipeline_logreg_probe_proba_mad": 0.15,
+            "pipeline_logreg_train_mismatch": 0.12,
+            "pipeline_cv_predict_mismatch": 0.2,
         },
         "multiclass": {
             "X": X_multi.tolist(),
@@ -181,6 +209,14 @@ def build_fixtures(seed: int, seeds: list[int]) -> dict:
             "seeds": seeds,
             "decision_tree_pred": multi_seed_dt_preds,
             "random_forest_pred": multi_seed_rf_preds,
+        },
+        "pipeline_logistic_regression": {
+            "X": X_binary.tolist(),
+            "y": y_binary.tolist(),
+            "probe": probe_binary.tolist(),
+            "probe_proba": pipeline_logreg_probe_proba.tolist(),
+            "train_pred": pipeline_logreg_train_pred.tolist(),
+            "cv_predict_kfold4": pipeline_cv_pred.tolist(),
         },
         "hist_gradient_boosting": {
             "X_binary": X_binary.tolist(),

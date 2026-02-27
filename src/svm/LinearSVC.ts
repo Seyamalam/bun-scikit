@@ -49,7 +49,7 @@ export class LinearSVC implements ClassificationModel {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateClassificationInputs(X, y);
     this.classes_ = uniqueSortedLabels(y);
     if (this.classes_.length < 2) {
@@ -173,3 +173,4 @@ export class LinearSVC implements ClassificationModel {
     return { coef, intercept };
   }
 }
+

@@ -7,11 +7,16 @@ import {
   GaussianNB,
   HistGradientBoostingClassifier,
   HistGradientBoostingRegressor,
+  KFold,
   KernelPCA,
   KNeighborsClassifier,
+  LogisticRegression,
   NMF,
+  Pipeline,
   RandomForestClassifier,
+  StandardScaler,
   VotingClassifier,
+  crossValPredict,
 } from "../src";
 
 function meanAbsDiff(a: number[][], b: number[][]): number {
@@ -192,4 +197,51 @@ test("KernelPCA pairwise distances stay close to sklearn snapshot", () => {
     return out;
   };
   expect(meanSquaredError(distance(a), distance(b))).toBeLessThan(0.2);
+});
+
+test("Pipeline LogisticRegression probabilities stay close to sklearn snapshot", () => {
+  const section = fixture.pipeline_logistic_regression;
+  const model = new Pipeline([
+    ["scale", new StandardScaler()],
+    [
+      "clf",
+      new LogisticRegression({
+        maxIter: 400,
+        learningRate: 0.1,
+        tolerance: 1e-6,
+      }),
+    ],
+  ]).fit(section.X, section.y);
+
+  const proba = model.predictProba(section.probe);
+  expect(meanAbsDiff(proba, section.probe_proba)).toBeLessThan(0.15);
+});
+
+test("crossValPredict matches sklearn fixture within mismatch tolerance", () => {
+  const section = fixture.pipeline_logistic_regression;
+  const pred = crossValPredict(
+    () =>
+      new Pipeline([
+        ["scale", new StandardScaler()],
+        [
+          "clf",
+          new LogisticRegression({
+            maxIter: 400,
+            learningRate: 0.1,
+            tolerance: 1e-6,
+          }),
+        ],
+      ]),
+    section.X,
+    section.y,
+    { cv: new KFold({ nSplits: 4, shuffle: false }) },
+  ) as number[];
+
+  let mismatch = 0;
+  for (let i = 0; i < pred.length; i += 1) {
+    if (pred[i] !== section.cv_predict_kfold4[i]) {
+      mismatch += 1;
+    }
+  }
+  expect(mismatch / pred.length).toBeLessThan(0.2);
 });

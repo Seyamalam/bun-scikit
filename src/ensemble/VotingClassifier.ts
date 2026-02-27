@@ -11,7 +11,7 @@ export type VotingStrategy = "hard" | "soft";
 
 type ClassifierLike = {
   classes_?: Vector | null;
-  fit(X: Matrix, y: Vector): unknown;
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): unknown;
   predict(X: Matrix): Vector;
   predictProba?: (X: Matrix) => Matrix;
   score?(X: Matrix, y: Vector): number;
@@ -60,7 +60,7 @@ export class VotingClassifier {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateClassificationInputs(X, y);
     this.classes_ = uniqueSortedLabels(y);
     this.labelToIndex = buildLabelIndex(this.classes_);
@@ -166,3 +166,4 @@ export class VotingClassifier {
     }
   }
 }
+

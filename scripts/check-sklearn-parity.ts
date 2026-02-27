@@ -7,10 +7,15 @@ import {
   HistGradientBoostingClassifier,
   HistGradientBoostingRegressor,
   KernelPCA,
+  KFold,
   KNeighborsClassifier,
+  LogisticRegression,
   NMF,
+  Pipeline,
   RandomForestClassifier,
+  StandardScaler,
   VotingClassifier,
+  crossValPredict,
 } from "../src";
 
 type Matrix = number[][];
@@ -225,6 +230,49 @@ const metrics: Record<string, number> = {};
 }
 
 {
+  const section = fixture.pipeline_logistic_regression;
+  const model = new Pipeline([
+    ["scale", new StandardScaler()],
+    [
+      "clf",
+      new LogisticRegression({
+        maxIter: 400,
+        learningRate: 0.1,
+        tolerance: 1e-6,
+      }),
+    ],
+  ]).fit(section.X, section.y);
+
+  metrics.pipeline_logreg_probe_proba_mad = meanAbsDiffMatrix(
+    model.predictProba(section.probe),
+    section.probe_proba,
+  );
+  metrics.pipeline_logreg_train_mismatch = mismatchRate(
+    model.predict(section.X),
+    section.train_pred,
+  );
+
+  const oofPred = crossValPredict(
+    () =>
+      new Pipeline([
+        ["scale", new StandardScaler()],
+        [
+          "clf",
+          new LogisticRegression({
+            maxIter: 400,
+            learningRate: 0.1,
+            tolerance: 1e-6,
+          }),
+        ],
+      ]),
+    section.X,
+    section.y,
+    { cv: new KFold({ nSplits: 4, shuffle: false }) },
+  ) as Vector;
+  metrics.pipeline_cv_predict_mismatch = mismatchRate(oofPred, section.cv_predict_kfold4);
+}
+
+{
   const seeds: number[] = fixture.multi_seed.seeds;
   const previousTreeBackend = process.env.BUN_SCIKIT_TREE_BACKEND;
   process.env.BUN_SCIKIT_TREE_BACKEND = "js";
@@ -310,6 +358,18 @@ const limits: Record<string, number> = {
   multi_seed_random_forest_mismatch_avg: threshold(
     "PARITY_MAX_MULTI_SEED_RANDOM_FOREST_MISMATCH_AVG",
     fixtureThresholds.multi_seed_random_forest_mismatch_avg ?? 0.12,
+  ),
+  pipeline_logreg_probe_proba_mad: threshold(
+    "PARITY_MAX_PIPELINE_LOGREG_PROBE_PROBA_MAD",
+    fixtureThresholds.pipeline_logreg_probe_proba_mad ?? 0.15,
+  ),
+  pipeline_logreg_train_mismatch: threshold(
+    "PARITY_MAX_PIPELINE_LOGREG_TRAIN_MISMATCH",
+    fixtureThresholds.pipeline_logreg_train_mismatch ?? 0.12,
+  ),
+  pipeline_cv_predict_mismatch: threshold(
+    "PARITY_MAX_PIPELINE_CV_PREDICT_MISMATCH",
+    fixtureThresholds.pipeline_cv_predict_mismatch ?? 0.2,
   ),
 };
 

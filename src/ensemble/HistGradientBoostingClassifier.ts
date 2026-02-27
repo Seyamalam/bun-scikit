@@ -97,7 +97,7 @@ export class HistGradientBoostingClassifier {
     this.randomState = options.randomState;
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateBinaryClassificationInputs(X, y);
     this.estimators_ = [];
 
@@ -241,3 +241,4 @@ export class HistGradientBoostingClassifier {
     }
   }
 }
+

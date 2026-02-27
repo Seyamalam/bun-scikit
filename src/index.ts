@@ -70,6 +70,9 @@ export * from "./model_selection/RepeatedKFold";
 export * from "./model_selection/RepeatedStratifiedKFold";
 export * from "./model_selection/crossValScore";
 export * from "./model_selection/crossValidate";
+export * from "./model_selection/crossValPredict";
+export * from "./model_selection/learningCurve";
+export * from "./model_selection/validationCurve";
 export * from "./model_selection/GridSearchCV";
 export * from "./model_selection/RandomizedSearchCV";
 

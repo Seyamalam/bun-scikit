@@ -82,7 +82,7 @@ export class SVC implements ClassificationModel {
     return this;
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateClassificationInputs(X, y);
     this.classes_ = uniqueSortedLabels(y);
     if (this.classes_.length < 2) {
@@ -243,3 +243,4 @@ export class SVC implements ClassificationModel {
     }
   }
 }
+

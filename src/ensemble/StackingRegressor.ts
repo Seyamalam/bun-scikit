@@ -4,7 +4,7 @@ import { KFold } from "../model_selection/KFold";
 import { assertFiniteVector, validateRegressionInputs } from "../utils/validation";
 
 type RegressorLike = {
-  fit(X: Matrix, y: Vector): unknown;
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): unknown;
   predict(X: Matrix): Vector;
   score?(X: Matrix, y: Vector): number;
 };
@@ -73,7 +73,7 @@ export class StackingRegressor {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateRegressionInputs(X, y);
     if (this.cv > X.length) {
       throw new Error(`cv (${this.cv}) cannot exceed sample count (${X.length}).`);
@@ -164,3 +164,4 @@ export class StackingRegressor {
     }
   }
 }
+

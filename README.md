@@ -95,7 +95,7 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 - Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`.
 - Composition: `Pipeline`, `ColumnTransformer`, `FeatureUnion`.
 - Feature selection: `VarianceThreshold`.
-- Model selection: `trainTestSplit`, `KFold`, stratified/repeated splitters, `crossValScore`, `GridSearchCV`, `RandomizedSearchCV`.
+- Model selection: `trainTestSplit`, `KFold`, stratified/repeated splitters, `crossValScore`, `crossValidate`, `crossValPredict`, `learningCurve`, `validationCurve`, `GridSearchCV`, `RandomizedSearchCV`.
 - Metrics: regression and classification metrics, including `logLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport`, `balancedAccuracyScore`, `matthewsCorrcoef`, `brierScoreLoss`, `meanAbsolutePercentageError`, and `explainedVarianceScore`.
 
 ## Scikit Parity Matrix
@@ -136,7 +136,9 @@ Optional env vars:
 - `BUN_SCIKIT_ZIG_LIB=/absolute/path/to/bun_scikit_kernels.<ext>`
 - `BUN_SCIKIT_TREE_BACKEND=zig|js` (default is `zig`; set `js` to force JS tree/forest fallback)
 
-Parity checks are enforced in CI using sklearn snapshot fixtures (including multi-seed drift checks) via `bun run parity:check`.
+Parity checks are enforced in CI using:
+- API parity matrix coverage (`bun run parity:matrix:check`)
+- sklearn snapshot fixtures with multi-seed drift checks (`bun run parity:check`)
 
 ## Performance Snapshot
 

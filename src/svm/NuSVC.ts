@@ -56,7 +56,7 @@ export class NuSVC implements ClassificationModel {
     return this;
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     this.svc.fit(X, y);
     this.classes_ = this.svc.classes_.slice();
     this.support_ = this.svc.support_.slice();
@@ -96,3 +96,4 @@ export class NuSVC implements ClassificationModel {
     };
   }
 }
+

@@ -29,7 +29,7 @@ export class LinearRegression implements RegressionModel {
     this.solver = options.solver ?? "normal";
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateRegressionInputs(X, y);
     if (this.solver !== "normal") {
       throw new Error("LinearRegression solver 'normal' is required in zig-only mode.");
@@ -134,3 +134,4 @@ export class LinearRegression implements RegressionModel {
   }
 
 }
+

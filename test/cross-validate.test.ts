@@ -39,3 +39,21 @@ test("crossValidate supports group-aware splitters", () => {
 
   expect(result.testScore.length).toBe(3);
 });
+
+test("crossValidate accepts sampleWeight and returns scores", () => {
+  const X = [[-2], [-1], [-0.5], [0.5], [1], [2], [2.5], [3]];
+  const y = [0, 0, 0, 1, 1, 1, 1, 1];
+  const sampleWeight = [1, 1, 1, 2, 2, 2, 2, 2];
+
+  const result = crossValidate(
+    () => new SGDClassifier({ loss: "hinge", maxIter: 4000, learningRate: 0.1 }),
+    X,
+    y,
+    { cv: 3, scoring: "accuracy", sampleWeight },
+  );
+
+  expect(result.testScore.length).toBe(3);
+  for (const score of result.testScore) {
+    expect(score).toBeGreaterThanOrEqual(0.5);
+  }
+});

@@ -40,7 +40,7 @@ export class KNeighborsClassifier implements ClassificationModel {
     this.nNeighbors = nNeighbors;
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateClassificationInputs(X, y);
     if (this.nNeighbors > X.length) {
       throw new Error(
@@ -98,3 +98,4 @@ export class KNeighborsClassifier implements ClassificationModel {
     return accuracyScore(y, this.predict(X));
   }
 }
+

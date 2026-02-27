@@ -40,7 +40,7 @@ export class ExtraTreesClassifier implements ClassificationModel {
     return this;
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     this.forest.fit(X, y);
     this.classes_ = this.forest.classes_.slice();
     this.featureImportances_ = this.forest.featureImportances_?.slice() ?? null;
@@ -62,3 +62,4 @@ export class ExtraTreesClassifier implements ClassificationModel {
     this.forest.dispose();
   }
 }
+

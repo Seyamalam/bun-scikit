@@ -57,7 +57,7 @@ export class DummyRegressor {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateRegressionInputs(X, y);
     this.nFeaturesIn_ = X[0].length;
 
@@ -106,3 +106,4 @@ export class DummyRegressor {
     return r2Score(y, this.predict(X));
   }
 }
+

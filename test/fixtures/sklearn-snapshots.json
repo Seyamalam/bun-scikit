@@ -22,7 +22,10 @@
     "kernel_pca_train_distance_mse": 0.2,
     "kernel_pca_probe_distance_mse": 0.2,
     "multi_seed_decision_tree_mismatch_avg": 0.08,
-    "multi_seed_random_forest_mismatch_avg": 0.12
+    "multi_seed_random_forest_mismatch_avg": 0.12,
+    "pipeline_logreg_probe_proba_mad": 0.15,
+    "pipeline_logreg_train_mismatch": 0.12,
+    "pipeline_cv_predict_mismatch": 0.2
   },
   "multiclass": {
     "X": [
@@ -254,6 +257,94 @@
         2,
         2
       ]
+    ]
+  },
+  "pipeline_logistic_regression": {
+    "X": [
+      [
+        -4.0
+      ],
+      [
+        -3.0
+      ],
+      [
+        -2.0
+      ],
+      [
+        -1.0
+      ],
+      [
+        1.0
+      ],
+      [
+        2.0
+      ],
+      [
+        3.0
+      ],
+      [
+        4.0
+      ],
+      [
+        5.0
+      ],
+      [
+        6.0
+      ]
+    ],
+    "y": [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "probe": [
+      [
+        -3.0
+      ],
+      [
+        5.0
+      ]
+    ],
+    "probe_proba": [
+      [
+        0.7822213485710091,
+        0.21777865142899086
+      ],
+      [
+        0.08412607357058177,
+        0.9158739264294182
+      ]
+    ],
+    "train_pred": [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "cv_predict_kfold4": [
+      0,
+      0,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ]
   },
   "hist_gradient_boosting": {

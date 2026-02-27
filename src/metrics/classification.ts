@@ -10,6 +10,44 @@ function validateInputs(yTrue: number[], yPred: number[]): void {
   }
 }
 
+function validateMultilabelInputs(yTrue: Matrix, yPred: Matrix): void {
+  if (yTrue.length === 0 || yPred.length === 0) {
+    throw new Error("yTrue and yPred must be non-empty.");
+  }
+  if (yTrue.length !== yPred.length) {
+    throw new Error(`Length mismatch: yTrue=${yTrue.length}, yPred=${yPred.length}.`);
+  }
+  const width = yTrue[0].length;
+  if (width === 0) {
+    throw new Error("Multilabel indicator matrices must have at least one column.");
+  }
+  for (let i = 0; i < yTrue.length; i += 1) {
+    if (yTrue[i].length !== width || yPred[i].length !== width) {
+      throw new Error("All multilabel rows must share the same width.");
+    }
+  }
+}
+
+function resolveSampleWeight(sampleWeight: Vector | undefined, nSamples: number): Vector {
+  if (!sampleWeight) {
+    return new Array<number>(nSamples).fill(1);
+  }
+  if (sampleWeight.length !== nSamples) {
+    throw new Error(
+      `sampleWeight length must match sample count. Got ${sampleWeight.length} and ${nSamples}.`,
+    );
+  }
+  const out = new Array<number>(sampleWeight.length);
+  for (let i = 0; i < sampleWeight.length; i += 1) {
+    const weight = sampleWeight[i];
+    if (!Number.isFinite(weight) || weight < 0) {
+      throw new Error(`sampleWeight must contain finite non-negative values. Got ${weight} at ${i}.`);
+    }
+    out[i] = weight;
+  }
+  return out;
+}
+
 function validateBinaryTargets(yTrue: number[]): void {
   for (let i = 0; i < yTrue.length; i += 1) {
     const value = yTrue[i];
@@ -38,7 +76,17 @@ function confusionCounts(yTrue: number[], yPred: number[], positiveLabel: number
   fn: number;
   tn: number;
 } {
+  return confusionCountsWithWeights(yTrue, yPred, positiveLabel);
+}
+
+function confusionCountsWithWeights(yTrue: number[], yPred: number[], positiveLabel: number, sampleWeight?: Vector): {
+  tp: number;
+  fp: number;
+  fn: number;
+  tn: number;
+} {
   validateInputs(yTrue, yPred);
+  const weights = resolveSampleWeight(sampleWeight, yTrue.length);
 
   let tp = 0;
   let fp = 0;
@@ -48,15 +96,16 @@ function confusionCounts(yTrue: number[], yPred: number[], positiveLabel: number
   for (let i = 0; i < yTrue.length; i += 1) {
     const truthPositive = yTrue[i] === positiveLabel;
     const predPositive = yPred[i] === positiveLabel;
+    const weight = weights[i];
 
     if (truthPositive && predPositive) {
-      tp += 1;
+      tp += weight;
     } else if (!truthPositive && predPositive) {
-      fp += 1;
+      fp += weight;
     } else if (truthPositive && !predPositive) {
-      fn += 1;
+      fn += weight;
     } else {
-      tn += 1;
+      tn += weight;
     }
   }
 
@@ -83,23 +132,59 @@ export interface ClassificationReportResult {
   weightedAvg: ClassificationReportLabelMetrics;
 }
 
-export function accuracyScore(yTrue: number[], yPred: number[]): number {
-  validateInputs(yTrue, yPred);
+export function accuracyScore(yTrue: number[] | Matrix, yPred: number[] | Matrix, sampleWeight?: Vector): number {
+  if (Array.isArray(yTrue[0]) || Array.isArray(yPred[0])) {
+    const trueMatrix = yTrue as Matrix;
+    const predMatrix = yPred as Matrix;
+    validateMultilabelInputs(trueMatrix, predMatrix);
+    const weights = resolveSampleWeight(sampleWeight, trueMatrix.length);
+    let weightSum = 0;
+    let correct = 0;
+    for (let i = 0; i < trueMatrix.length; i += 1) {
+      let rowEqual = true;
+      for (let j = 0; j < trueMatrix[i].length; j += 1) {
+        if (trueMatrix[i][j] !== predMatrix[i][j]) {
+          rowEqual = false;
+          break;
+        }
+      }
+      weightSum += weights[i];
+      if (rowEqual) {
+        correct += weights[i];
+      }
+    }
+    if (weightSum === 0) {
+      return 0;
+    }
+    return correct / weightSum;
+  }
+
+  const yTrueVector = yTrue as number[];
+  const yPredVector = yPred as number[];
+  validateInputs(yTrueVector, yPredVector);
+  const weights = resolveSampleWeight(sampleWeight, yTrueVector.length);
+
   let correct = 0;
-  for (let i = 0; i < yTrue.length; i += 1) {
-    if (yTrue[i] === yPred[i]) {
-      correct += 1;
+  let weightSum = 0;
+  for (let i = 0; i < yTrueVector.length; i += 1) {
+    weightSum += weights[i];
+    if (yTrueVector[i] === yPredVector[i]) {
+      correct += weights[i];
     }
   }
-  return correct / yTrue.length;
+  if (weightSum === 0) {
+    return 0;
+  }
+  return correct / weightSum;
 }
 
 export function precisionScore(
   yTrue: number[],
   yPred: number[],
   positiveLabel = 1,
+  sampleWeight?: Vector,
 ): number {
-  const { tp, fp } = confusionCounts(yTrue, yPred, positiveLabel);
+  const { tp, fp } = confusionCountsWithWeights(yTrue, yPred, positiveLabel, sampleWeight);
   const denominator = tp + fp;
   if (denominator === 0) {
     return 0;
@@ -107,8 +192,8 @@ export function precisionScore(
   return tp / denominator;
 }
 
-export function recallScore(yTrue: number[], yPred: number[], positiveLabel = 1): number {
-  const { tp, fn } = confusionCounts(yTrue, yPred, positiveLabel);
+export function recallScore(yTrue: number[], yPred: number[], positiveLabel = 1, sampleWeight?: Vector): number {
+  const { tp, fn } = confusionCountsWithWeights(yTrue, yPred, positiveLabel, sampleWeight);
   const denominator = tp + fn;
   if (denominator === 0) {
     return 0;
@@ -116,9 +201,9 @@ export function recallScore(yTrue: number[], yPred: number[], positiveLabel = 1)
   return tp / denominator;
 }
 
-export function f1Score(yTrue: number[], yPred: number[], positiveLabel = 1): number {
-  const precision = precisionScore(yTrue, yPred, positiveLabel);
-  const recall = recallScore(yTrue, yPred, positiveLabel);
+export function f1Score(yTrue: number[], yPred: number[], positiveLabel = 1, sampleWeight?: Vector): number {
+  const precision = precisionScore(yTrue, yPred, positiveLabel, sampleWeight);
+  const recall = recallScore(yTrue, yPred, positiveLabel, sampleWeight);
   const denominator = precision + recall;
   if (denominator === 0) {
     return 0;

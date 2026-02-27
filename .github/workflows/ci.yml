@@ -82,6 +82,9 @@ jobs:
           BUN_SCIKIT_SKIP_NATIVE_INSTALL: "1"
         run: bun install --frozen-lockfile
 
+      - name: Validate parity matrix coverage
+        run: bun run parity:matrix:check
+
       - name: Run sklearn snapshot parity checks
         run: bun run parity:check
 

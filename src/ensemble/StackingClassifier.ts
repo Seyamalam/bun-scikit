@@ -10,7 +10,7 @@ import { assertFiniteVector, validateClassificationInputs } from "../utils/valid
 
 type ClassifierLike = {
   classes_?: Vector | null;
-  fit(X: Matrix, y: Vector): unknown;
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): unknown;
   predict(X: Matrix): Vector;
   predictProba?: (X: Matrix) => Matrix;
 };
@@ -86,7 +86,7 @@ export class StackingClassifier {
     }
   }
 
-  fit(X: Matrix, y: Vector): this {
+  fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateClassificationInputs(X, y);
     if (this.cv > X.length) {
       throw new Error(`cv (${this.cv}) cannot exceed sample count (${X.length}).`);
@@ -246,3 +246,4 @@ export class StackingClassifier {
     }
   }
 }
+

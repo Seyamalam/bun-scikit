@@ -88,6 +88,12 @@ jobs:
       - name: Run typecheck
         run: bun run typecheck
 
+      - name: Validate parity matrix coverage
+        run: bun run parity:matrix:check
+
+      - name: Run sklearn snapshot parity checks
+        run: bun run parity:check
+
       - name: Run Zig backend guard test
         env:
           BUN_SCIKIT_TREE_BACKEND: "zig"
