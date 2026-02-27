@@ -9,7 +9,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 <!-- PARITY_AUTO_START -->
-- feat(parity): implement next sklearn parity batch (1-5)
+- feat(parity): implement next 1-5 roadmap batch for sklearn parity
 <!-- PARITY_AUTO_END -->
 - Reusable `Release Prep` workflow (`.github/workflows/release-prep.yml`) that gates release pipelines with tests, typecheck, Zig guard checks, benchmark checks, README benchmark sync checks, and npm-pack smoke validation.
 - Zig backend smoke example for users: `examples/zig-backend-smoke.ts`.
