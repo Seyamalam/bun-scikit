@@ -68,6 +68,23 @@ jobs:
           EOF
           bun run index.ts
 
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        env:
+          BUN_SCIKIT_SKIP_NATIVE_INSTALL: "1"
+        run: bun install --frozen-lockfile
+
+      - name: Run sklearn snapshot parity checks
+        run: bun run parity:check
+
   native-addon-matrix:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ${{ matrix.os }}

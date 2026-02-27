@@ -223,6 +223,53 @@ Learned attributes:
 - `estimators_: unknown[]`
 - `init_: number | null`
 
+### `HistGradientBoostingClassifierOptions`
+
+- `maxIter?: number`
+- `learningRate?: number`
+- `maxBins?: number`
+- `minSamplesLeaf?: number`
+- `l2Regularization?: number`
+- `randomState?: number`
+
+### `HistGradientBoostingClassifier`
+
+Methods:
+
+- `fit(X: number[][], y: number[]): this`
+- `decisionFunction(X: number[][]): number[]`
+- `predict(X: number[][]): number[]`
+- `predictProba(X: number[][]): number[][]`
+- `score(X: number[][], y: number[]): number`
+
+Learned attributes:
+
+- `classes_: number[]`
+- `estimators_: unknown[]`
+- `baselineLogit_: number | null`
+
+### `HistGradientBoostingRegressorOptions`
+
+- `maxIter?: number`
+- `learningRate?: number`
+- `maxBins?: number`
+- `minSamplesLeaf?: number`
+- `l2Regularization?: number`
+- `randomState?: number`
+
+### `HistGradientBoostingRegressor`
+
+Methods:
+
+- `fit(X: number[][], y: number[]): this`
+- `predict(X: number[][]): number[]`
+- `score(X: number[][], y: number[]): number`
+
+Learned attributes:
+
+- `estimators_: unknown[]`
+- `baseline_: number | null`
+
 ### `VotingRegressorOptions`
 
 - `weights?: number[]`
@@ -465,6 +512,34 @@ Learned attributes:
 - `nIter_: number | null`
 - `nFeaturesIn_: number | null`
 - `nComponents_: number | null`
+
+### `KernelPCAKernel`
+
+- `"linear" | "rbf" | "poly"`
+
+### `KernelPCAOptions`
+
+- `nComponents?: number`
+- `kernel?: KernelPCAKernel`
+- `gamma?: number`
+- `degree?: number`
+- `coef0?: number`
+- `tolerance?: number`
+- `maxIter?: number`
+
+### `KernelPCA`
+
+Methods:
+
+- `fit(X: number[][]): this`
+- `transform(X: number[][]): number[][]`
+- `fitTransform(X: number[][]): number[][]`
+
+Learned attributes:
+
+- `alphas_: number[][] | null`
+- `lambdas_: number[] | null`
+- `nFeaturesIn_: number | null`
 
 ## Calibration
 

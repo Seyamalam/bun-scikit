@@ -33,6 +33,8 @@ export * from "./ensemble/RandomForestRegressor";
 export * from "./ensemble/AdaBoostClassifier";
 export * from "./ensemble/GradientBoostingClassifier";
 export * from "./ensemble/GradientBoostingRegressor";
+export * from "./ensemble/HistGradientBoostingClassifier";
+export * from "./ensemble/HistGradientBoostingRegressor";
 export * from "./ensemble/VotingClassifier";
 export * from "./ensemble/StackingClassifier";
 export * from "./ensemble/VotingRegressor";
@@ -45,6 +47,7 @@ export * from "./decomposition/PCA";
 export * from "./decomposition/TruncatedSVD";
 export * from "./decomposition/FastICA";
 export * from "./decomposition/NMF";
+export * from "./decomposition/KernelPCA";
 export * from "./calibration/CalibratedClassifierCV";
 
 // Model selection

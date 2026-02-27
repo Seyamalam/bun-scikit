@@ -10,17 +10,17 @@ Deliver practical scikit-learn parity for Bun/TypeScript without stalling releas
 
 ## In Scope (Current Wave)
 - Maintain shipped clustering parity: `KMeans`, `DBSCAN`, `AgglomerativeClustering`.
-- Maintain shipped decomposition parity: `PCA`, `TruncatedSVD`, `FastICA`, `NMF`.
+- Maintain shipped decomposition parity: `PCA`, `TruncatedSVD`, `FastICA`, `NMF`, `KernelPCA`.
 - Maintain shipped calibration/meta-estimator parity: `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier`.
-- Maintain shipped boosting parity baseline: `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor`.
-- Maintain multiclass support baseline across linear, probabilistic, neighbor, and meta-ensemble classifiers.
+- Maintain shipped boosting parity baseline: `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor`.
+- Maintain multiclass support baseline across linear, probabilistic, neighbor, tree/forest, and meta-ensemble classifiers.
 - Keep API style aligned with existing estimator conventions (`fit`/`predict`/`transform`, learned attrs).
 
 ## Explicitly Out of Scope (Current Wave)
 - Full scikit module parity in one release.
 - Advanced clustering families (spectral/OPTICS/HDBSCAN-like parity).
-- Advanced decomposition beyond current baseline (kernel PCA, sparse coding).
-- Boosting/manifold/inspection module breadth (hist-gradient, extra-trees, XGBoost-style APIs).
+- Advanced decomposition beyond current baseline (sparse coding, incremental decomposition).
+- Boosting/manifold/inspection module breadth (extra-trees, XGBoost-style APIs, partial-dependence/SHAP).
 
 ## Non-Negotiables
 - New APIs must have unit tests.

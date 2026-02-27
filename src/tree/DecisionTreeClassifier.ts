@@ -3,10 +3,11 @@ import {
   assertConsistentRowSize,
   assertFiniteMatrix,
   assertFiniteVector,
-  validateBinaryClassificationInputs,
+  validateClassificationInputs,
 } from "../utils/validation";
 import { accuracyScore } from "../metrics/classification";
 import { getZigKernels } from "../native/zigKernels";
+import { buildLabelIndex, uniqueSortedLabels } from "../utils/classification";
 
 export type MaxFeaturesOption = "sqrt" | "log2" | number | null;
 
@@ -19,7 +20,7 @@ export interface DecisionTreeClassifierOptions {
 }
 
 interface TreeNode {
-  prediction: 0 | 1;
+  predictionClassIndex: number;
   featureIndex?: number;
   threshold?: number;
   left?: TreeNode;
@@ -60,13 +61,28 @@ function mulberry32(seed: number): () => number {
   };
 }
 
-function giniImpurity(positiveCount: number, sampleCount: number): number {
+function giniImpurity(counts: Uint32Array | number[], sampleCount: number): number {
   if (sampleCount === 0) {
     return 0;
   }
-  const p1 = positiveCount / sampleCount;
-  const p0 = 1 - p1;
-  return 1 - p1 * p1 - p0 * p0;
+  let sumSquares = 0;
+  for (let i = 0; i < counts.length; i += 1) {
+    const p = counts[i] / sampleCount;
+    sumSquares += p * p;
+  }
+  return 1 - sumSquares;
+}
+
+function majorityClassIndex(counts: Uint32Array | number[]): number {
+  let best = 0;
+  let bestCount = counts[0];
+  for (let i = 1; i < counts.length; i += 1) {
+    if (counts[i] > bestCount) {
+      bestCount = counts[i];
+      best = i;
+    }
+  }
+  return best;
 }
 
 export class DecisionTreeClassifier implements ClassificationModel {
@@ -81,13 +97,16 @@ export class DecisionTreeClassifier implements ClassificationModel {
   private random: () => number = Math.random;
   private root: TreeNode | null = null;
   private flattenedXTrain: Float64Array | null = null;
+  private yEncodedTrain: Uint16Array | null = null;
   private yBinaryTrain: Uint8Array | null = null;
   private featureCount = 0;
+  private classCount = 0;
   private allFeatureIndices: number[] = [];
   private featureSelectionMarks: Uint8Array | null = null;
   private binTotals: Uint32Array = new Uint32Array(MAX_THRESHOLD_BINS);
-  private binPositives: Uint32Array = new Uint32Array(MAX_THRESHOLD_BINS);
+  private binClassCounts: Uint32Array = new Uint32Array(MAX_THRESHOLD_BINS);
   private zigModelHandle: bigint | null = null;
+  private nativeBinaryEligible = false;
 
   constructor(options: DecisionTreeClassifierOptions = {}) {
     this.maxDepth = options.maxDepth ?? 12;
@@ -103,22 +122,38 @@ export class DecisionTreeClassifier implements ClassificationModel {
     sampleIndices?: ArrayLike<number>,
     skipValidation = false,
     flattenedXTrain?: Float64Array,
-    yBinaryTrain?: Uint8Array,
+    yEncodedTrain?: Uint16Array,
+    classes?: Vector,
   ): this {
     this.destroyZigModel();
 
     if (!skipValidation) {
-      validateBinaryClassificationInputs(X, y);
+      validateClassificationInputs(X, y);
     }
     this.featureCount = X[0].length;
+    this.classes_ = classes ? classes.slice() : uniqueSortedLabels(y);
+    this.classCount = this.classes_.length;
+    if (this.classCount < 2) {
+      throw new Error("DecisionTreeClassifier requires at least two classes.");
+    }
+    const classToIndex = buildLabelIndex(this.classes_);
+
     this.flattenedXTrain = flattenedXTrain ?? this.flattenTrainingMatrix(X);
-    this.yBinaryTrain = yBinaryTrain ?? this.buildBinaryTargets(y);
+    this.yEncodedTrain =
+      yEncodedTrain ?? this.encodeTargets(y, classToIndex);
+    this.nativeBinaryEligible =
+      this.classes_.length === 2 && this.classes_[0] === 0 && this.classes_[1] === 1;
+    this.yBinaryTrain = this.nativeBinaryEligible
+      ? this.buildBinaryTargetsFromEncoded(this.yEncodedTrain)
+      : null;
+
     this.allFeatureIndices = new Array<number>(this.featureCount);
     for (let i = 0; i < this.featureCount; i += 1) {
       this.allFeatureIndices[i] = i;
     }
     this.featureSelectionMarks = new Uint8Array(this.featureCount);
     this.random = this.randomState === undefined ? Math.random : mulberry32(this.randomState);
+    this.binClassCounts = new Uint32Array(MAX_THRESHOLD_BINS * this.classCount);
 
     let validatedSampleIndices: Uint32Array | null = null;
     if (sampleIndices) {
@@ -135,7 +170,11 @@ export class DecisionTreeClassifier implements ClassificationModel {
       }
     }
 
-    if (isZigTreeBackendEnabled() && this.tryFitWithZig(X.length, validatedSampleIndices)) {
+    if (
+      this.nativeBinaryEligible &&
+      isZigTreeBackendEnabled() &&
+      this.tryFitWithZig(X.length, validatedSampleIndices)
+    ) {
       return this;
     }
 
@@ -183,7 +222,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
           outLabels,
         );
         if (status === 1) {
-          return Array.from(outLabels);
+          return Array.from(outLabels).map((idx) => this.classes_[idx]);
         }
       }
       if (!this.root) {
@@ -208,10 +247,11 @@ export class DecisionTreeClassifier implements ClassificationModel {
     this.destroyZigModel();
     this.root = null;
     this.flattenedXTrain = null;
+    this.yEncodedTrain = null;
     this.yBinaryTrain = null;
   }
 
-  private predictOne(sample: Vector, node: TreeNode): 0 | 1 {
+  private predictOne(sample: Vector, node: TreeNode): number {
     let current: TreeNode = node;
     while (
       !current.isLeaf &&
@@ -224,27 +264,28 @@ export class DecisionTreeClassifier implements ClassificationModel {
         current = current.right!;
       }
     }
-    return current.prediction;
+    return this.classes_[current.predictionClassIndex];
   }
 
   private buildTree(indices: number[], depth: number): TreeNode {
-    const y = this.yBinaryTrain!;
+    const y = this.yEncodedTrain!;
     const sampleCount = indices.length;
-    let positiveCount = 0;
+    const classCounts = new Uint32Array(this.classCount);
     for (let i = 0; i < sampleCount; i += 1) {
-      positiveCount += y[indices[i]];
+      classCounts[y[indices[i]]] += 1;
     }
-    const prediction: 0 | 1 = positiveCount * 2 >= sampleCount ? 1 : 0;
+    const predictionClassIndex = majorityClassIndex(classCounts);
 
-    const sameClass = positiveCount === 0 || positiveCount === sampleCount;
+    const maxClassCount = classCounts[predictionClassIndex];
+    const sameClass = maxClassCount === sampleCount;
     const depthStop = depth >= this.maxDepth;
     const splitStop = sampleCount < this.minSamplesSplit;
     if (sameClass || depthStop || splitStop) {
-      return { isLeaf: true, prediction };
+      return { isLeaf: true, predictionClassIndex };
     }
 
     const candidateFeatures = this.selectFeatureIndices(this.featureCount);
-    const parentImpurity = giniImpurity(positiveCount, sampleCount);
+    const parentImpurity = giniImpurity(classCounts, sampleCount);
 
     let bestFeature = -1;
     let bestSplit: SplitEvaluation | null = null;
@@ -263,17 +304,17 @@ export class DecisionTreeClassifier implements ClassificationModel {
     }
 
     if (!bestSplit || bestFeature === -1 || bestSplit.impurity >= parentImpurity - 1e-12) {
-      return { isLeaf: true, prediction };
+      return { isLeaf: true, predictionClassIndex };
     }
 
     const partition = this.partitionIndices(indices, bestFeature, bestSplit.threshold);
     if (!partition) {
-      return { isLeaf: true, prediction };
+      return { isLeaf: true, predictionClassIndex };
     }
 
     return {
       isLeaf: false,
-      prediction,
+      predictionClassIndex,
       featureIndex: bestFeature,
       threshold: bestSplit.threshold,
       left: this.buildTree(partition.leftIndices, depth + 1),
@@ -324,7 +365,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
     const create = kernels?.decisionTreeModelCreate;
     const fit = kernels?.decisionTreeModelFit;
     const destroy = kernels?.decisionTreeModelDestroy;
-    if (!create || !fit || !destroy) {
+    if (!create || !fit || !destroy || !this.yBinaryTrain) {
       return false;
     }
 
@@ -351,7 +392,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
       const status = fit(
         handle,
         this.flattenedXTrain!,
-        this.yBinaryTrain!,
+        this.yBinaryTrain,
         sampleCount,
         this.featureCount,
         sampleIndices ?? emptySampleIndices,
@@ -418,12 +459,13 @@ export class DecisionTreeClassifier implements ClassificationModel {
 
   private findBestThreshold(indices: number[], featureIndex: number): SplitEvaluation | null {
     const x = this.flattenedXTrain!;
-    const y = this.yBinaryTrain!;
+    const y = this.yEncodedTrain!;
     const stride = this.featureCount;
     const sampleCount = indices.length;
     let minValue = Number.POSITIVE_INFINITY;
     let maxValue = Number.NEGATIVE_INFINITY;
-    let totalPositive = 0;
+    const totalClassCounts = new Uint32Array(this.classCount);
+
     for (let i = 0; i < sampleCount; i += 1) {
       const sampleIndex = indices[i];
       const value = x[sampleIndex * stride + featureIndex];
@@ -433,7 +475,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
       if (value > maxValue) {
         maxValue = value;
       }
-      totalPositive += y[sampleIndex];
+      totalClassCounts[y[sampleIndex]] += 1;
     }
 
     if (!Number.isFinite(minValue) || !Number.isFinite(maxValue) || minValue === maxValue) {
@@ -443,9 +485,9 @@ export class DecisionTreeClassifier implements ClassificationModel {
     const dynamicBins = Math.floor(Math.sqrt(sampleCount));
     const binCount = Math.max(16, Math.min(MAX_THRESHOLD_BINS, dynamicBins));
     const binTotals = this.binTotals;
-    const binPositives = this.binPositives;
+    const binClassCounts = this.binClassCounts;
     binTotals.fill(0, 0, binCount);
-    binPositives.fill(0, 0, binCount);
+    binClassCounts.fill(0, 0, binCount * this.classCount);
     const range = maxValue - minValue;
 
     for (let i = 0; i < sampleCount; i += 1) {
@@ -457,28 +499,40 @@ export class DecisionTreeClassifier implements ClassificationModel {
       } else if (bin >= binCount) {
         bin = binCount - 1;
       }
+      const classIndex = y[sampleIndex];
       binTotals[bin] += 1;
-      binPositives[bin] += y[sampleIndex];
+      binClassCounts[bin * this.classCount + classIndex] += 1;
     }
 
+    const leftClassCounts = new Uint32Array(this.classCount);
     let leftCount = 0;
-    let leftPositive = 0;
     let bestImpurity = Number.POSITIVE_INFINITY;
     let bestThreshold = 0;
 
     for (let bin = 0; bin < binCount - 1; bin += 1) {
       leftCount += binTotals[bin];
-      leftPositive += binPositives[bin];
       const rightCount = sampleCount - leftCount;
+      for (let classIndex = 0; classIndex < this.classCount; classIndex += 1) {
+        leftClassCounts[classIndex] += binClassCounts[bin * this.classCount + classIndex];
+      }
 
       if (leftCount < this.minSamplesLeaf || rightCount < this.minSamplesLeaf) {
         continue;
       }
 
-      const rightPositive = totalPositive - leftPositive;
+      let leftGiniSum = 0;
+      let rightGiniSum = 0;
+      for (let classIndex = 0; classIndex < this.classCount; classIndex += 1) {
+        const leftClassCount = leftClassCounts[classIndex];
+        const rightClassCount = totalClassCounts[classIndex] - leftClassCount;
+        const lp = leftClassCount / leftCount;
+        const rp = rightClassCount / rightCount;
+        leftGiniSum += lp * lp;
+        rightGiniSum += rp * rp;
+      }
       const impurity =
-        (leftCount / sampleCount) * giniImpurity(leftPositive, leftCount) +
-        (rightCount / sampleCount) * giniImpurity(rightPositive, rightCount);
+        (leftCount / sampleCount) * (1 - leftGiniSum) +
+        (rightCount / sampleCount) * (1 - rightGiniSum);
 
       if (impurity < bestImpurity) {
         bestImpurity = impurity;
@@ -545,10 +599,22 @@ export class DecisionTreeClassifier implements ClassificationModel {
     return flattened;
   }
 
-  private buildBinaryTargets(y: Vector): Uint8Array {
-    const encoded = new Uint8Array(y.length);
+  private encodeTargets(y: Vector, classToIndex: Map<number, number>): Uint16Array {
+    const encoded = new Uint16Array(y.length);
     for (let i = 0; i < y.length; i += 1) {
-      encoded[i] = y[i] === 1 ? 1 : 0;
+      const classIndex = classToIndex.get(y[i]);
+      if (classIndex === undefined) {
+        throw new Error(`Unknown class label '${y[i]}' in target vector.`);
+      }
+      encoded[i] = classIndex;
+    }
+    return encoded;
+  }
+
+  private buildBinaryTargetsFromEncoded(yEncoded: Uint16Array): Uint8Array {
+    const encoded = new Uint8Array(yEncoded.length);
+    for (let i = 0; i < yEncoded.length; i += 1) {
+      encoded[i] = yEncoded[i] === 1 ? 1 : 0;
     }
     return encoded;
   }

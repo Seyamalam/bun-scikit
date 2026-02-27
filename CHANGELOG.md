@@ -16,13 +16,16 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 - `TruncatedSVD` decomposition estimator with deterministic power-iteration components, variance attribution, `fitTransform`, and `inverseTransform`.
 - `FastICA` decomposition estimator with whitening, independent component extraction, and inverse projection support.
 - `NMF` decomposition estimator with multiplicative-update factorization and reconstruction APIs.
+- `KernelPCA` decomposition estimator (`linear`, `rbf`, `poly` kernels).
 - `DBSCAN` and `AgglomerativeClustering` for density-based and hierarchical clustering parity.
 - `CalibratedClassifierCV` with `sigmoid` and `isotonic` calibration methods.
 - `VotingClassifier` (hard/soft) and `StackingClassifier` baseline meta-estimators.
 - `VotingRegressor`, `StackingRegressor`, and `BaggingClassifier` meta-estimator parity additions.
 - Boosting estimators: `AdaBoostClassifier`, `GradientBoostingClassifier`, and `GradientBoostingRegressor`.
-- Multiclass support across core classifiers/ensembles (`GaussianNB`, `KNeighborsClassifier`, `LogisticRegression`, `SGDClassifier`, `LinearSVC`, `VotingClassifier`, `StackingClassifier`, `BaggingClassifier`, `CalibratedClassifierCV`).
+- Histogram boosting estimators: `HistGradientBoostingClassifier` and `HistGradientBoostingRegressor`.
+- Multiclass support across core classifiers/ensembles (`GaussianNB`, `KNeighborsClassifier`, `LogisticRegression`, `SGDClassifier`, `LinearSVC`, `DecisionTreeClassifier`, `RandomForestClassifier`, `VotingClassifier`, `StackingClassifier`, `BaggingClassifier`, `CalibratedClassifierCV`).
 - sklearn snapshot fixtures at `test/fixtures/sklearn-snapshots.json` and fixture-based parity tests for calibration/ensemble/decomposition outputs.
+- Reproducible fixture generation script: `scripts/generate-sklearn-fixtures.py`.
 
 ### Changed
 - README install docs now include a post-install Zig backend smoke check for `DecisionTreeClassifier` and `RandomForestClassifier`.
@@ -34,6 +37,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 - Release-native-prebuild workflow now runs only on published releases (plus manual dispatch) to avoid duplicate tag-triggered asset jobs.
 - Hot-path predict retention guard for random-forest is relaxed to `0.55` in CI/release-prep to match observed stable baseline variance.
 - CI now uses fast PR checks and main-only heavy lanes (native matrix, zig-tree smoke, benchmarks) to reduce PR cycle time while preserving release strictness.
+- New CI `parity` job runs `parity:check` and enforces per-family sklearn drift thresholds.
 
 ### Improved
 - Zig tree codebase split into modules: `zig/src/tree/split.zig`, `zig/src/tree/fit.zig`, and `zig/src/tree/predict.zig`.

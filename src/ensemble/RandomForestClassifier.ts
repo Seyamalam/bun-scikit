@@ -1,8 +1,9 @@
 import type { ClassificationModel, Matrix, Vector } from "../types";
 import { accuracyScore } from "../metrics/classification";
 import { DecisionTreeClassifier, type MaxFeaturesOption } from "../tree/DecisionTreeClassifier";
-import { assertFiniteVector, validateBinaryClassificationInputs } from "../utils/validation";
+import { assertFiniteVector, validateClassificationInputs } from "../utils/validation";
 import { getZigKernels } from "../native/zigKernels";
+import { argmax, buildLabelIndex, uniqueSortedLabels } from "../utils/classification";
 
 export interface RandomForestClassifierOptions {
   nEstimators?: number;
@@ -48,6 +49,8 @@ export class RandomForestClassifier implements ClassificationModel {
   private readonly randomState?: number;
   private nativeModelHandle: bigint | null = null;
   private trees: DecisionTreeClassifier[] = [];
+  private classToIndex: Map<number, number> = new Map<number, number>();
+  private nativeBinaryEligible = false;
 
   constructor(options: RandomForestClassifierOptions = {}) {
     this.nEstimators = options.nEstimators ?? 50;
@@ -65,16 +68,23 @@ export class RandomForestClassifier implements ClassificationModel {
 
   fit(X: Matrix, y: Vector): this {
     this.disposeNativeModel();
-    validateBinaryClassificationInputs(X, y);
+    validateClassificationInputs(X, y);
+    this.classes_ = uniqueSortedLabels(y);
+    this.classToIndex = buildLabelIndex(this.classes_);
+    this.nativeBinaryEligible =
+      this.classes_.length === 2 && this.classes_[0] === 0 && this.classes_[1] === 1;
 
     const sampleCount = X.length;
     const featureCount = X[0].length;
     const random = this.randomState === undefined ? Math.random : mulberry32(this.randomState);
     const flattenedX = this.flattenTrainingMatrix(X, sampleCount, featureCount);
-    const yBinary = this.buildBinaryTargets(y);
+    const yEncoded = this.encodeTargets(y);
+    const yBinary = this.nativeBinaryEligible ? this.buildBinaryTargets(yEncoded) : null;
     const sampleIndices = new Uint32Array(sampleCount);
     this.trees = [];
     if (
+      this.nativeBinaryEligible &&
+      yBinary &&
       isZigTreeBackendEnabled() &&
       this.tryFitNativeForest(flattenedX, yBinary, sampleCount, featureCount)
     ) {
@@ -104,7 +114,7 @@ export class RandomForestClassifier implements ClassificationModel {
         randomState:
           this.randomState === undefined ? undefined : this.randomState + estimatorIndex + 1,
       });
-      tree.fit(X, y, sampleIndices, true, flattenedX, yBinary);
+      tree.fit(X, y, sampleIndices, true, flattenedX, yEncoded, this.classes_);
       this.trees[estimatorIndex] = tree;
     }
 
@@ -128,7 +138,7 @@ export class RandomForestClassifier implements ClassificationModel {
           out,
         );
         if (status === 1) {
-          return Array.from(out);
+          return Array.from(out).map((idx) => this.classes_[idx]);
         }
       }
     }
@@ -138,24 +148,21 @@ export class RandomForestClassifier implements ClassificationModel {
     }
 
     const sampleCount = X.length;
-    const voteCounts = new Uint16Array(sampleCount);
+    const voteCounts: Matrix = Array.from({ length: sampleCount }, () =>
+      new Array<number>(this.classes_.length).fill(0),
+    );
 
     for (let treeIndex = 0; treeIndex < this.trees.length; treeIndex += 1) {
       const treePrediction = this.trees[treeIndex].predict(X);
       for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex += 1) {
-        if (treePrediction[sampleIndex] === 1) {
-          voteCounts[sampleIndex] += 1;
+        const classIndex = this.classToIndex.get(treePrediction[sampleIndex]);
+        if (classIndex !== undefined) {
+          voteCounts[sampleIndex][classIndex] += 1;
         }
       }
     }
 
-    const predictions = new Array<number>(sampleCount);
-    const voteThreshold = this.trees.length;
-    for (let sampleIndex = 0; sampleIndex < sampleCount; sampleIndex += 1) {
-      predictions[sampleIndex] = voteCounts[sampleIndex] * 2 >= voteThreshold ? 1 : 0;
-    }
-
-    return predictions;
+    return voteCounts.map((row) => this.classes_[argmax(row)]);
   }
 
   score(X: Matrix, y: Vector): number {
@@ -272,11 +279,23 @@ export class RandomForestClassifier implements ClassificationModel {
     return flattened;
   }
 
-  private buildBinaryTargets(y: Vector): Uint8Array {
-    const encoded = new Uint8Array(y.length);
+  private encodeTargets(y: Vector): Uint16Array {
+    const out = new Uint16Array(y.length);
     for (let i = 0; i < y.length; i += 1) {
-      encoded[i] = y[i] === 1 ? 1 : 0;
+      const classIndex = this.classToIndex.get(y[i]);
+      if (classIndex === undefined) {
+        throw new Error(`Unknown class label '${y[i]}' in targets.`);
+      }
+      out[i] = classIndex;
     }
-    return encoded;
+    return out;
+  }
+
+  private buildBinaryTargets(yEncoded: Uint16Array): Uint8Array {
+    const out = new Uint8Array(yEncoded.length);
+    for (let i = 0; i < yEncoded.length; i += 1) {
+      out[i] = yEncoded[i] === 1 ? 1 : 0;
+    }
+    return out;
   }
 }

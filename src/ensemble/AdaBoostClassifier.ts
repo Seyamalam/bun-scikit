@@ -110,6 +110,34 @@ export class AdaBoostClassifier {
 
     for (let t = 0; t < this.nEstimators; t += 1) {
       const sampleIndices = weightedSampleIndices(weights, nSamples, random);
+
+      let hasZero = false;
+      let hasOne = false;
+      for (let i = 0; i < sampleIndices.length; i += 1) {
+        if (y[sampleIndices[i]] === 0) {
+          hasZero = true;
+        } else {
+          hasOne = true;
+        }
+        if (hasZero && hasOne) {
+          break;
+        }
+      }
+      if (!hasZero || !hasOne) {
+        const missingClass = hasZero ? 1 : 0;
+        let replacementIndex = -1;
+        let bestWeight = -Infinity;
+        for (let i = 0; i < nSamples; i += 1) {
+          if (y[i] === missingClass && weights[i] > bestWeight) {
+            bestWeight = weights[i];
+            replacementIndex = i;
+          }
+        }
+        if (replacementIndex !== -1) {
+          sampleIndices[sampleIndices.length - 1] = replacementIndex;
+        }
+      }
+
       const estimator = this.estimatorFactory();
       estimator.fit(subsetMatrix(X, sampleIndices), subsetVector(y, sampleIndices));
       const pred = estimator.predict(X);
