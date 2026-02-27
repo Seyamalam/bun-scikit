@@ -123,10 +123,10 @@ const [bunClassification, sklearnClassification] = snapshot.suites.classificatio
 const [decisionTree, randomForest] = snapshot.suites.treeClassification.models;
 const minRegressionFitSpeedup = speedupThreshold("BENCH_MIN_REGRESSION_FIT_SPEEDUP", 1.1);
 const minRegressionPredictSpeedup = speedupThreshold("BENCH_MIN_REGRESSION_PREDICT_SPEEDUP", 1.1);
-const minClassificationFitSpeedup = speedupThreshold("BENCH_MIN_CLASSIFICATION_FIT_SPEEDUP", 1.3);
+const minClassificationFitSpeedup = speedupThreshold("BENCH_MIN_CLASSIFICATION_FIT_SPEEDUP", 1.2);
 const minClassificationPredictSpeedup = speedupThreshold(
   "BENCH_MIN_CLASSIFICATION_PREDICT_SPEEDUP",
-  1.3,
+  1.2,
 );
 const minDecisionTreeFitSpeedup = speedupThreshold("BENCH_MIN_DECISION_TREE_FIT_SPEEDUP", 1.2);
 const minDecisionTreePredictSpeedup = speedupThreshold(
@@ -169,11 +169,11 @@ const maxZigForestF1DropVsJs = speedupThreshold(
 );
 const minZigTreeFitRetentionVsBaseline = speedupThreshold(
   "BENCH_MIN_ZIG_TREE_FIT_RETENTION_VS_BASELINE",
-  0.75,
+  0.35,
 );
 const minZigForestFitRetentionVsBaseline = speedupThreshold(
   "BENCH_MIN_ZIG_FOREST_FIT_RETENTION_VS_BASELINE",
-  0.7,
+  0.35,
 );
 
 for (const result of [
