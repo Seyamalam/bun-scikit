@@ -4,32 +4,27 @@ import { meanSquaredError, r2Score } from "../metrics/regression";
 import { assertFiniteMatrix, assertFiniteVector, assertVectorLength } from "../utils/validation";
 import { KFold, type FoldIndices } from "./KFold";
 import { StratifiedKFold } from "./StratifiedKFold";
+import type {
+  BuiltInScoring,
+  CrossValEstimator,
+  CrossValSplitter,
+  ScoringFn,
+} from "./crossValScore";
 
-export type BuiltInScoring =
-  | "accuracy"
-  | "f1"
-  | "precision"
-  | "recall"
-  | "r2"
-  | "mean_squared_error"
-  | "neg_mean_squared_error";
-
-export type ScoringFn = (yTrue: Vector, yPred: Vector) => number;
-
-export interface CrossValEstimator {
-  fit(X: Matrix, y: Vector): unknown;
-  predict(X: Matrix): Vector;
-  score?(X: Matrix, y: Vector): number;
-}
-
-export type CrossValSplitter = {
-  split(X: Matrix, y?: Vector, groups?: Vector): FoldIndices[];
-};
-
-export interface CrossValScoreOptions {
+export interface CrossValidateOptions {
   cv?: number | CrossValSplitter;
   scoring?: BuiltInScoring | ScoringFn;
   groups?: Vector;
+  returnTrainScore?: boolean;
+  returnEstimator?: boolean;
+}
+
+export interface CrossValidateResult {
+  fitTime: number[];
+  scoreTime: number[];
+  testScore: number[];
+  trainScore?: number[];
+  estimators?: CrossValEstimator[];
 }
 
 function isBinaryVector(y: Vector): boolean {
@@ -40,6 +35,13 @@ function isBinaryVector(y: Vector): boolean {
     }
   }
   return true;
+}
+
+function nowMs(): number {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now();
+  }
+  return Date.now();
 }
 
 function subsetMatrix(X: Matrix, indices: number[]): Matrix {
@@ -107,19 +109,19 @@ function resolveFolds(
   return new KFold({ nSplits: 5, shuffle: false }).split(X, y);
 }
 
-export function crossValScore(
+export function crossValidate(
   createEstimator: () => CrossValEstimator,
   X: Matrix,
   y: Vector,
-  options: CrossValScoreOptions = {},
-): number[] {
+  options: CrossValidateOptions = {},
+): CrossValidateResult {
   if (typeof createEstimator !== "function") {
     throw new Error("createEstimator must be a function returning a new estimator instance.");
   }
-
   if (!Array.isArray(X) || X.length === 0) {
     throw new Error("X must be a non-empty matrix.");
   }
+
   assertFiniteMatrix(X);
   assertVectorLength(y, X.length);
   assertFiniteVector(y);
@@ -128,48 +130,65 @@ export function crossValScore(
     assertFiniteVector(options.groups);
   }
 
-  const folds = resolveFolds(X, y, options.cv, options.groups);
-  if (folds.length === 0) {
-    throw new Error("Cross-validation splitter produced no folds.");
-  }
-
-  const explicitScorer =
+  const scorer =
     typeof options.scoring === "function"
       ? options.scoring
       : options.scoring
         ? resolveBuiltInScorer(options.scoring)
         : null;
+  const folds = resolveFolds(X, y, options.cv, options.groups);
+  if (folds.length === 0) {
+    throw new Error("Cross-validation splitter produced no folds.");
+  }
 
-  const scores = new Array<number>(folds.length);
+  const fitTime = new Array<number>(folds.length);
+  const scoreTime = new Array<number>(folds.length);
+  const testScore = new Array<number>(folds.length);
+  const trainScore = options.returnTrainScore ? new Array<number>(folds.length) : undefined;
+  const estimators = options.returnEstimator ? new Array<CrossValEstimator>(folds.length) : undefined;
+
   for (let foldIndex = 0; foldIndex < folds.length; foldIndex += 1) {
     const fold = folds[foldIndex];
-    if (fold.trainIndices.length === 0 || fold.testIndices.length === 0) {
-      throw new Error(`Fold ${foldIndex} must have non-empty train and test indices.`);
-    }
-
     const XTrain = subsetMatrix(X, fold.trainIndices);
     const yTrain = subsetVector(y, fold.trainIndices);
     const XTest = subsetMatrix(X, fold.testIndices);
     const yTest = subsetVector(y, fold.testIndices);
 
     const estimator = createEstimator();
+    const fitStart = nowMs();
     estimator.fit(XTrain, yTrain);
+    fitTime[foldIndex] = nowMs() - fitStart;
 
-    if (explicitScorer) {
+    const scoreStart = nowMs();
+    if (scorer) {
       const yPred = estimator.predict(XTest);
-      scores[foldIndex] = explicitScorer(yTest, yPred);
-      continue;
+      testScore[foldIndex] = scorer(yTest, yPred);
+      if (trainScore) {
+        const yTrainPred = estimator.predict(XTrain);
+        trainScore[foldIndex] = scorer(yTrain, yTrainPred);
+      }
+    } else if (typeof estimator.score === "function") {
+      testScore[foldIndex] = estimator.score(XTest, yTest);
+      if (trainScore) {
+        trainScore[foldIndex] = estimator.score(XTrain, yTrain);
+      }
+    } else {
+      throw new Error(
+        "Estimator must implement score() when no explicit scoring function is provided.",
+      );
     }
+    scoreTime[foldIndex] = nowMs() - scoreStart;
 
-    if (typeof estimator.score === "function") {
-      scores[foldIndex] = estimator.score(XTest, yTest);
-      continue;
+    if (estimators) {
+      estimators[foldIndex] = estimator;
     }
-
-    throw new Error(
-      "Estimator must implement score() when no explicit scoring function is provided.",
-    );
   }
 
-  return scores;
+  return {
+    fitTime,
+    scoreTime,
+    testScore,
+    ...(trainScore ? { trainScore } : {}),
+    ...(estimators ? { estimators } : {}),
+  };
 }

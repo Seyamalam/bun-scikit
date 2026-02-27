@@ -610,6 +610,34 @@ Methods:
 - `recallScore(yTrue, yPred, positiveLabel?): number`
 - `f1Score(yTrue, yPred, positiveLabel?): number`
 
+## Recent Additions
+
+- `AdaBoostRegressor`
+- `AdaBoostRegressorOptions`
+- `crossValidate`
+- `CrossValidateOptions`
+- `CrossValidateResult`
+- `ExtraTreesClassifier`
+- `ExtraTreesClassifierOptions`
+- `ExtraTreesRegressor`
+- `ExtraTreesRegressorOptions`
+- `GroupKFold`
+- `GroupKFoldOptions`
+- `KNNImputer`
+- `KNNImputerOptions`
+- `LinearSVR`
+- `LinearSVROptions`
+- `NuSVC`
+- `NuSVCOptions`
+- `NuSVR`
+- `NuSVROptions`
+- `OrdinalEncoder`
+- `OrdinalEncoderOptions`
+- `SVC`
+- `SVCOptions`
+- `SVR`
+- `SVROptions`
+
 ## API Symbol Index
 
 `AdaBoostClassifier`, `AdaBoostClassifierOptions`, `AgglomerativeClustering`, `AgglomerativeClusteringOptions`, `AgglomerativeLinkage`, `AgglomerativeMetric`, `BaggingClassifier`, `BaggingClassifierOptions`, `balancedAccuracyScore`, `Binarizer`, `BinarizerOptions`, `brierScoreLoss`, `BuiltInScoring`, `CalibratedClassifierCV`, `CalibratedClassifierCVOptions`, `CalibrationMethod`, `classificationReport`, `ClassificationReportLabelMetrics`, `ClassificationReportResult`, `ColumnSelector`, `ColumnTransformer`, `ColumnTransformerOptions`, `ColumnTransformerSpec`, `confusionMatrix`, `ConfusionMatrixResult`, `CrossValEstimator`, `crossValScore`, `CrossValScoreOptions`, `CrossValSplitter`, `DBSCAN`, `DBSCANOptions`, `DecisionTreeRegressor`, `DecisionTreeRegressorOptions`, `DummyClassifier`, `DummyClassifierOptions`, `DummyClassifierStrategy`, `DummyRegressor`, `DummyRegressorOptions`, `DummyRegressorStrategy`, `explainedVarianceScore`, `FastICA`, `FastICAOptions`, `FeatureUnion`, `FeatureUnionSpec`, `FoldIndices`, `GaussianNB`, `GaussianNBOptions`, `GradientBoostingClassifier`, `GradientBoostingClassifierOptions`, `GradientBoostingRegressor`, `GradientBoostingRegressorOptions`, `GridSearchCV`, `GridSearchCVOptions`, `GridSearchResultRow`, `ImputerStrategy`, `KFold`, `KFoldOptions`, `KMeans`, `KMeansOptions`, `LabelEncoder`, `LinearSVC`, `LinearSVCOptions`, `logLoss`, `matthewsCorrcoef`, `MaxAbsScaler`, `meanAbsolutePercentageError`, `MinMaxScaler`, `MinMaxScalerOptions`, `NMF`, `NMFOptions`, `Normalizer`, `NormalizerOptions`, `OneHotEncoder`, `OneHotEncoderOptions`, `PCA`, `PCAOptions`, `ParamDistributions`, `ParamGrid`, `Pipeline`, `PipelineStep`, `PolynomialFeatures`, `PolynomialFeaturesOptions`, `RandomForestRegressor`, `RandomForestRegressorOptions`, `RandomizedSearchCV`, `RandomizedSearchCVOptions`, `RandomizedSearchResultRow`, `RepeatedKFold`, `RepeatedKFoldOptions`, `RepeatedStratifiedKFold`, `RepeatedStratifiedKFoldOptions`, `RobustScaler`, `RobustScalerOptions`, `rocAucScore`, `ScoringFn`, `SGDClassifier`, `SGDClassifierLoss`, `SGDClassifierOptions`, `SGDRegressor`, `SGDRegressorOptions`, `SimpleImputer`, `SimpleImputerOptions`, `StackingClassifier`, `StackingClassifierOptions`, `StackingEstimatorSpec`, `StackingMethod`, `StackingRegressor`, `StackingRegressorEstimatorSpec`, `StackingRegressorOptions`, `StratifiedKFold`, `StratifiedKFoldOptions`, `StratifiedShuffleSplit`, `StratifiedShuffleSplitOptions`, `Transformer`, `TruncatedSVD`, `TruncatedSVDOptions`, `VarianceThreshold`, `VarianceThresholdOptions`, `VotingClassifier`, `VotingClassifierOptions`, `VotingEstimatorSpec`, `VotingRegressor`, `VotingRegressorEstimatorSpec`, `VotingRegressorOptions`, `VotingStrategy`.
