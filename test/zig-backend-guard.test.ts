@@ -28,6 +28,7 @@ test("zig backend guard enforces native tree and forest fit paths", () => {
     [3, 2],
   ];
   const y = [0, 0, 0, 1, 1, 1];
+  const yMulti = [0, 0, 1, 1, 2, 2];
 
   const previousTreeBackend = process.env.BUN_SCIKIT_TREE_BACKEND;
   process.env.BUN_SCIKIT_TREE_BACKEND = "zig";
@@ -47,6 +48,22 @@ test("zig backend guard enforces native tree and forest fit paths", () => {
     expect(forest.fitBackend_).toBe("zig");
     expect(forest.fitBackendLibrary_).toBeTruthy();
     forest.dispose();
+
+    const multiTree = new DecisionTreeClassifier({ maxDepth: 3, randomState: 42 });
+    multiTree.fit(X, yMulti);
+    expect(multiTree.fitBackend_).toBe("zig");
+    expect(multiTree.predict(X).length).toBe(X.length);
+    multiTree.dispose();
+
+    const multiForest = new RandomForestClassifier({
+      nEstimators: 20,
+      maxDepth: 4,
+      randomState: 42,
+    });
+    multiForest.fit(X, yMulti);
+    expect(multiForest.fitBackend_).toBe("zig");
+    expect(multiForest.predict(X).length).toBe(X.length);
+    multiForest.dispose();
   } finally {
     if (previousTreeBackend === undefined) {
       delete process.env.BUN_SCIKIT_TREE_BACKEND;

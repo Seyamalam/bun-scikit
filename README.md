@@ -119,6 +119,8 @@ Near-term parity gaps vs scikit-learn include clustering breadth (e.g. spectral)
 
 Multiclass support is available for `GaussianNB`, `KNeighborsClassifier`, `LogisticRegression`, `SGDClassifier`, `LinearSVC`, `DecisionTreeClassifier`, `RandomForestClassifier`, `VotingClassifier`, `StackingClassifier`, `BaggingClassifier`, and `CalibratedClassifierCV`.
 
+`DecisionTreeClassifier` and `RandomForestClassifier` now support multiclass native Zig fit/predict paths (up to 256 encoded classes) when `BUN_SCIKIT_TREE_BACKEND=zig`.
+
 ## Native Runtime
 
 - Prebuilt binaries are bundled in the npm package for:
@@ -133,6 +135,8 @@ Optional env vars:
 - `BUN_SCIKIT_NODE_ADDON=/absolute/path/to/bun_scikit_node_addon.node`
 - `BUN_SCIKIT_ZIG_LIB=/absolute/path/to/bun_scikit_kernels.<ext>`
 - `BUN_SCIKIT_TREE_BACKEND=zig|js` (default is `zig`; set `js` to force JS tree/forest fallback)
+
+Parity checks are enforced in CI using sklearn snapshot fixtures (including multi-seed drift checks) via `bun run parity:check`.
 
 ## Performance Snapshot
 

@@ -18,7 +18,7 @@ pub const LogisticModel = struct {
 };
 
 pub const TreeNode = struct {
-    prediction: u8,
+    prediction: u16,
     feature_index: u32,
     threshold: f64,
     left_index: u32,
@@ -26,8 +26,11 @@ pub const TreeNode = struct {
     is_leaf: bool,
 };
 
+pub const MAX_CLASS_COUNT: usize = 256;
+
 pub const DecisionTreeModel = struct {
     n_features: usize,
+    class_count: usize,
     max_depth: usize,
     min_samples_split: usize,
     min_samples_leaf: usize,
@@ -42,6 +45,7 @@ pub const DecisionTreeModel = struct {
 
 pub const RandomForestClassifierModel = struct {
     n_features: usize,
+    class_count: usize,
     n_estimators: usize,
     max_depth: usize,
     min_samples_split: usize,
@@ -134,11 +138,14 @@ pub inline fn asRandomForestClassifierModel(handle: usize) ?*RandomForestClassif
     return @as(*RandomForestClassifierModel, @ptrFromInt(handle));
 }
 
-pub inline fn giniImpurity(positive_count: usize, sample_count: usize) f64 {
+pub inline fn giniFromCounts(class_counts: []const usize, sample_count: usize) f64 {
     if (sample_count == 0) {
         return 0.0;
     }
-    const p1 = @as(f64, @floatFromInt(positive_count)) / @as(f64, @floatFromInt(sample_count));
-    const p0 = 1.0 - p1;
-    return 1.0 - p1 * p1 - p0 * p0;
+    var sum_squares: f64 = 0.0;
+    for (class_counts) |count| {
+        const p = @as(f64, @floatFromInt(count)) / @as(f64, @floatFromInt(sample_count));
+        sum_squares += p * p;
+    }
+    return 1.0 - sum_squares;
 }

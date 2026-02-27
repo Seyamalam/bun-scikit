@@ -5,7 +5,7 @@ const EXACT_SPLIT_MAX_SAMPLES: usize = 88;
 
 const FeatureSample = struct {
     value: f64,
-    label: u8,
+    label: u16,
 };
 
 fn featureSampleLessThan(_: void, a: FeatureSample, b: FeatureSample) bool {
@@ -57,7 +57,7 @@ pub fn selectCandidateFeatures(
 pub fn findBestSplitForFeature(
     model: *const common.DecisionTreeModel,
     x_ptr: [*]const f64,
-    y_ptr: [*]const u8,
+    y_ptr: [*]const u16,
     indices: []const usize,
     feature_index: usize,
 ) ?common.SplitEvaluation {
@@ -65,9 +65,13 @@ pub fn findBestSplitForFeature(
     if (sample_count < 2) {
         return null;
     }
+    if (model.class_count < 2 or model.class_count > common.MAX_CLASS_COUNT) {
+        return null;
+    }
+
     var min_value = std.math.inf(f64);
     var max_value = -std.math.inf(f64);
-    var total_positive: usize = 0;
+    var total_counts: [common.MAX_CLASS_COUNT]usize = [_]usize{0} ** common.MAX_CLASS_COUNT;
     for (indices) |sample_index| {
         const value = x_ptr[sample_index * model.n_features + feature_index];
         if (value < min_value) {
@@ -76,7 +80,11 @@ pub fn findBestSplitForFeature(
         if (value > max_value) {
             max_value = value;
         }
-        total_positive += y_ptr[sample_index];
+        const class_index = @as(usize, y_ptr[sample_index]);
+        if (class_index >= model.class_count) {
+            return null;
+        }
+        total_counts[class_index] += 1;
     }
 
     if (!std.math.isFinite(min_value) or !std.math.isFinite(max_value) or min_value == max_value) {
@@ -95,7 +103,7 @@ pub fn findBestSplitForFeature(
         std.sort.pdq(FeatureSample, sorted_samples, {}, featureSampleLessThan);
 
         var left_count: usize = 0;
-        var left_positive: usize = 0;
+        var left_counts: [common.MAX_CLASS_COUNT]usize = [_]usize{0} ** common.MAX_CLASS_COUNT;
         var best_impurity = std.math.inf(f64);
         var best_threshold: f64 = 0.0;
         var found = false;
@@ -103,7 +111,7 @@ pub fn findBestSplitForFeature(
         var split_index: usize = 0;
         while (split_index + 1 < sample_count) : (split_index += 1) {
             left_count += 1;
-            left_positive += sorted_samples[split_index].label;
+            left_counts[@as(usize, sorted_samples[split_index].label)] += 1;
 
             const current_value = sorted_samples[split_index].value;
             const next_value = sorted_samples[split_index + 1].value;
@@ -116,12 +124,17 @@ pub fn findBestSplitForFeature(
                 continue;
             }
 
-            const right_positive = total_positive - left_positive;
+            var right_counts: [common.MAX_CLASS_COUNT]usize = [_]usize{0} ** common.MAX_CLASS_COUNT;
+            var class_index: usize = 0;
+            while (class_index < model.class_count) : (class_index += 1) {
+                right_counts[class_index] = total_counts[class_index] - left_counts[class_index];
+            }
+
             const impurity =
                 (@as(f64, @floatFromInt(left_count)) / @as(f64, @floatFromInt(sample_count))) *
-                    common.giniImpurity(left_positive, left_count) +
+                    common.giniFromCounts(left_counts[0..model.class_count], left_count) +
                 (@as(f64, @floatFromInt(right_count)) / @as(f64, @floatFromInt(sample_count))) *
-                    common.giniImpurity(right_positive, right_count);
+                    common.giniFromCounts(right_counts[0..model.class_count], right_count);
 
             if (impurity < best_impurity) {
                 best_impurity = impurity;
@@ -141,22 +154,27 @@ pub fn findBestSplitForFeature(
 
     const dynamic_bins = @as(usize, @intFromFloat(@floor(@sqrt(@as(f64, @floatFromInt(sample_count))))));
     const bin_count = std.math.clamp(dynamic_bins, 16, common.MAX_THRESHOLD_BINS);
-    var bin_totals: [common.MAX_THRESHOLD_BINS]usize = [_]usize{0} ** common.MAX_THRESHOLD_BINS;
-    var bin_positives: [common.MAX_THRESHOLD_BINS]usize = [_]usize{0} ** common.MAX_THRESHOLD_BINS;
     const value_range = max_value - min_value;
 
+    var bin_totals: [common.MAX_THRESHOLD_BINS]usize = [_]usize{0} ** common.MAX_THRESHOLD_BINS;
+    var bin_class_counts: [common.MAX_THRESHOLD_BINS * common.MAX_CLASS_COUNT]usize =
+        [_]usize{0} ** (common.MAX_THRESHOLD_BINS * common.MAX_CLASS_COUNT);
     for (indices) |sample_index| {
         const value = x_ptr[sample_index * model.n_features + feature_index];
         var bin_index = @as(usize, @intFromFloat(@floor(((value - min_value) / value_range) * @as(f64, @floatFromInt(bin_count)))));
         if (bin_index >= bin_count) {
             bin_index = bin_count - 1;
         }
+        const class_index = @as(usize, y_ptr[sample_index]);
+        if (class_index >= model.class_count) {
+            return null;
+        }
         bin_totals[bin_index] += 1;
-        bin_positives[bin_index] += y_ptr[sample_index];
+        bin_class_counts[bin_index * common.MAX_CLASS_COUNT + class_index] += 1;
     }
 
     var left_count: usize = 0;
-    var left_positive: usize = 0;
+    var left_counts: [common.MAX_CLASS_COUNT]usize = [_]usize{0} ** common.MAX_CLASS_COUNT;
     var best_impurity = std.math.inf(f64);
     var best_threshold: f64 = 0.0;
     var found = false;
@@ -164,18 +182,28 @@ pub fn findBestSplitForFeature(
     var bin: usize = 0;
     while (bin + 1 < bin_count) : (bin += 1) {
         left_count += bin_totals[bin];
-        left_positive += bin_positives[bin];
+        var class_index: usize = 0;
+        while (class_index < model.class_count) : (class_index += 1) {
+            left_counts[class_index] +=
+                bin_class_counts[bin * common.MAX_CLASS_COUNT + class_index];
+        }
+
         const right_count = sample_count - left_count;
         if (left_count < model.min_samples_leaf or right_count < model.min_samples_leaf) {
             continue;
         }
 
-        const right_positive = total_positive - left_positive;
+        var right_counts: [common.MAX_CLASS_COUNT]usize = [_]usize{0} ** common.MAX_CLASS_COUNT;
+        class_index = 0;
+        while (class_index < model.class_count) : (class_index += 1) {
+            right_counts[class_index] = total_counts[class_index] - left_counts[class_index];
+        }
+
         const impurity =
             (@as(f64, @floatFromInt(left_count)) / @as(f64, @floatFromInt(sample_count))) *
-                common.giniImpurity(left_positive, left_count) +
+                common.giniFromCounts(left_counts[0..model.class_count], left_count) +
             (@as(f64, @floatFromInt(right_count)) / @as(f64, @floatFromInt(sample_count))) *
-                common.giniImpurity(right_positive, right_count);
+                common.giniFromCounts(right_counts[0..model.class_count], right_count);
 
         if (impurity < best_impurity) {
             best_impurity = impurity;

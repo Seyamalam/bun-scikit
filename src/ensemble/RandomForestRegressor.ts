@@ -25,6 +25,7 @@ function mulberry32(seed: number): () => number {
 }
 
 export class RandomForestRegressor implements RegressionModel {
+  featureImportances_: Vector | null = null;
   private readonly nEstimators: number;
   private readonly maxDepth?: number;
   private readonly minSamplesSplit?: number;
@@ -50,6 +51,7 @@ export class RandomForestRegressor implements RegressionModel {
 
   fit(X: Matrix, y: Vector): this {
     validateRegressionInputs(X, y);
+    this.featureImportances_ = null;
 
     const sampleCount = X.length;
     const featureCount = X[0].length;
@@ -81,6 +83,7 @@ export class RandomForestRegressor implements RegressionModel {
       tree.fit(X, y, sampleIndices, true, flattenedX, yValues);
       this.trees[estimatorIndex] = tree;
     }
+    this.computeFeatureImportances(featureCount);
 
     return this;
   }
@@ -136,5 +139,28 @@ export class RandomForestRegressor implements RegressionModel {
       out[i] = y[i];
     }
     return out;
+  }
+
+  private computeFeatureImportances(featureCount: number): void {
+    if (this.trees.length === 0) {
+      this.featureImportances_ = null;
+      return;
+    }
+    const raw = new Array<number>(featureCount).fill(0);
+    for (let i = 0; i < this.trees.length; i += 1) {
+      const importances = this.trees[i].featureImportances_;
+      if (!importances) {
+        continue;
+      }
+      for (let j = 0; j < featureCount; j += 1) {
+        raw[j] += importances[j];
+      }
+    }
+    let total = 0;
+    for (let i = 0; i < raw.length; i += 1) {
+      total += raw[i];
+    }
+    this.featureImportances_ =
+      total > 0 ? raw.map((value) => value / total) : new Array<number>(featureCount).fill(0);
   }
 }

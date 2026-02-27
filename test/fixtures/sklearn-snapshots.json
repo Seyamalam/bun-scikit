@@ -1,7 +1,28 @@
 {
   "metadata": {
     "description": "Snapshot fixtures for parity checks",
-    "seed": 42
+    "seed": 42,
+    "seeds": [
+      13,
+      42,
+      77
+    ]
+  },
+  "thresholds": {
+    "gnb_proba_mad": 0.15,
+    "voting_soft_proba_mad": 0.2,
+    "calibrated_proba_mad": 0.25,
+    "decision_tree_mismatch": 0.05,
+    "random_forest_mismatch": 0.1,
+    "hist_gb_classifier_probe_mad": 0.25,
+    "hist_gb_classifier_mismatch": 0.1,
+    "hist_gb_regressor_probe_mse": 50.0,
+    "hist_gb_regressor_train_mse": 50.0,
+    "nmf_reconstruction_mse": 0.1,
+    "kernel_pca_train_distance_mse": 0.2,
+    "kernel_pca_probe_distance_mse": 0.2,
+    "multi_seed_decision_tree_mismatch_avg": 0.08,
+    "multi_seed_random_forest_mismatch_avg": 0.12
   },
   "multiclass": {
     "X": [
@@ -155,6 +176,83 @@
         0.0,
         0.05,
         0.95
+      ]
+    ]
+  },
+  "multi_seed": {
+    "seeds": [
+      13,
+      42,
+      77
+    ],
+    "decision_tree_pred": [
+      [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2
+      ]
+    ],
+    "random_forest_pred": [
+      [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2
       ]
     ]
   },

@@ -27,10 +27,10 @@ using LogisticModelFitFn = std::size_t (*)(NativeHandle, const double*, const do
 using LogisticModelFitLbfgsFn = std::size_t (*)(NativeHandle, const double*, const double*, std::size_t, std::size_t, double, double, std::size_t);
 using LogisticModelCopyCoefficientsFn = std::uint8_t (*)(NativeHandle, double*);
 using LogisticModelGetInterceptFn = double (*)(NativeHandle);
-using DecisionTreeModelCreateFn = NativeHandle (*)(std::size_t, std::size_t, std::size_t, std::uint8_t, std::size_t, std::uint32_t, std::uint8_t, std::size_t);
+using DecisionTreeModelCreateFn = NativeHandle (*)(std::size_t, std::size_t, std::size_t, std::uint8_t, std::size_t, std::uint32_t, std::uint8_t, std::size_t, std::size_t);
 using DecisionTreeModelDestroyFn = void (*)(NativeHandle);
-using DecisionTreeModelFitFn = std::uint8_t (*)(NativeHandle, const double*, const std::uint8_t*, std::size_t, std::size_t, const std::uint32_t*, std::size_t);
-using DecisionTreeModelPredictFn = std::uint8_t (*)(NativeHandle, const double*, std::size_t, std::size_t, std::uint8_t*);
+using DecisionTreeModelFitFn = std::uint8_t (*)(NativeHandle, const double*, const std::uint16_t*, std::size_t, std::size_t, const std::uint32_t*, std::size_t);
+using DecisionTreeModelPredictFn = std::uint8_t (*)(NativeHandle, const double*, std::size_t, std::size_t, std::uint16_t*);
 using RandomForestClassifierModelCreateFn = NativeHandle (*)(
     std::size_t,
     std::size_t,
@@ -41,10 +41,11 @@ using RandomForestClassifierModelCreateFn = NativeHandle (*)(
     std::uint8_t,
     std::uint32_t,
     std::uint8_t,
+    std::size_t,
     std::size_t);
 using RandomForestClassifierModelDestroyFn = void (*)(NativeHandle);
-using RandomForestClassifierModelFitFn = std::uint8_t (*)(NativeHandle, const double*, const std::uint8_t*, std::size_t, std::size_t);
-using RandomForestClassifierModelPredictFn = std::uint8_t (*)(NativeHandle, const double*, std::size_t, std::size_t, std::uint8_t*);
+using RandomForestClassifierModelFitFn = std::uint8_t (*)(NativeHandle, const double*, const std::uint16_t*, std::size_t, std::size_t);
+using RandomForestClassifierModelPredictFn = std::uint8_t (*)(NativeHandle, const double*, std::size_t, std::size_t, std::uint16_t*);
 
 struct KernelLibrary {
 #if defined(_WIN32)
@@ -474,10 +475,10 @@ Napi::Value DecisionTreeModelCreate(const Napi::CallbackInfo& info) {
     throwError(env, "Symbol decision_tree_model_create is unavailable.");
     return env.Null();
   }
-  if (info.Length() != 8 || !info[0].IsNumber() || !info[1].IsNumber() || !info[2].IsNumber() ||
+  if (info.Length() != 9 || !info[0].IsNumber() || !info[1].IsNumber() || !info[2].IsNumber() ||
       !info[3].IsNumber() || !info[4].IsNumber() || !info[5].IsNumber() || !info[6].IsNumber() ||
-      !info[7].IsNumber()) {
-    throwTypeError(env, "decisionTreeModelCreate(maxDepth, minSamplesSplit, minSamplesLeaf, maxFeaturesMode, maxFeaturesValue, randomState, useRandomState, nFeatures) expects eight numbers.");
+      !info[7].IsNumber() || !info[8].IsNumber()) {
+    throwTypeError(env, "decisionTreeModelCreate(maxDepth, minSamplesSplit, minSamplesLeaf, maxFeaturesMode, maxFeaturesValue, randomState, useRandomState, classCount, nFeatures) expects nine numbers.");
     return env.Null();
   }
 
@@ -488,7 +489,8 @@ Napi::Value DecisionTreeModelCreate(const Napi::CallbackInfo& info) {
   const std::size_t max_features_value = static_cast<std::size_t>(info[4].As<Napi::Number>().Uint32Value());
   const std::uint32_t random_state = static_cast<std::uint32_t>(info[5].As<Napi::Number>().Uint32Value());
   const std::uint8_t use_random_state = static_cast<std::uint8_t>(info[6].As<Napi::Number>().Uint32Value());
-  const std::size_t n_features = static_cast<std::size_t>(info[7].As<Napi::Number>().Uint32Value());
+  const std::size_t class_count = static_cast<std::size_t>(info[7].As<Napi::Number>().Uint32Value());
+  const std::size_t n_features = static_cast<std::size_t>(info[8].As<Napi::Number>().Uint32Value());
 
   const NativeHandle handle = g_library.decision_tree_model_create(
       max_depth,
@@ -498,6 +500,7 @@ Napi::Value DecisionTreeModelCreate(const Napi::CallbackInfo& info) {
       max_features_value,
       random_state,
       use_random_state,
+      class_count,
       n_features);
   return Napi::BigInt::New(env, static_cast<std::uint64_t>(handle));
 }
@@ -543,7 +546,7 @@ Napi::Value DecisionTreeModelFit(const Napi::CallbackInfo& info) {
     return env.Null();
   }
   auto x = info[1].As<Napi::Float64Array>();
-  auto y = info[2].As<Napi::Uint8Array>();
+  auto y = info[2].As<Napi::Uint16Array>();
   const std::size_t n_samples = static_cast<std::size_t>(info[3].As<Napi::Number>().Uint32Value());
   const std::size_t n_features = static_cast<std::size_t>(info[4].As<Napi::Number>().Uint32Value());
   auto sample_indices = info[5].As<Napi::Uint32Array>();
@@ -582,7 +585,7 @@ Napi::Value DecisionTreeModelPredict(const Napi::CallbackInfo& info) {
   auto x = info[1].As<Napi::Float64Array>();
   const std::size_t n_samples = static_cast<std::size_t>(info[2].As<Napi::Number>().Uint32Value());
   const std::size_t n_features = static_cast<std::size_t>(info[3].As<Napi::Number>().Uint32Value());
-  auto out_labels = info[4].As<Napi::Uint8Array>();
+  auto out_labels = info[4].As<Napi::Uint16Array>();
 
   const std::uint8_t status = g_library.decision_tree_model_predict(
       handle,
@@ -602,10 +605,10 @@ Napi::Value RandomForestClassifierModelCreate(const Napi::CallbackInfo& info) {
     throwError(env, "Symbol random_forest_classifier_model_create is unavailable.");
     return env.Null();
   }
-  if (info.Length() != 10 || !info[0].IsNumber() || !info[1].IsNumber() || !info[2].IsNumber() ||
+  if (info.Length() != 11 || !info[0].IsNumber() || !info[1].IsNumber() || !info[2].IsNumber() ||
       !info[3].IsNumber() || !info[4].IsNumber() || !info[5].IsNumber() || !info[6].IsNumber() ||
-      !info[7].IsNumber() || !info[8].IsNumber() || !info[9].IsNumber()) {
-    throwTypeError(env, "randomForestClassifierModelCreate(nEstimators, maxDepth, minSamplesSplit, minSamplesLeaf, maxFeaturesMode, maxFeaturesValue, bootstrap, randomState, useRandomState, nFeatures) expects ten numbers.");
+      !info[7].IsNumber() || !info[8].IsNumber() || !info[9].IsNumber() || !info[10].IsNumber()) {
+    throwTypeError(env, "randomForestClassifierModelCreate(nEstimators, maxDepth, minSamplesSplit, minSamplesLeaf, maxFeaturesMode, maxFeaturesValue, bootstrap, randomState, useRandomState, classCount, nFeatures) expects eleven numbers.");
     return env.Null();
   }
 
@@ -618,7 +621,8 @@ Napi::Value RandomForestClassifierModelCreate(const Napi::CallbackInfo& info) {
   const std::uint8_t bootstrap = static_cast<std::uint8_t>(info[6].As<Napi::Number>().Uint32Value());
   const std::uint32_t random_state = static_cast<std::uint32_t>(info[7].As<Napi::Number>().Uint32Value());
   const std::uint8_t use_random_state = static_cast<std::uint8_t>(info[8].As<Napi::Number>().Uint32Value());
-  const std::size_t n_features = static_cast<std::size_t>(info[9].As<Napi::Number>().Uint32Value());
+  const std::size_t class_count = static_cast<std::size_t>(info[9].As<Napi::Number>().Uint32Value());
+  const std::size_t n_features = static_cast<std::size_t>(info[10].As<Napi::Number>().Uint32Value());
 
   const NativeHandle handle = g_library.random_forest_classifier_model_create(
       n_estimators,
@@ -630,6 +634,7 @@ Napi::Value RandomForestClassifierModelCreate(const Napi::CallbackInfo& info) {
       bootstrap,
       random_state,
       use_random_state,
+      class_count,
       n_features);
   return Napi::BigInt::New(env, static_cast<std::uint64_t>(handle));
 }
@@ -675,7 +680,7 @@ Napi::Value RandomForestClassifierModelFit(const Napi::CallbackInfo& info) {
     return env.Null();
   }
   auto x = info[1].As<Napi::Float64Array>();
-  auto y = info[2].As<Napi::Uint8Array>();
+  auto y = info[2].As<Napi::Uint16Array>();
   const std::size_t n_samples = static_cast<std::size_t>(info[3].As<Napi::Number>().Uint32Value());
   const std::size_t n_features = static_cast<std::size_t>(info[4].As<Napi::Number>().Uint32Value());
 
@@ -710,7 +715,7 @@ Napi::Value RandomForestClassifierModelPredict(const Napi::CallbackInfo& info) {
   auto x = info[1].As<Napi::Float64Array>();
   const std::size_t n_samples = static_cast<std::size_t>(info[2].As<Napi::Number>().Uint32Value());
   const std::size_t n_features = static_cast<std::size_t>(info[3].As<Napi::Number>().Uint32Value());
-  auto out_labels = info[4].As<Napi::Uint8Array>();
+  auto out_labels = info[4].As<Napi::Uint16Array>();
 
   const std::uint8_t status = g_library.random_forest_classifier_model_predict(
       handle,

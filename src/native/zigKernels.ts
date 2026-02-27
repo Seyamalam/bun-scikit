@@ -69,13 +69,14 @@ type DecisionTreeModelCreateFn = (
   maxFeaturesValue: number,
   randomState: number,
   useRandomState: number,
+  classCount: number,
   nFeatures: number,
 ) => NativeHandle;
 type DecisionTreeModelDestroyFn = (handle: NativeHandle) => void;
 type DecisionTreeModelFitFn = (
   handle: NativeHandle,
   x: Float64Array,
-  y: Uint8Array,
+  y: Uint16Array,
   nSamples: number,
   nFeatures: number,
   sampleIndices: Uint32Array,
@@ -86,7 +87,7 @@ type DecisionTreeModelPredictFn = (
   x: Float64Array,
   nSamples: number,
   nFeatures: number,
-  outLabels: Uint8Array,
+  outLabels: Uint16Array,
 ) => number;
 type RandomForestClassifierModelCreateFn = (
   nEstimators: number,
@@ -98,13 +99,14 @@ type RandomForestClassifierModelCreateFn = (
   bootstrap: number,
   randomState: number,
   useRandomState: number,
+  classCount: number,
   nFeatures: number,
 ) => NativeHandle;
 type RandomForestClassifierModelDestroyFn = (handle: NativeHandle) => void;
 type RandomForestClassifierModelFitFn = (
   handle: NativeHandle,
   x: Float64Array,
-  y: Uint8Array,
+  y: Uint16Array,
   nSamples: number,
   nFeatures: number,
 ) => number;
@@ -113,7 +115,7 @@ type RandomForestClassifierModelPredictFn = (
   x: Float64Array,
   nSamples: number,
   nFeatures: number,
-  outLabels: Uint8Array,
+  outLabels: Uint16Array,
 ) => number;
 
 type LogisticTrainEpochFn = (
@@ -204,7 +206,7 @@ export interface ZigKernels {
 }
 
 let cachedKernels: ZigKernels | null | undefined;
-const EXPECTED_ABI_VERSION = 1;
+const EXPECTED_ABI_VERSION = 2;
 
 function isTruthy(value: string | undefined): boolean {
   if (!value) {
@@ -480,6 +482,7 @@ export function getZigKernels(): ZigKernels | null {
               FFIType.u32,
               FFIType.u8,
               "usize",
+              "usize",
             ],
             returns: "usize",
           },
@@ -551,6 +554,7 @@ export function getZigKernels(): ZigKernels | null {
                 FFIType.u8,
                 FFIType.u32,
                 FFIType.u8,
+                "usize",
                 "usize",
               ],
               returns: "usize",

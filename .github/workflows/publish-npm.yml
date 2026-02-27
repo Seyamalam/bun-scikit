@@ -10,6 +10,10 @@ on:
         required: false
         type: string
 
+concurrency:
+  group: publish-npm-${{ github.event.release.tag_name || inputs.tag || github.sha }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   id-token: write

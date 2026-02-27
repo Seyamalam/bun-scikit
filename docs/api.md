@@ -93,6 +93,7 @@ Methods:
 Learned attributes:
 
 - `classes_: number[]`
+- `featureImportances_: number[] | null`
 - `fitBackend_: "zig" | "js"`
 - `fitBackendLibrary_: string | null`
 
@@ -119,6 +120,7 @@ Methods:
 Learned attributes:
 
 - `classes_: number[]`
+- `featureImportances_: number[] | null`
 - `fitBackend_: "zig" | "js"`
 - `fitBackendLibrary_: string | null`
 
@@ -173,6 +175,7 @@ Learned attributes:
 - `classes_: number[]`
 - `estimators_: unknown[]`
 - `estimatorWeights_: number[]`
+- `featureImportances_: number[] | null`
 
 ### `GradientBoostingClassifierOptions`
 
@@ -199,6 +202,7 @@ Learned attributes:
 - `classes_: number[]`
 - `estimators_: unknown[]`
 - `init_: number | null`
+- `featureImportances_: number[] | null`
 
 ### `GradientBoostingRegressorOptions`
 
@@ -222,14 +226,21 @@ Learned attributes:
 
 - `estimators_: unknown[]`
 - `init_: number | null`
+- `featureImportances_: number[] | null`
 
 ### `HistGradientBoostingClassifierOptions`
 
 - `maxIter?: number`
 - `learningRate?: number`
 - `maxBins?: number`
+- `maxDepth?: number`
+- `maxLeafNodes?: number`
 - `minSamplesLeaf?: number`
 - `l2Regularization?: number`
+- `earlyStopping?: boolean`
+- `nIterNoChange?: number`
+- `validationFraction?: number`
+- `tolerance?: number`
 - `randomState?: number`
 
 ### `HistGradientBoostingClassifier`
@@ -247,14 +258,21 @@ Learned attributes:
 - `classes_: number[]`
 - `estimators_: unknown[]`
 - `baselineLogit_: number | null`
+- `featureImportances_: number[] | null`
 
 ### `HistGradientBoostingRegressorOptions`
 
 - `maxIter?: number`
 - `learningRate?: number`
 - `maxBins?: number`
+- `maxDepth?: number`
+- `maxLeafNodes?: number`
 - `minSamplesLeaf?: number`
 - `l2Regularization?: number`
+- `earlyStopping?: boolean`
+- `nIterNoChange?: number`
+- `validationFraction?: number`
+- `tolerance?: number`
 - `randomState?: number`
 
 ### `HistGradientBoostingRegressor`
@@ -269,6 +287,7 @@ Learned attributes:
 
 - `estimators_: unknown[]`
 - `baseline_: number | null`
+- `featureImportances_: number[] | null`
 
 ### `VotingRegressorOptions`
 

@@ -26,6 +26,9 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 - Multiclass support across core classifiers/ensembles (`GaussianNB`, `KNeighborsClassifier`, `LogisticRegression`, `SGDClassifier`, `LinearSVC`, `DecisionTreeClassifier`, `RandomForestClassifier`, `VotingClassifier`, `StackingClassifier`, `BaggingClassifier`, `CalibratedClassifierCV`).
 - sklearn snapshot fixtures at `test/fixtures/sklearn-snapshots.json` and fixture-based parity tests for calibration/ensemble/decomposition outputs.
 - Reproducible fixture generation script: `scripts/generate-sklearn-fixtures.py`.
+- Feature-importance API (`featureImportances_`) for tree/forest/boosting estimators, including histogram boosting.
+- `Release Guard` workflow (`.github/workflows/release-guard.yml`) with tag/version/npm preflight checks and duplicate publish/native-run detection.
+- Concurrency dedupe guards on publish workflows to avoid duplicate tag releases.
 
 ### Changed
 - README install docs now include a post-install Zig backend smoke check for `DecisionTreeClassifier` and `RandomForestClassifier`.
@@ -38,6 +41,9 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 - Hot-path predict retention guard for random-forest is relaxed to `0.55` in CI/release-prep to match observed stable baseline variance.
 - CI now uses fast PR checks and main-only heavy lanes (native matrix, zig-tree smoke, benchmarks) to reduce PR cycle time while preserving release strictness.
 - New CI `parity` job runs `parity:check` and enforces per-family sklearn drift thresholds.
+- Native tree/forest ABI now supports multiclass labels end-to-end in Zig (`Uint16` labels, up to 256 classes) and is loaded via ABI version `2`.
+- `HistGradientBoostingClassifier` / `HistGradientBoostingRegressor` now support `maxDepth`, `maxLeafNodes`, and early-stopping controls (`earlyStopping`, `nIterNoChange`, `validationFraction`, `tolerance`).
+- sklearn fixtures and parity checks now include multi-seed drift baselines with fixture-defined threshold tables.
 
 ### Improved
 - Zig tree codebase split into modules: `zig/src/tree/split.zig`, `zig/src/tree/fit.zig`, and `zig/src/tree/predict.zig`.

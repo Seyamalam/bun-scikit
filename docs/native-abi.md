@@ -5,7 +5,7 @@ This document defines the stable ABI boundary between JavaScript runtimes (Bun/N
 ## ABI Version
 
 - Exported symbol: `bun_scikit_abi_version() -> u32`
-- Current version: `1`
+- Current version: `2`
 - JavaScript bridges must refuse to load mismatched ABI versions.
 
 ## Status Codes
@@ -39,7 +39,9 @@ Lifecycle:
 ## Tensor Layout
 
 - `x` must be row-major contiguous `Float64Array` with shape `[n_samples, n_features]`.
-- `y` is contiguous `Float64Array` (`LinearRegression`/`LogisticRegression`) or `Uint8Array` for classifier labels where required.
+- `y` is contiguous `Float64Array` (`LinearRegression`/`LogisticRegression`) or classifier-label typed arrays where required:
+  - tree/forest classifiers: `Uint16Array` encoded class indices
+  - logistic classifier outputs: `Uint8Array` labels
 
 ## Runtime Bridges
 

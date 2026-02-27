@@ -57,6 +57,7 @@ function safeVariance(sum: number, sumSquares: number, count: number): number {
 }
 
 export class DecisionTreeRegressor implements RegressionModel {
+  featureImportances_: Vector | null = null;
   private readonly maxDepth: number;
   private readonly minSamplesSplit: number;
   private readonly minSamplesLeaf: number;
@@ -72,6 +73,7 @@ export class DecisionTreeRegressor implements RegressionModel {
   private binTotals: Uint32Array = new Uint32Array(MAX_THRESHOLD_BINS);
   private binSums: Float64Array = new Float64Array(MAX_THRESHOLD_BINS);
   private binSumsSquares: Float64Array = new Float64Array(MAX_THRESHOLD_BINS);
+  private featureImportanceRaw: Float64Array | null = null;
 
   constructor(options: DecisionTreeRegressorOptions = {}) {
     this.maxDepth = options.maxDepth ?? 12;
@@ -94,6 +96,8 @@ export class DecisionTreeRegressor implements RegressionModel {
     }
 
     this.featureCount = X[0].length;
+    this.featureImportanceRaw = new Float64Array(this.featureCount);
+    this.featureImportances_ = null;
     this.flattenedXTrain = flattenedXTrain ?? this.flattenTrainingMatrix(X);
     this.yTrain = yTrain ?? this.toFloat64Vector(y);
     this.allFeatureIndices = new Array<number>(this.featureCount);
@@ -124,6 +128,7 @@ export class DecisionTreeRegressor implements RegressionModel {
     }
 
     this.root = this.buildTree(rootIndices, 0);
+    this.finalizeFeatureImportances();
     return this;
   }
 
@@ -209,6 +214,10 @@ export class DecisionTreeRegressor implements RegressionModel {
     const partition = this.partitionIndices(indices, bestFeature, bestSplit.threshold);
     if (!partition) {
       return { isLeaf: true, prediction };
+    }
+    const gain = parentVariance - bestSplit.impurity;
+    if (gain > 0 && this.featureImportanceRaw) {
+      this.featureImportanceRaw[bestFeature] += sampleCount * gain;
     }
 
     return {
@@ -403,5 +412,28 @@ export class DecisionTreeRegressor implements RegressionModel {
       out[i] = y[i];
     }
     return out;
+  }
+
+  private finalizeFeatureImportances(): void {
+    if (!this.featureImportanceRaw) {
+      this.featureImportances_ = null;
+      return;
+    }
+    const out = new Array<number>(this.featureImportanceRaw.length);
+    let total = 0;
+    for (let i = 0; i < this.featureImportanceRaw.length; i += 1) {
+      total += this.featureImportanceRaw[i];
+    }
+    if (total <= 0) {
+      for (let i = 0; i < out.length; i += 1) {
+        out[i] = 0;
+      }
+      this.featureImportances_ = out;
+      return;
+    }
+    for (let i = 0; i < out.length; i += 1) {
+      out[i] = this.featureImportanceRaw[i] / total;
+    }
+    this.featureImportances_ = out;
   }
 }

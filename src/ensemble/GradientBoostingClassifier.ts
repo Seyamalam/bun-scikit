@@ -63,6 +63,7 @@ export class GradientBoostingClassifier {
   classes_: Vector = [0, 1];
   estimators_: DecisionTreeRegressor[] = [];
   init_: number | null = null;
+  featureImportances_: Vector | null = null;
 
   private readonly nEstimators: number;
   private readonly learningRate: number;
@@ -105,6 +106,7 @@ export class GradientBoostingClassifier {
     const p = Math.min(1 - 1e-12, Math.max(1e-12, positive / nSamples));
     this.init_ = Math.log(p / (1 - p));
     this.estimators_ = [];
+    this.featureImportances_ = null;
 
     const logits = new Array<number>(nSamples).fill(this.init_);
     const sampleCount = Math.max(1, Math.floor(this.subsample * nSamples));
@@ -135,6 +137,7 @@ export class GradientBoostingClassifier {
       this.estimators_.push(tree);
     }
 
+    this.computeFeatureImportances(X[0].length);
     this.isFitted = true;
     return this;
   }
@@ -171,5 +174,24 @@ export class GradientBoostingClassifier {
     if (!this.isFitted || this.init_ === null) {
       throw new Error("GradientBoostingClassifier has not been fitted.");
     }
+  }
+
+  private computeFeatureImportances(featureCount: number): void {
+    const raw = new Array<number>(featureCount).fill(0);
+    for (let i = 0; i < this.estimators_.length; i += 1) {
+      const importances = this.estimators_[i].featureImportances_;
+      if (!importances) {
+        continue;
+      }
+      for (let j = 0; j < featureCount; j += 1) {
+        raw[j] += importances[j];
+      }
+    }
+    let sum = 0;
+    for (let i = 0; i < raw.length; i += 1) {
+      sum += raw[i];
+    }
+    this.featureImportances_ =
+      sum > 0 ? raw.map((value) => value / sum) : new Array<number>(featureCount).fill(0);
   }
 }

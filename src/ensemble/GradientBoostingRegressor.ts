@@ -53,6 +53,7 @@ function subsetVector(y: Vector, indices: number[]): Vector {
 export class GradientBoostingRegressor {
   estimators_: DecisionTreeRegressor[] = [];
   init_: number | null = null;
+  featureImportances_: Vector | null = null;
 
   private readonly nEstimators: number;
   private readonly learningRate: number;
@@ -95,6 +96,7 @@ export class GradientBoostingRegressor {
     mean /= y.length;
     this.init_ = mean;
     this.estimators_ = [];
+    this.featureImportances_ = null;
 
     const currentPrediction = new Array<number>(nSamples).fill(mean);
     const sampleCount = Math.max(1, Math.floor(this.subsample * nSamples));
@@ -124,6 +126,7 @@ export class GradientBoostingRegressor {
       this.estimators_.push(tree);
     }
 
+    this.computeFeatureImportances(X[0].length);
     this.isFitted = true;
     return this;
   }
@@ -149,5 +152,24 @@ export class GradientBoostingRegressor {
     if (!this.isFitted || this.init_ === null) {
       throw new Error("GradientBoostingRegressor has not been fitted.");
     }
+  }
+
+  private computeFeatureImportances(featureCount: number): void {
+    const raw = new Array<number>(featureCount).fill(0);
+    for (let i = 0; i < this.estimators_.length; i += 1) {
+      const importances = this.estimators_[i].featureImportances_;
+      if (!importances) {
+        continue;
+      }
+      for (let j = 0; j < featureCount; j += 1) {
+        raw[j] += importances[j];
+      }
+    }
+    let sum = 0;
+    for (let i = 0; i < raw.length; i += 1) {
+      sum += raw[i];
+    }
+    this.featureImportances_ =
+      sum > 0 ? raw.map((value) => value / sum) : new Array<number>(featureCount).fill(0);
   }
 }

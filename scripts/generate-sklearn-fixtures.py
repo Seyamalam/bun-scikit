@@ -21,7 +21,19 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 
 
-def build_fixtures(seed: int) -> dict:
+def parse_seed_list(raw: str) -> list[int]:
+    out: list[int] = []
+    for chunk in raw.split(","):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        out.append(int(chunk))
+    if not out:
+        raise ValueError("At least one seed must be provided.")
+    return out
+
+
+def build_fixtures(seed: int, seeds: list[int]) -> dict:
     rng = np.random.default_rng(seed)
 
     X_multi = np.array(
@@ -120,10 +132,39 @@ def build_fixtures(seed: int) -> dict:
     kpca_train = kpca.fit_transform(X_kpca)
     kpca_probe = kpca.transform(np.array([[0.1, 0.1], [1.1, 1.0]], dtype=float))
 
+    multi_seed_dt_preds: list[list[int]] = []
+    multi_seed_rf_preds: list[list[int]] = []
+    for current_seed in seeds:
+        seeded_dt = DecisionTreeClassifier(max_depth=4, random_state=current_seed).fit(X_multi, y_multi)
+        multi_seed_dt_preds.append(seeded_dt.predict(X_multi).tolist())
+        seeded_rf = RandomForestClassifier(
+            n_estimators=40,
+            max_depth=4,
+            random_state=current_seed,
+        ).fit(X_multi, y_multi)
+        multi_seed_rf_preds.append(seeded_rf.predict(X_multi).tolist())
+
     return {
         "metadata": {
             "description": "Snapshot fixtures for parity checks",
             "seed": seed,
+            "seeds": seeds,
+        },
+        "thresholds": {
+            "gnb_proba_mad": 0.15,
+            "voting_soft_proba_mad": 0.2,
+            "calibrated_proba_mad": 0.25,
+            "decision_tree_mismatch": 0.05,
+            "random_forest_mismatch": 0.1,
+            "hist_gb_classifier_probe_mad": 0.25,
+            "hist_gb_classifier_mismatch": 0.1,
+            "hist_gb_regressor_probe_mse": 50.0,
+            "hist_gb_regressor_train_mse": 50.0,
+            "nmf_reconstruction_mse": 0.1,
+            "kernel_pca_train_distance_mse": 0.2,
+            "kernel_pca_probe_distance_mse": 0.2,
+            "multi_seed_decision_tree_mismatch_avg": 0.08,
+            "multi_seed_random_forest_mismatch_avg": 0.12,
         },
         "multiclass": {
             "X": X_multi.tolist(),
@@ -135,6 +176,11 @@ def build_fixtures(seed: int) -> dict:
             "decision_tree_pred": dt_pred.tolist(),
             "random_forest_pred": rf_pred.tolist(),
             "random_forest_probe_proba": rf_probe_proba.tolist(),
+        },
+        "multi_seed": {
+            "seeds": seeds,
+            "decision_tree_pred": multi_seed_dt_preds,
+            "random_forest_pred": multi_seed_rf_preds,
         },
         "hist_gradient_boosting": {
             "X_binary": X_binary.tolist(),
@@ -171,10 +217,17 @@ def main() -> None:
         default=Path("test/fixtures/sklearn-snapshots.json"),
         help="Path for generated fixture JSON",
     )
-    parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser.add_argument("--seed", type=int, default=42, help="Primary random seed")
+    parser.add_argument(
+        "--seeds",
+        type=str,
+        default="13,42,77",
+        help="Comma-separated seeds for multi-seed parity fixtures",
+    )
     args = parser.parse_args()
 
-    fixture = build_fixtures(args.seed)
+    seeds = parse_seed_list(args.seeds)
+    fixture = build_fixtures(args.seed, seeds)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(fixture, indent=2), encoding="utf-8")
     print(f"Wrote {args.output}")

@@ -6,6 +6,7 @@ import { DecisionTreeClassifier } from "../tree/DecisionTreeClassifier";
 type ClassifierLike = {
   fit(X: Matrix, y: Vector): unknown;
   predict(X: Matrix): Vector;
+  featureImportances_?: Vector | null;
 };
 
 export interface AdaBoostClassifierOptions {
@@ -73,6 +74,7 @@ export class AdaBoostClassifier {
   classes_: Vector = [0, 1];
   estimators_: ClassifierLike[] = [];
   estimatorWeights_: Vector = [];
+  featureImportances_: Vector | null = null;
 
   private readonly estimatorFactory: () => ClassifierLike;
   private readonly nEstimators: number;
@@ -107,6 +109,7 @@ export class AdaBoostClassifier {
 
     this.estimators_ = [];
     this.estimatorWeights_ = [];
+    this.featureImportances_ = null;
 
     for (let t = 0; t < this.nEstimators; t += 1) {
       const sampleIndices = weightedSampleIndices(weights, nSamples, random);
@@ -174,6 +177,7 @@ export class AdaBoostClassifier {
       throw new Error("AdaBoostClassifier failed to train any weak learner.");
     }
 
+    this.computeFeatureImportances(X[0].length);
     this.isFitted = true;
     return this;
   }
@@ -212,5 +216,31 @@ export class AdaBoostClassifier {
     if (!this.isFitted || this.estimators_.length === 0) {
       throw new Error("AdaBoostClassifier has not been fitted.");
     }
+  }
+
+  private computeFeatureImportances(featureCount: number): void {
+    const raw = new Array<number>(featureCount).fill(0);
+    let totalWeight = 0;
+    for (let i = 0; i < this.estimators_.length; i += 1) {
+      const importances = this.estimators_[i].featureImportances_;
+      if (!importances) {
+        continue;
+      }
+      const alpha = Math.max(0, this.estimatorWeights_[i]);
+      totalWeight += alpha;
+      for (let j = 0; j < featureCount; j += 1) {
+        raw[j] += alpha * importances[j];
+      }
+    }
+    if (totalWeight <= 0) {
+      this.featureImportances_ = new Array<number>(featureCount).fill(0);
+      return;
+    }
+    let sum = 0;
+    for (let i = 0; i < raw.length; i += 1) {
+      sum += raw[i];
+    }
+    this.featureImportances_ =
+      sum > 0 ? raw.map((value) => value / sum) : new Array<number>(featureCount).fill(0);
   }
 }

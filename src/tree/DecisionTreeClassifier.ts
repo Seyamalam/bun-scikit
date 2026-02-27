@@ -87,6 +87,7 @@ function majorityClassIndex(counts: Uint32Array | number[]): number {
 
 export class DecisionTreeClassifier implements ClassificationModel {
   classes_: Vector = [0, 1];
+  featureImportances_: Vector | null = null;
   fitBackend_: "zig" | "js" = "js";
   fitBackendLibrary_: string | null = null;
   private readonly maxDepth: number;
@@ -98,15 +99,16 @@ export class DecisionTreeClassifier implements ClassificationModel {
   private root: TreeNode | null = null;
   private flattenedXTrain: Float64Array | null = null;
   private yEncodedTrain: Uint16Array | null = null;
-  private yBinaryTrain: Uint8Array | null = null;
+  private yNativeTrain: Uint16Array | null = null;
   private featureCount = 0;
   private classCount = 0;
   private allFeatureIndices: number[] = [];
   private featureSelectionMarks: Uint8Array | null = null;
   private binTotals: Uint32Array = new Uint32Array(MAX_THRESHOLD_BINS);
   private binClassCounts: Uint32Array = new Uint32Array(MAX_THRESHOLD_BINS);
+  private featureImportanceRaw: Float64Array | null = null;
   private zigModelHandle: bigint | null = null;
-  private nativeBinaryEligible = false;
+  private nativeClassEligible = false;
 
   constructor(options: DecisionTreeClassifierOptions = {}) {
     this.maxDepth = options.maxDepth ?? 12;
@@ -131,6 +133,8 @@ export class DecisionTreeClassifier implements ClassificationModel {
       validateClassificationInputs(X, y);
     }
     this.featureCount = X[0].length;
+    this.featureImportanceRaw = new Float64Array(this.featureCount);
+    this.featureImportances_ = null;
     this.classes_ = classes ? classes.slice() : uniqueSortedLabels(y);
     this.classCount = this.classes_.length;
     if (this.classCount < 2) {
@@ -141,11 +145,8 @@ export class DecisionTreeClassifier implements ClassificationModel {
     this.flattenedXTrain = flattenedXTrain ?? this.flattenTrainingMatrix(X);
     this.yEncodedTrain =
       yEncodedTrain ?? this.encodeTargets(y, classToIndex);
-    this.nativeBinaryEligible =
-      this.classes_.length === 2 && this.classes_[0] === 0 && this.classes_[1] === 1;
-    this.yBinaryTrain = this.nativeBinaryEligible
-      ? this.buildBinaryTargetsFromEncoded(this.yEncodedTrain)
-      : null;
+    this.nativeClassEligible = this.classes_.length >= 2 && this.classes_.length <= 256;
+    this.yNativeTrain = this.nativeClassEligible ? this.yEncodedTrain : null;
 
     this.allFeatureIndices = new Array<number>(this.featureCount);
     for (let i = 0; i < this.featureCount; i += 1) {
@@ -171,10 +172,11 @@ export class DecisionTreeClassifier implements ClassificationModel {
     }
 
     if (
-      this.nativeBinaryEligible &&
+      this.nativeClassEligible &&
       isZigTreeBackendEnabled() &&
       this.tryFitWithZig(X.length, validatedSampleIndices)
     ) {
+      this.featureImportances_ = new Array<number>(this.featureCount).fill(0);
       return this;
     }
 
@@ -189,6 +191,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
     }
 
     this.root = this.buildTree(rootIndices, 0);
+    this.finalizeFeatureImportances();
     this.fitBackend_ = "js";
     this.fitBackendLibrary_ = null;
     return this;
@@ -213,7 +216,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
       const nativePredict = kernels?.decisionTreeModelPredict;
       if (nativePredict) {
         const flattenedX = this.flattenTrainingMatrix(X);
-        const outLabels = new Uint8Array(X.length);
+        const outLabels = new Uint16Array(X.length);
         const status = nativePredict(
           this.zigModelHandle,
           flattenedX,
@@ -222,7 +225,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
           outLabels,
         );
         if (status === 1) {
-          return Array.from(outLabels).map((idx) => this.classes_[idx]);
+          return Array.from(outLabels).map((idx) => this.classes_[idx] ?? this.classes_[0]);
         }
       }
       if (!this.root) {
@@ -248,7 +251,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
     this.root = null;
     this.flattenedXTrain = null;
     this.yEncodedTrain = null;
-    this.yBinaryTrain = null;
+    this.yNativeTrain = null;
   }
 
   private predictOne(sample: Vector, node: TreeNode): number {
@@ -311,6 +314,10 @@ export class DecisionTreeClassifier implements ClassificationModel {
     if (!partition) {
       return { isLeaf: true, predictionClassIndex };
     }
+    const gain = parentImpurity - bestSplit.impurity;
+    if (gain > 0 && this.featureImportanceRaw) {
+      this.featureImportanceRaw[bestFeature] += sampleCount * gain;
+    }
 
     return {
       isLeaf: false,
@@ -365,7 +372,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
     const create = kernels?.decisionTreeModelCreate;
     const fit = kernels?.decisionTreeModelFit;
     const destroy = kernels?.decisionTreeModelDestroy;
-    if (!create || !fit || !destroy || !this.yBinaryTrain) {
+    if (!create || !fit || !destroy || !this.yNativeTrain) {
       return false;
     }
 
@@ -380,6 +387,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
       value,
       randomState >>> 0,
       useRandomState,
+      this.classCount,
       this.featureCount,
     );
     if (handle === 0n) {
@@ -392,7 +400,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
       const status = fit(
         handle,
         this.flattenedXTrain!,
-        this.yBinaryTrain,
+        this.yNativeTrain,
         sampleCount,
         this.featureCount,
         sampleIndices ?? emptySampleIndices,
@@ -611,11 +619,26 @@ export class DecisionTreeClassifier implements ClassificationModel {
     return encoded;
   }
 
-  private buildBinaryTargetsFromEncoded(yEncoded: Uint16Array): Uint8Array {
-    const encoded = new Uint8Array(yEncoded.length);
-    for (let i = 0; i < yEncoded.length; i += 1) {
-      encoded[i] = yEncoded[i] === 1 ? 1 : 0;
+  private finalizeFeatureImportances(): void {
+    if (!this.featureImportanceRaw) {
+      this.featureImportances_ = null;
+      return;
     }
-    return encoded;
+    const out = new Array<number>(this.featureImportanceRaw.length);
+    let total = 0;
+    for (let i = 0; i < this.featureImportanceRaw.length; i += 1) {
+      total += this.featureImportanceRaw[i];
+    }
+    if (total <= 0) {
+      for (let i = 0; i < out.length; i += 1) {
+        out[i] = 0;
+      }
+      this.featureImportances_ = out;
+      return;
+    }
+    for (let i = 0; i < out.length; i += 1) {
+      out[i] = this.featureImportanceRaw[i] / total;
+    }
+    this.featureImportances_ = out;
   }
 }

@@ -14,7 +14,10 @@ Deliver practical scikit-learn parity for Bun/TypeScript without stalling releas
 - Maintain shipped calibration/meta-estimator parity: `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier`.
 - Maintain shipped boosting parity baseline: `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor`.
 - Maintain multiclass support baseline across linear, probabilistic, neighbor, tree/forest, and meta-ensemble classifiers.
+- Maintain multiclass native Zig tree/forest backend parity (no binary-only native restriction).
 - Keep API style aligned with existing estimator conventions (`fit`/`predict`/`transform`, learned attrs).
+- Maintain estimator introspection baseline via learned feature-importance attributes for tree/forest/boosting families.
+- Maintain parity guardrails with reproducible fixture generation and multi-seed thresholded drift checks.
 
 ## Explicitly Out of Scope (Current Wave)
 - Full scikit module parity in one release.

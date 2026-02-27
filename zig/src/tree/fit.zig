@@ -14,19 +14,32 @@ fn buildDecisionTreeNode(
     feature_scratch: []usize,
     workspace: std.mem.Allocator,
     x_ptr: [*]const f64,
-    y_ptr: [*]const u8,
+    y_ptr: [*]const u16,
     indices: []const usize,
     depth: usize,
     rng: *common.Mulberry32,
 ) !usize {
     const sample_count = indices.len;
-    var positive_count: usize = 0;
+    var class_counts: [common.MAX_CLASS_COUNT]usize = [_]usize{0} ** common.MAX_CLASS_COUNT;
     for (indices) |sample_index| {
-        positive_count += y_ptr[sample_index];
+        const class_index = @as(usize, y_ptr[sample_index]);
+        if (class_index >= model.class_count) {
+            return error.InvalidClassLabel;
+        }
+        class_counts[class_index] += 1;
     }
-    const prediction: u8 = if (positive_count * 2 >= sample_count) 1 else 0;
 
-    const same_class = positive_count == 0 or positive_count == sample_count;
+    var prediction: u16 = 0;
+    var max_class_count: usize = class_counts[0];
+    var class_index: usize = 1;
+    while (class_index < model.class_count) : (class_index += 1) {
+        if (class_counts[class_index] > max_class_count) {
+            max_class_count = class_counts[class_index];
+            prediction = @as(u16, @intCast(class_index));
+        }
+    }
+
+    const same_class = max_class_count == sample_count;
     const depth_stop = depth >= model.max_depth;
     const split_stop = sample_count < model.min_samples_split;
     if (same_class or depth_stop or split_stop) {
@@ -42,7 +55,7 @@ fn buildDecisionTreeNode(
         return node_index;
     }
 
-    const parent_impurity = common.giniImpurity(positive_count, sample_count);
+    const parent_impurity = common.giniFromCounts(class_counts[0..model.class_count], sample_count);
     const candidate_features = split.selectCandidateFeatures(model, feature_scratch, rng);
 
     var best_feature: usize = 0;
@@ -158,9 +171,13 @@ fn createDecisionTreeModelInternal(
     max_features_value: usize,
     random_state: u32,
     use_random_state: u8,
+    class_count: usize,
     n_features: usize,
 ) ?*common.DecisionTreeModel {
     if (n_features == 0 or max_depth == 0) {
+        return null;
+    }
+    if (class_count < 2 or class_count > common.MAX_CLASS_COUNT) {
         return null;
     }
 
@@ -168,6 +185,7 @@ fn createDecisionTreeModelInternal(
     errdefer common.allocator.destroy(model);
     model.* = .{
         .n_features = n_features,
+        .class_count = class_count,
         .max_depth = max_depth,
         .min_samples_split = if (min_samples_split < 2) 2 else min_samples_split,
         .min_samples_leaf = if (min_samples_leaf < 1) 1 else min_samples_leaf,
@@ -190,7 +208,7 @@ fn destroyDecisionTreeModelInternal(model: *common.DecisionTreeModel) void {
 fn fitDecisionTreeModelWithWorkspace(
     model: *common.DecisionTreeModel,
     x_ptr: [*]const f64,
-    y_ptr: [*]const u8,
+    y_ptr: [*]const u16,
     n_samples: usize,
     n_features: usize,
     sample_indices_opt: ?[]const usize,
@@ -209,7 +227,7 @@ fn fitDecisionTreeModelWithWorkspace(
         }
         if (validate_sample_indices) {
             for (sample_indices) |sample_index| {
-                if (sample_index >= n_samples) {
+                if (sample_index >= n_samples or y_ptr[sample_index] >= model.class_count) {
                     return 0;
                 }
             }
@@ -218,6 +236,9 @@ fn fitDecisionTreeModelWithWorkspace(
     } else blk: {
         const indices = workspace.alloc(usize, n_samples) catch return 0;
         for (indices, 0..) |*entry, idx| {
+            if (y_ptr[idx] >= model.class_count) {
+                return 0;
+            }
             entry.* = idx;
         }
         break :blk @as([]const usize, indices);
@@ -241,7 +262,7 @@ fn fitDecisionTreeModelWithWorkspace(
 fn fitDecisionTreeModelInternal(
     model: *common.DecisionTreeModel,
     x_ptr: [*]const f64,
-    y_ptr: [*]const u8,
+    y_ptr: [*]const u16,
     n_samples: usize,
     n_features: usize,
     sample_indices_opt: ?[]const usize,
@@ -275,6 +296,7 @@ pub fn decision_tree_model_create(
     max_features_value: usize,
     random_state: u32,
     use_random_state: u8,
+    class_count: usize,
     n_features: usize,
 ) usize {
     const model = createDecisionTreeModelInternal(
@@ -285,6 +307,7 @@ pub fn decision_tree_model_create(
         max_features_value,
         random_state,
         use_random_state,
+        class_count,
         n_features,
     ) orelse return 0;
     return @intFromPtr(model);
@@ -298,7 +321,7 @@ pub fn decision_tree_model_destroy(handle: usize) void {
 pub fn decision_tree_model_fit(
     handle: usize,
     x_ptr: [*]const f64,
-    y_ptr: [*]const u8,
+    y_ptr: [*]const u16,
     n_samples: usize,
     n_features: usize,
     sample_indices_ptr: [*]const u32,
@@ -351,7 +374,7 @@ fn destroyRandomForestClassifierTrees(model: *common.RandomForestClassifierModel
 const ForestFitShared = struct {
     model: *common.RandomForestClassifierModel,
     x_ptr: [*]const f64,
-    y_ptr: [*]const u8,
+    y_ptr: [*]const u16,
     n_samples: usize,
     n_features: usize,
     base_seed: u32,
@@ -452,9 +475,13 @@ pub fn random_forest_classifier_model_create(
     bootstrap: u8,
     random_state: u32,
     use_random_state: u8,
+    class_count: usize,
     n_features: usize,
 ) usize {
     if (n_features == 0 or max_depth == 0 or n_estimators == 0) {
+        return 0;
+    }
+    if (class_count < 2 or class_count > common.MAX_CLASS_COUNT) {
         return 0;
     }
 
@@ -474,6 +501,7 @@ pub fn random_forest_classifier_model_create(
             max_features_value,
             random_state +% @as(u32, @truncate(estimator_index + 1)),
             1,
+            class_count,
             n_features,
         ) orelse {
             var cleanup_index: usize = 0;
@@ -490,6 +518,7 @@ pub fn random_forest_classifier_model_create(
 
     model.* = .{
         .n_features = n_features,
+        .class_count = class_count,
         .n_estimators = n_estimators,
         .max_depth = max_depth,
         .min_samples_split = if (min_samples_split < 2) 2 else min_samples_split,
@@ -518,7 +547,7 @@ pub fn random_forest_classifier_model_destroy(handle: usize) void {
 pub fn random_forest_classifier_model_fit(
     handle: usize,
     x_ptr: [*]const f64,
-    y_ptr: [*]const u8,
+    y_ptr: [*]const u16,
     n_samples: usize,
     n_features: usize,
 ) u8 {

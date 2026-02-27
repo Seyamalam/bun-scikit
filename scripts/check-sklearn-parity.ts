@@ -90,6 +90,7 @@ function threshold(name: string, fallback: number): number {
 }
 
 const fixture = JSON.parse(readFileSync(resolve("test/fixtures/sklearn-snapshots.json"), "utf-8"));
+const fixtureThresholds: Record<string, number> = fixture.thresholds ?? {};
 
 const metrics: Record<string, number> = {};
 
@@ -223,19 +224,93 @@ const metrics: Record<string, number> = {};
   );
 }
 
+{
+  const seeds: number[] = fixture.multi_seed.seeds;
+  const previousTreeBackend = process.env.BUN_SCIKIT_TREE_BACKEND;
+  process.env.BUN_SCIKIT_TREE_BACKEND = "js";
+  try {
+    let dtMismatchTotal = 0;
+    let rfMismatchTotal = 0;
+    for (let i = 0; i < seeds.length; i += 1) {
+      const seed = seeds[i];
+      const dt = new DecisionTreeClassifier({ maxDepth: 4, randomState: seed }).fit(
+        fixture.multiclass.X,
+        fixture.multiclass.y,
+      );
+      dtMismatchTotal += mismatchRate(dt.predict(fixture.multiclass.X), fixture.multi_seed.decision_tree_pred[i]);
+
+      const rf = new RandomForestClassifier({
+        nEstimators: 40,
+        maxDepth: 4,
+        randomState: seed,
+      }).fit(fixture.multiclass.X, fixture.multiclass.y);
+      rfMismatchTotal += mismatchRate(rf.predict(fixture.multiclass.X), fixture.multi_seed.random_forest_pred[i]);
+    }
+    metrics.multi_seed_decision_tree_mismatch_avg = dtMismatchTotal / seeds.length;
+    metrics.multi_seed_random_forest_mismatch_avg = rfMismatchTotal / seeds.length;
+  } finally {
+    if (previousTreeBackend === undefined) {
+      delete process.env.BUN_SCIKIT_TREE_BACKEND;
+    } else {
+      process.env.BUN_SCIKIT_TREE_BACKEND = previousTreeBackend;
+    }
+  }
+}
+
 const limits: Record<string, number> = {
-  gnb_proba_mad: threshold("PARITY_MAX_GNB_PROBA_MAD", 0.15),
-  voting_soft_proba_mad: threshold("PARITY_MAX_VOTING_SOFT_PROBA_MAD", 0.2),
-  calibrated_proba_mad: threshold("PARITY_MAX_CALIBRATED_PROBA_MAD", 0.25),
-  decision_tree_mismatch: threshold("PARITY_MAX_DECISION_TREE_MISMATCH", 0.05),
-  random_forest_mismatch: threshold("PARITY_MAX_RANDOM_FOREST_MISMATCH", 0.1),
-  hist_gb_classifier_probe_mad: threshold("PARITY_MAX_HIST_GB_CLASSIFIER_PROBE_MAD", 0.25),
-  hist_gb_classifier_mismatch: threshold("PARITY_MAX_HIST_GB_CLASSIFIER_MISMATCH", 0.1),
-  hist_gb_regressor_probe_mse: threshold("PARITY_MAX_HIST_GB_REGRESSOR_PROBE_MSE", 50),
-  hist_gb_regressor_train_mse: threshold("PARITY_MAX_HIST_GB_REGRESSOR_TRAIN_MSE", 50),
-  nmf_reconstruction_mse: threshold("PARITY_MAX_NMF_RECONSTRUCTION_MSE", 0.1),
-  kernel_pca_train_distance_mse: threshold("PARITY_MAX_KERNEL_PCA_TRAIN_DISTANCE_MSE", 0.2),
-  kernel_pca_probe_distance_mse: threshold("PARITY_MAX_KERNEL_PCA_PROBE_DISTANCE_MSE", 0.2),
+  gnb_proba_mad: threshold("PARITY_MAX_GNB_PROBA_MAD", fixtureThresholds.gnb_proba_mad ?? 0.15),
+  voting_soft_proba_mad: threshold(
+    "PARITY_MAX_VOTING_SOFT_PROBA_MAD",
+    fixtureThresholds.voting_soft_proba_mad ?? 0.2,
+  ),
+  calibrated_proba_mad: threshold(
+    "PARITY_MAX_CALIBRATED_PROBA_MAD",
+    fixtureThresholds.calibrated_proba_mad ?? 0.25,
+  ),
+  decision_tree_mismatch: threshold(
+    "PARITY_MAX_DECISION_TREE_MISMATCH",
+    fixtureThresholds.decision_tree_mismatch ?? 0.05,
+  ),
+  random_forest_mismatch: threshold(
+    "PARITY_MAX_RANDOM_FOREST_MISMATCH",
+    fixtureThresholds.random_forest_mismatch ?? 0.1,
+  ),
+  hist_gb_classifier_probe_mad: threshold(
+    "PARITY_MAX_HIST_GB_CLASSIFIER_PROBE_MAD",
+    fixtureThresholds.hist_gb_classifier_probe_mad ?? 0.25,
+  ),
+  hist_gb_classifier_mismatch: threshold(
+    "PARITY_MAX_HIST_GB_CLASSIFIER_MISMATCH",
+    fixtureThresholds.hist_gb_classifier_mismatch ?? 0.1,
+  ),
+  hist_gb_regressor_probe_mse: threshold(
+    "PARITY_MAX_HIST_GB_REGRESSOR_PROBE_MSE",
+    fixtureThresholds.hist_gb_regressor_probe_mse ?? 50,
+  ),
+  hist_gb_regressor_train_mse: threshold(
+    "PARITY_MAX_HIST_GB_REGRESSOR_TRAIN_MSE",
+    fixtureThresholds.hist_gb_regressor_train_mse ?? 50,
+  ),
+  nmf_reconstruction_mse: threshold(
+    "PARITY_MAX_NMF_RECONSTRUCTION_MSE",
+    fixtureThresholds.nmf_reconstruction_mse ?? 0.1,
+  ),
+  kernel_pca_train_distance_mse: threshold(
+    "PARITY_MAX_KERNEL_PCA_TRAIN_DISTANCE_MSE",
+    fixtureThresholds.kernel_pca_train_distance_mse ?? 0.2,
+  ),
+  kernel_pca_probe_distance_mse: threshold(
+    "PARITY_MAX_KERNEL_PCA_PROBE_DISTANCE_MSE",
+    fixtureThresholds.kernel_pca_probe_distance_mse ?? 0.2,
+  ),
+  multi_seed_decision_tree_mismatch_avg: threshold(
+    "PARITY_MAX_MULTI_SEED_DECISION_TREE_MISMATCH_AVG",
+    fixtureThresholds.multi_seed_decision_tree_mismatch_avg ?? 0.08,
+  ),
+  multi_seed_random_forest_mismatch_avg: threshold(
+    "PARITY_MAX_MULTI_SEED_RANDOM_FOREST_MISMATCH_AVG",
+    fixtureThresholds.multi_seed_random_forest_mismatch_avg ?? 0.12,
+  ),
 };
 
 let failed = false;

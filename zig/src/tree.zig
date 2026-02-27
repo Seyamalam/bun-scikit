@@ -9,6 +9,7 @@ pub fn decision_tree_model_create(
     max_features_value: usize,
     random_state: u32,
     use_random_state: u8,
+    class_count: usize,
     n_features: usize,
 ) usize {
     return fit.decision_tree_model_create(
@@ -19,6 +20,7 @@ pub fn decision_tree_model_create(
         max_features_value,
         random_state,
         use_random_state,
+        class_count,
         n_features,
     );
 }
@@ -30,7 +32,7 @@ pub fn decision_tree_model_destroy(handle: usize) void {
 pub fn decision_tree_model_fit(
     handle: usize,
     x_ptr: [*]const f64,
-    y_ptr: [*]const u8,
+    y_ptr: [*]const u16,
     n_samples: usize,
     n_features: usize,
     sample_indices_ptr: [*]const u32,
@@ -52,7 +54,7 @@ pub fn decision_tree_model_predict(
     x_ptr: [*]const f64,
     n_samples: usize,
     n_features: usize,
-    out_labels_ptr: [*]u8,
+    out_labels_ptr: [*]u16,
 ) u8 {
     return predict.decision_tree_model_predict(handle, x_ptr, n_samples, n_features, out_labels_ptr);
 }
@@ -67,6 +69,7 @@ pub fn random_forest_classifier_model_create(
     bootstrap: u8,
     random_state: u32,
     use_random_state: u8,
+    class_count: usize,
     n_features: usize,
 ) usize {
     return fit.random_forest_classifier_model_create(
@@ -79,6 +82,7 @@ pub fn random_forest_classifier_model_create(
         bootstrap,
         random_state,
         use_random_state,
+        class_count,
         n_features,
     );
 }
@@ -90,7 +94,7 @@ pub fn random_forest_classifier_model_destroy(handle: usize) void {
 pub fn random_forest_classifier_model_fit(
     handle: usize,
     x_ptr: [*]const f64,
-    y_ptr: [*]const u8,
+    y_ptr: [*]const u16,
     n_samples: usize,
     n_features: usize,
 ) u8 {
@@ -102,7 +106,7 @@ pub fn random_forest_classifier_model_predict(
     x_ptr: [*]const f64,
     n_samples: usize,
     n_features: usize,
-    out_labels_ptr: [*]u8,
+    out_labels_ptr: [*]u16,
 ) u8 {
     return predict.random_forest_classifier_model_predict(handle, x_ptr, n_samples, n_features, out_labels_ptr);
 }
