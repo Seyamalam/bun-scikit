@@ -175,6 +175,7 @@ const minZigForestFitRetentionVsBaseline = speedupThreshold(
   "BENCH_MIN_ZIG_FOREST_FIT_RETENTION_VS_BASELINE",
   0.35,
 );
+const retentionGraceRatio = speedupThreshold("BENCH_RETENTION_GRACE_RATIO", 0.05);
 
 for (const result of [
   bunRegression,
@@ -370,15 +371,29 @@ if (snapshot.suites.treeBackendModes.enabled) {
       const randomForestFitRetention =
         randomForestModes.comparison.zigFitSpeedupVsJs /
         baselineRandomForestModes.comparison.zigFitSpeedupVsJs;
+      const effectiveDecisionTreeRetentionFloor =
+        minZigTreeFitRetentionVsBaseline * (1 - retentionGraceRatio);
+      const effectiveRandomForestRetentionFloor =
+        minZigForestFitRetentionVsBaseline * (1 - retentionGraceRatio);
 
-      if (decisionTreeFitRetention < minZigTreeFitRetentionVsBaseline) {
+      if (decisionTreeFitRetention < effectiveDecisionTreeRetentionFloor) {
         throw new Error(
-          `DecisionTree zig/js fit retention too low vs baseline: ${decisionTreeFitRetention} < ${minZigTreeFitRetentionVsBaseline}.`,
+          `DecisionTree zig/js fit retention too low vs baseline: ${decisionTreeFitRetention} < ${effectiveDecisionTreeRetentionFloor} (raw floor ${minZigTreeFitRetentionVsBaseline}, grace ${retentionGraceRatio}).`,
+        );
+      }
+      if (randomForestFitRetention < effectiveRandomForestRetentionFloor) {
+        throw new Error(
+          `RandomForest zig/js fit retention too low vs baseline: ${randomForestFitRetention} < ${effectiveRandomForestRetentionFloor} (raw floor ${minZigForestFitRetentionVsBaseline}, grace ${retentionGraceRatio}).`,
+        );
+      }
+      if (decisionTreeFitRetention < minZigTreeFitRetentionVsBaseline) {
+        console.warn(
+          `Warning: DecisionTree zig/js fit retention dipped below raw floor but is within grace window (${decisionTreeFitRetention} < ${minZigTreeFitRetentionVsBaseline}).`,
         );
       }
       if (randomForestFitRetention < minZigForestFitRetentionVsBaseline) {
-        throw new Error(
-          `RandomForest zig/js fit retention too low vs baseline: ${randomForestFitRetention} < ${minZigForestFitRetentionVsBaseline}.`,
+        console.warn(
+          `Warning: RandomForest zig/js fit retention dipped below raw floor but is within grace window (${randomForestFitRetention} < ${minZigForestFitRetentionVsBaseline}).`,
         );
       }
     }

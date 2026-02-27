@@ -5,20 +5,33 @@
     "policy": "runtime-exports-must-match-required-exports"
   },
   "requiredExports": [
+    "accuracyScore",
     "AdaBoostClassifier",
     "AdaBoostRegressor",
     "AgglomerativeClustering",
     "BaggingClassifier",
+    "balancedAccuracyScore",
     "Binarizer",
+    "brierScoreLoss",
     "CalibratedClassifierCV",
+    "chi2",
+    "classificationReport",
     "ColumnTransformer",
+    "confusionMatrix",
+    "crossValidate",
+    "crossValPredict",
+    "crossValScore",
     "DBSCAN",
     "DecisionTreeClassifier",
     "DecisionTreeRegressor",
     "DummyClassifier",
     "DummyRegressor",
+    "explainedVarianceScore",
     "ExtraTreesClassifier",
     "ExtraTreesRegressor",
+    "f_classif",
+    "f_regression",
+    "f1Score",
     "FastICA",
     "FeatureUnion",
     "GaussianNB",
@@ -29,17 +42,23 @@
     "GroupShuffleSplit",
     "HistGradientBoostingClassifier",
     "HistGradientBoostingRegressor",
+    "KernelPCA",
     "KFold",
     "KMeans",
-    "KNNImputer",
     "KNeighborsClassifier",
-    "KernelPCA",
+    "KNNImputer",
     "LabelEncoder",
+    "learningCurve",
     "LinearRegression",
     "LinearSVC",
     "LinearSVR",
     "LogisticRegression",
+    "logLoss",
+    "matthewsCorrcoef",
     "MaxAbsScaler",
+    "meanAbsoluteError",
+    "meanAbsolutePercentageError",
+    "meanSquaredError",
     "MinMaxScaler",
     "NMF",
     "Normalizer",
@@ -48,52 +67,38 @@
     "OneHotEncoder",
     "OrdinalEncoder",
     "PCA",
+    "permutationImportance",
     "Pipeline",
     "PolynomialFeatures",
+    "precisionScore",
+    "r2Score",
     "RandomForestClassifier",
     "RandomForestRegressor",
     "RandomizedSearchCV",
+    "recallScore",
     "RepeatedKFold",
     "RepeatedStratifiedKFold",
     "RobustScaler",
+    "rocAucScore",
+    "SelectKBest",
+    "SelectPercentile",
     "SGDClassifier",
     "SGDRegressor",
-    "SVC",
-    "SVR",
     "SimpleImputer",
     "StackingClassifier",
     "StackingRegressor",
     "StandardScaler",
+    "StratifiedGroupKFold",
     "StratifiedKFold",
     "StratifiedShuffleSplit",
+    "SVC",
+    "SVR",
+    "trainTestSplit",
     "TruncatedSVD",
+    "validationCurve",
     "VarianceThreshold",
     "VotingClassifier",
-    "VotingRegressor",
-    "accuracyScore",
-    "balancedAccuracyScore",
-    "brierScoreLoss",
-    "classificationReport",
-    "confusionMatrix",
-    "crossValPredict",
-    "crossValScore",
-    "crossValidate",
-    "explainedVarianceScore",
-    "f1Score",
-    "learningCurve",
-    "logLoss",
-    "matthewsCorrcoef",
-    "meanAbsoluteError",
-    "meanAbsolutePercentageError",
-    "meanSquaredError",
-    "precisionScore",
-    "permutationImportance",
-    "r2Score",
-    "recallScore",
-    "rocAucScore",
-    "StratifiedGroupKFold",
-    "trainTestSplit",
-    "validationCurve"
+    "VotingRegressor"
   ],
   "contracts": {
     "classes": [
@@ -129,6 +134,7 @@
         "name": "CalibratedClassifierCV",
         "requiredMethods": [
           "getParams",
+          "setFitRequest",
           "setParams"
         ]
       },
@@ -136,10 +142,11 @@
         "name": "ColumnTransformer",
         "requiredMethods": [
           "fit",
-          "transform",
           "fitTransform",
           "getParams",
-          "setParams"
+          "setFitRequest",
+          "setParams",
+          "transform"
         ]
       },
       {
@@ -188,10 +195,10 @@
         "name": "FeatureUnion",
         "requiredMethods": [
           "fit",
-          "transform",
           "fitTransform",
           "getParams",
-          "setParams"
+          "setParams",
+          "transform"
         ]
       },
       {
@@ -366,12 +373,13 @@
         "name": "Pipeline",
         "requiredMethods": [
           "fit",
-          "predict",
-          "transform",
           "fitTransform",
           "getParams",
+          "predict",
+          "score",
+          "setFitRequest",
           "setParams",
-          "score"
+          "transform"
         ]
       },
       {
@@ -424,6 +432,20 @@
         ]
       },
       {
+        "name": "SelectKBest",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "SelectPercentile",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "SGDClassifier",
         "requiredMethods": [
           "getParams",
@@ -448,6 +470,7 @@
         "name": "StackingClassifier",
         "requiredMethods": [
           "getParams",
+          "setFitRequest",
           "setParams"
         ]
       },
@@ -455,6 +478,7 @@
         "name": "StackingRegressor",
         "requiredMethods": [
           "getParams",
+          "setFitRequest",
           "setParams"
         ]
       },
@@ -504,6 +528,7 @@
         "name": "VotingClassifier",
         "requiredMethods": [
           "getParams",
+          "setFitRequest",
           "setParams"
         ]
       },
@@ -511,6 +536,7 @@
         "name": "VotingRegressor",
         "requiredMethods": [
           "getParams",
+          "setFitRequest",
           "setParams"
         ]
       }

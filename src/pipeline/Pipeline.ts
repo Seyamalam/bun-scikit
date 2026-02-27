@@ -1,5 +1,6 @@
 import type { Matrix, Vector } from "../types";
 import { assertConsistentRowSize, assertNonEmptyMatrix } from "../utils/validation";
+import { fitWithSampleWeight, type FitSampleWeightRequest } from "../utils/fitWithSampleWeight";
 
 type StepValue = Record<string, unknown>;
 
@@ -94,9 +95,12 @@ function fitTransformStep(
   sampleWeight?: Vector,
 ): Matrix {
   if (typeof step.fitTransform === "function") {
-    return step.fitTransform(X, y, sampleWeight);
+    if (sampleWeight) {
+      return step.fitTransform(X, y, sampleWeight);
+    }
+    return step.fitTransform(X, y);
   }
-  step.fit(X, y, sampleWeight);
+  fitWithSampleWeight(step, X, y, sampleWeight);
   return step.transform(X);
 }
 
@@ -107,6 +111,7 @@ export class Pipeline {
   namedSteps_: Record<string, unknown> = {};
   private runtimeSteps: RuntimeStep[];
   private isFitted = false;
+  sampleWeightRequest_ = true;
 
   constructor(steps: PipelineStep[]) {
     if (steps.length === 0) {
@@ -138,6 +143,8 @@ export class Pipeline {
     assertNonEmptyMatrix(X);
     assertConsistentRowSize(X);
 
+    const routedSampleWeight = this.sampleWeightRequest_ ? sampleWeight : undefined;
+
     let transformedX = X;
     const lastIndex = this.runtimeSteps.length - 1;
 
@@ -148,7 +155,7 @@ export class Pipeline {
           `Pipeline step '${current.name}' must implement fit() and transform() because it is not the final step.`,
         );
       }
-      transformedX = fitTransformStep(current.value, transformedX, y, sampleWeight);
+      transformedX = fitTransformStep(current.value, transformedX, y, routedSampleWeight);
     }
 
     const finalStep = this.runtimeSteps[lastIndex];
@@ -160,7 +167,7 @@ export class Pipeline {
       throw new Error(`Pipeline final step '${finalStep.name}' requires target labels y for fit().`);
     }
 
-    finalStep.value.fit(transformedX, y, sampleWeight);
+    fitWithSampleWeight(finalStep.value, transformedX, y, routedSampleWeight);
     this.isFitted = true;
     return this;
   }
@@ -224,6 +231,13 @@ export class Pipeline {
   fitTransform(X: Matrix, y?: Vector, sampleWeight?: Vector): Matrix {
     this.fit(X, y, sampleWeight);
     return this.transform(X);
+  }
+
+  setFitRequest(request: FitSampleWeightRequest): this {
+    if (typeof request.sampleWeight === "boolean") {
+      this.sampleWeightRequest_ = request.sampleWeight;
+    }
+    return this;
   }
 
   getParams(deep = true): Record<string, unknown> {

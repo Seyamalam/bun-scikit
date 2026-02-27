@@ -94,7 +94,7 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 - Baselines: `DummyClassifier`, `DummyRegressor`.
 - Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`.
 - Composition: `Pipeline`, `ColumnTransformer`, `FeatureUnion`.
-- Feature selection: `VarianceThreshold`.
+- Feature selection: `VarianceThreshold`, `SelectKBest`, `SelectPercentile`, `chi2`, `f_classif`, `f_regression`.
 - Model selection: `trainTestSplit`, `KFold`, `GroupKFold`, `GroupShuffleSplit`, `StratifiedKFold`, `StratifiedGroupKFold`, stratified/repeated splitters, `crossValScore`, `crossValidate`, `crossValPredict`, `learningCurve`, `validationCurve`, `GridSearchCV`, `RandomizedSearchCV`.
 - Metrics: regression and classification metrics, including `logLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport`, `balancedAccuracyScore`, `matthewsCorrcoef`, `brierScoreLoss`, `meanAbsolutePercentageError`, and `explainedVarianceScore`.
 - Inspection: `permutationImportance`.
@@ -227,6 +227,7 @@ Snapshot generated at: 2026-02-25T19:47:51.136Z
 - Zig acceleration: `docs/zig-acceleration.md`
 - Native ABI: `docs/native-abi.md`
 - Release checklist: `docs/release-checklist.md`
+- Release notes draft automation: `bun run release:notes` (updates `docs/release-notes/v0.1.18-draft.md` + parity block in `CHANGELOG.md`)
 
 ## Contributing / Project Files
 

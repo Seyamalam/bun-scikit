@@ -8,6 +8,7 @@ import {
   GaussianNB,
   HistGradientBoostingClassifier,
   HistGradientBoostingRegressor,
+  GroupShuffleSplit,
   KFold,
   KernelPCA,
   KNeighborsClassifier,
@@ -16,10 +17,12 @@ import {
   NMF,
   OneHotEncoder,
   Pipeline,
+  StratifiedGroupKFold,
   RandomForestClassifier,
   StandardScaler,
   VotingClassifier,
   crossValPredict,
+  permutationImportance,
 } from "../src";
 
 function meanAbsDiff(a: number[][], b: number[][]): number {
@@ -45,6 +48,15 @@ function meanSquaredError(a: number[][], b: number[][]): number {
     }
   }
   return total / count;
+}
+
+function meanSquaredErrorVector(a: number[], b: number[]): number {
+  let total = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    const d = a[i] - b[i];
+    total += d * d;
+  }
+  return total / Math.max(1, a.length);
 }
 
 const fixture = JSON.parse(
@@ -267,4 +279,67 @@ test("ColumnTransformer output stays close to sklearn snapshot", () => {
   );
   const transformed = model.fitTransform(section.X);
   expect(meanSquaredError(transformed, section.column_transformer_transform)).toBeLessThan(1e-10);
+});
+
+test("GroupShuffleSplit preserves sklearn split-rate profile", () => {
+  const section = fixture.splitters;
+  const splits = new GroupShuffleSplit({
+    nSplits: 4,
+    testSize: 0.25,
+    randomState: 42,
+  }).split(section.X, section.y, section.groups);
+  const rates = splits.map((split) => {
+    let positives = 0;
+    for (let i = 0; i < split.testIndices.length; i += 1) {
+      positives += section.y[split.testIndices[i]];
+    }
+    return positives / Math.max(1, split.testIndices.length);
+  }).sort((a, b) => a - b);
+  const expected = [...section.group_shuffle_split.test_positive_rate].sort((a, b) => a - b);
+  let mse = 0;
+  for (let i = 0; i < rates.length; i += 1) {
+    const d = rates[i] - expected[i];
+    mse += d * d;
+  }
+  mse /= rates.length;
+  expect(mse).toBeLessThan(fixture.thresholds.splitter_group_shuffle_rate_mse);
+});
+
+test("StratifiedGroupKFold preserves sklearn split-rate profile", () => {
+  const section = fixture.splitters;
+  const splits = new StratifiedGroupKFold({
+    nSplits: 3,
+    shuffle: true,
+    randomState: 42,
+  }).split(section.X, section.y, section.groups);
+  const rates = splits.map((split) => {
+    let positives = 0;
+    for (let i = 0; i < split.testIndices.length; i += 1) {
+      positives += section.y[split.testIndices[i]];
+    }
+    return positives / Math.max(1, split.testIndices.length);
+  }).sort((a, b) => a - b);
+  const expected = [...section.stratified_group_kfold.test_positive_rate].sort((a, b) => a - b);
+  let mse = 0;
+  for (let i = 0; i < rates.length; i += 1) {
+    const d = rates[i] - expected[i];
+    mse += d * d;
+  }
+  mse /= rates.length;
+  expect(mse).toBeLessThan(fixture.thresholds.splitter_stratified_group_rate_mse);
+});
+
+test("permutationImportance stays close to sklearn snapshot", () => {
+  const section = fixture.inspection.permutation_importance;
+  const estimator = new LogisticRegression({
+    maxIter: 400,
+    learningRate: 0.2,
+    tolerance: 1e-6,
+  }).fit(section.X, section.y);
+  const result = permutationImportance(estimator, section.X, section.y, {
+    scoring: "accuracy",
+    nRepeats: 10,
+    randomState: 11,
+  });
+  expect(meanSquaredErrorVector(result.importancesMean, section.importances_mean)).toBeLessThan(0.08);
 });

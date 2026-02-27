@@ -6,6 +6,7 @@ import {
   uniqueSortedLabels,
 } from "../utils/classification";
 import { assertFiniteVector, validateClassificationInputs } from "../utils/validation";
+import { fitWithSampleWeight, type FitSampleWeightRequest } from "../utils/fitWithSampleWeight";
 
 export type VotingStrategy = "hard" | "soft";
 
@@ -38,6 +39,7 @@ export class VotingClassifier {
   classes_: Vector = [0, 1];
   estimators_: Array<[string, ClassifierLike]> = [];
   namedEstimators_: Record<string, ClassifierLike> = {};
+  sampleWeightRequest_ = true;
 
   private readonly estimatorSpecs: VotingEstimatorSpec[];
   private readonly voting: VotingStrategy;
@@ -62,8 +64,17 @@ export class VotingClassifier {
 
   fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateClassificationInputs(X, y);
+    if (sampleWeight) {
+      if (sampleWeight.length !== X.length) {
+        throw new Error(
+          `sampleWeight length must match sample count. Got ${sampleWeight.length} and ${X.length}.`,
+        );
+      }
+      assertFiniteVector(sampleWeight);
+    }
     this.classes_ = uniqueSortedLabels(y);
     this.labelToIndex = buildLabelIndex(this.classes_);
+    const routedSampleWeight = this.sampleWeightRequest_ ? sampleWeight : undefined;
 
     const seenNames = new Set<string>();
     const estimators: Array<[string, ClassifierLike]> = [];
@@ -75,7 +86,7 @@ export class VotingClassifier {
       }
       seenNames.add(name);
       const estimator = resolveEstimator(estimatorOrFactory);
-      estimator.fit(X, y);
+      fitWithSampleWeight(estimator, X, y, routedSampleWeight);
       estimators.push([name, estimator]);
     }
 
@@ -158,6 +169,13 @@ export class VotingClassifier {
   score(X: Matrix, y: Vector): number {
     assertFiniteVector(y);
     return accuracyScore(y, this.predict(X));
+  }
+
+  setFitRequest(request: FitSampleWeightRequest): this {
+    if (typeof request.sampleWeight === "boolean") {
+      this.sampleWeightRequest_ = request.sampleWeight;
+    }
+    return this;
   }
 
   private assertFitted(): void {

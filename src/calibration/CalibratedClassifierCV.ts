@@ -8,6 +8,11 @@ import {
   uniqueSortedLabels,
 } from "../utils/classification";
 import { assertFiniteVector, validateClassificationInputs } from "../utils/validation";
+import {
+  fitWithSampleWeight,
+  subsetSampleWeight,
+  type FitSampleWeightRequest,
+} from "../utils/fitWithSampleWeight";
 
 export type CalibrationMethod = "sigmoid" | "isotonic";
 
@@ -288,6 +293,7 @@ function normalizeRowsInPlace(X: Matrix): void {
 
 export class CalibratedClassifierCV {
   classes_: Vector = [0, 1];
+  sampleWeightRequest_ = true;
 
   private readonly estimatorFactory: () => ProbaLikeEstimator;
   private readonly cv?: number;
@@ -316,6 +322,15 @@ export class CalibratedClassifierCV {
 
   fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateClassificationInputs(X, y);
+    if (sampleWeight) {
+      if (sampleWeight.length !== X.length) {
+        throw new Error(
+          `sampleWeight length must match sample count. Got ${sampleWeight.length} and ${X.length}.`,
+        );
+      }
+      assertFiniteVector(sampleWeight);
+    }
+    const routedSampleWeight = this.sampleWeightRequest_ ? sampleWeight : undefined;
     this.classes_ = uniqueSortedLabels(y);
 
     const folds = resolveStratifiedFolds(X, y, this.cv, this.randomState);
@@ -331,7 +346,12 @@ export class CalibratedClassifierCV {
       for (let foldIndex = 0; foldIndex < folds.length; foldIndex += 1) {
         const fold = folds[foldIndex];
         const estimator = this.estimatorFactory();
-        estimator.fit(subsetMatrix(X, fold.trainIndices), subsetVector(y, fold.trainIndices));
+        fitWithSampleWeight(
+          estimator,
+          subsetMatrix(X, fold.trainIndices),
+          subsetVector(y, fold.trainIndices),
+          subsetSampleWeight(routedSampleWeight, fold.trainIndices),
+        );
         const foldScores = estimatorScores(estimator, subsetMatrix(X, fold.testIndices), this.classes_);
         const foldTargets = subsetVector(y, fold.testIndices);
         const calibrators = new Array<BinaryCalibrator>(this.classes_.length);
@@ -350,7 +370,12 @@ export class CalibratedClassifierCV {
       for (let foldIndex = 0; foldIndex < folds.length; foldIndex += 1) {
         const fold = folds[foldIndex];
         const estimator = this.estimatorFactory();
-        estimator.fit(subsetMatrix(X, fold.trainIndices), subsetVector(y, fold.trainIndices));
+        fitWithSampleWeight(
+          estimator,
+          subsetMatrix(X, fold.trainIndices),
+          subsetVector(y, fold.trainIndices),
+          subsetSampleWeight(routedSampleWeight, fold.trainIndices),
+        );
         const foldScores = estimatorScores(estimator, subsetMatrix(X, fold.testIndices), this.classes_);
         for (let i = 0; i < fold.testIndices.length; i += 1) {
           oofScores[fold.testIndices[i]] = foldScores[i];
@@ -358,7 +383,7 @@ export class CalibratedClassifierCV {
       }
 
       this.finalEstimator = this.estimatorFactory();
-      this.finalEstimator.fit(X, y);
+      fitWithSampleWeight(this.finalEstimator, X, y, routedSampleWeight);
       this.finalCalibrators = new Array<BinaryCalibrator>(this.classes_.length);
       for (let classIndex = 0; classIndex < this.classes_.length; classIndex += 1) {
         const classLabel = this.classes_[classIndex];
@@ -430,6 +455,13 @@ export class CalibratedClassifierCV {
   score(X: Matrix, y: Vector): number {
     assertFiniteVector(y);
     return accuracyScore(y, this.predict(X));
+  }
+
+  setFitRequest(request: FitSampleWeightRequest): this {
+    if (typeof request.sampleWeight === "boolean") {
+      this.sampleWeightRequest_ = request.sampleWeight;
+    }
+    return this;
   }
 
   private assertFitted(): void {

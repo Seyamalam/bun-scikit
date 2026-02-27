@@ -22,6 +22,10 @@ import { StackingRegressor } from "../ensemble/StackingRegressor";
 import { VotingClassifier } from "../ensemble/VotingClassifier";
 import { VotingRegressor } from "../ensemble/VotingRegressor";
 import { VarianceThreshold } from "../feature_selection/VarianceThreshold";
+import {
+  SelectKBest,
+  SelectPercentile,
+} from "../feature_selection/univariateSelection";
 import { LinearRegression } from "../linear_model/LinearRegression";
 import { LogisticRegression } from "../linear_model/LogisticRegression";
 import { SGDClassifier } from "../linear_model/SGDClassifier";
@@ -235,6 +239,8 @@ installParamsApi(KernelPCA, {
 });
 
 installParamsApi(VarianceThreshold, { params: ["threshold"] });
+installParamsApi(SelectKBest, { params: ["scoreFunc", "k"] });
+installParamsApi(SelectPercentile, { params: ["scoreFunc", "percentile"] });
 
 installParamsApi(DummyClassifier, {
   params: ["strategy", "constant", "randomState"],

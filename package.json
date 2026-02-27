@@ -69,6 +69,7 @@
     "parity:matrix:check": "bun run scripts/check-parity-matrix.ts",
     "parity:check": "bun run scripts/check-sklearn-parity.ts",
     "parity:report": "bun run scripts/generate-parity-report.ts",
+    "release:notes": "bun run scripts/generate-release-notes.ts",
     "build:bench:bytecode": "bun build ./bench/run-ci-benchmarks.ts --target=bun --bytecode --minify --outdir=./dist/bench",
     "build:bench:compiled": "bun build ./bench/run-ci-benchmarks.ts --target=bun --compile --bytecode --minify --outfile=./dist/bench/bench-ci"
   },

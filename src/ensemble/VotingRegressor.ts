@@ -4,6 +4,7 @@ import {
   assertFiniteVector,
   validateRegressionInputs,
 } from "../utils/validation";
+import { fitWithSampleWeight, type FitSampleWeightRequest } from "../utils/fitWithSampleWeight";
 
 type RegressorLike = {
   fit(X: Matrix, y: Vector, sampleWeight?: Vector): unknown;
@@ -30,6 +31,7 @@ function resolveEstimator(input: (() => RegressorLike) | RegressorLike): Regress
 export class VotingRegressor {
   estimators_: Array<[string, RegressorLike]> = [];
   namedEstimators_: Record<string, RegressorLike> = {};
+  sampleWeightRequest_ = true;
 
   private readonly estimatorSpecs: VotingRegressorEstimatorSpec[];
   private readonly weights?: number[];
@@ -51,6 +53,15 @@ export class VotingRegressor {
 
   fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateRegressionInputs(X, y);
+    if (sampleWeight) {
+      if (sampleWeight.length !== X.length) {
+        throw new Error(
+          `sampleWeight length must match sample count. Got ${sampleWeight.length} and ${X.length}.`,
+        );
+      }
+      assertFiniteVector(sampleWeight);
+    }
+    const routedSampleWeight = this.sampleWeightRequest_ ? sampleWeight : undefined;
     const seenNames = new Set<string>();
     const estimators: Array<[string, RegressorLike]> = [];
 
@@ -61,7 +72,7 @@ export class VotingRegressor {
       }
       seenNames.add(name);
       const estimator = resolveEstimator(estimatorOrFactory);
-      estimator.fit(X, y);
+      fitWithSampleWeight(estimator, X, y, routedSampleWeight);
       estimators.push([name, estimator]);
     }
 
@@ -96,6 +107,13 @@ export class VotingRegressor {
   score(X: Matrix, y: Vector): number {
     assertFiniteVector(y);
     return r2Score(y, this.predict(X));
+  }
+
+  setFitRequest(request: FitSampleWeightRequest): this {
+    if (typeof request.sampleWeight === "boolean") {
+      this.sampleWeightRequest_ = request.sampleWeight;
+    }
+    return this;
   }
 
   private assertFitted(): void {

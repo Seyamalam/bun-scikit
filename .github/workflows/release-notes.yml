@@ -1,0 +1,36 @@
+name: Release Notes Draft
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        env:
+          BUN_SCIKIT_SKIP_NATIVE_INSTALL: "1"
+        run: bun install --frozen-lockfile
+
+      - name: Generate release notes draft + changelog block
+        run: bun run release:notes
+
+      - name: Commit release note updates
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(release): refresh release notes draft"
+          file_pattern: "CHANGELOG.md docs/release-notes/*.md"

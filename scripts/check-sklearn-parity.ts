@@ -15,10 +15,13 @@ import {
   NMF,
   OneHotEncoder,
   Pipeline,
+  GroupShuffleSplit,
   RandomForestClassifier,
   StandardScaler,
+  StratifiedGroupKFold,
   VotingClassifier,
   crossValPredict,
+  permutationImportance,
 } from "../src";
 
 type Matrix = number[][];
@@ -66,6 +69,15 @@ function mismatchRate(a: Vector, b: Vector): number {
     }
   }
   return mismatches / Math.max(1, a.length);
+}
+
+function argsortDesc(values: number[]): number[] {
+  return Array.from({ length: values.length }, (_, i) => i).sort((a, b) => {
+    if (values[b] !== values[a]) {
+      return values[b] - values[a];
+    }
+    return a - b;
+  });
 }
 
 function pairwiseDistanceMatrix(X: Matrix): Matrix {
@@ -299,6 +311,74 @@ const metrics: Record<string, number> = {};
 }
 
 {
+  const section = fixture.splitters;
+  const gssSplits = new GroupShuffleSplit({
+    nSplits: 4,
+    testSize: 0.25,
+    randomState: 42,
+  }).split(section.X, section.y, section.groups);
+  const gssRates = gssSplits.map((split) => {
+    let positives = 0;
+    for (let i = 0; i < split.testIndices.length; i += 1) {
+      positives += section.y[split.testIndices[i]];
+    }
+    return positives / Math.max(1, split.testIndices.length);
+  });
+  const expectedGssRates = [...section.group_shuffle_split.test_positive_rate];
+  gssRates.sort((a, b) => a - b);
+  expectedGssRates.sort((a, b) => a - b);
+  let gssRateMse = 0;
+  for (let i = 0; i < gssRates.length; i += 1) {
+    const d = gssRates[i] - expectedGssRates[i];
+    gssRateMse += d * d;
+  }
+  metrics.splitter_group_shuffle_rate_mse = gssRateMse / Math.max(1, gssRates.length);
+
+  const sgkfSplits = new StratifiedGroupKFold({
+    nSplits: 3,
+    shuffle: true,
+    randomState: 42,
+  }).split(section.X, section.y, section.groups);
+  const sgkfRates = sgkfSplits.map((split) => {
+    let positives = 0;
+    for (let i = 0; i < split.testIndices.length; i += 1) {
+      positives += section.y[split.testIndices[i]];
+    }
+    return positives / Math.max(1, split.testIndices.length);
+  });
+  const expectedSgkfRates = [...section.stratified_group_kfold.test_positive_rate];
+  sgkfRates.sort((a, b) => a - b);
+  expectedSgkfRates.sort((a, b) => a - b);
+  let sgkfRateMse = 0;
+  for (let i = 0; i < sgkfRates.length; i += 1) {
+    const d = sgkfRates[i] - expectedSgkfRates[i];
+    sgkfRateMse += d * d;
+  }
+  metrics.splitter_stratified_group_rate_mse = sgkfRateMse / Math.max(1, sgkfRates.length);
+}
+
+{
+  const section = fixture.inspection.permutation_importance;
+  const estimator = new LogisticRegression({
+    maxIter: 400,
+    learningRate: 0.2,
+    tolerance: 1e-6,
+  }).fit(section.X, section.y);
+  const result = permutationImportance(estimator, section.X, section.y, {
+    scoring: "accuracy",
+    nRepeats: 10,
+    randomState: 11,
+  });
+  metrics.inspection_permutation_mean_mse = meanSquaredErrorVector(
+    result.importancesMean,
+    section.importances_mean,
+  );
+  const predictedRank = argsortDesc(result.importancesMean);
+  const expectedRank = argsortDesc(section.importances_mean);
+  metrics.inspection_permutation_rank_mismatch = mismatchRate(predictedRank, expectedRank);
+}
+
+{
   const seeds: number[] = fixture.multi_seed.seeds;
   const previousTreeBackend = process.env.BUN_SCIKIT_TREE_BACKEND;
   process.env.BUN_SCIKIT_TREE_BACKEND = "js";
@@ -404,6 +484,22 @@ const limits: Record<string, number> = {
   composition_column_transformer_mse: threshold(
     "PARITY_MAX_COMPOSITION_COLUMN_TRANSFORMER_MSE",
     fixtureThresholds.composition_column_transformer_mse ?? 1e-10,
+  ),
+  splitter_group_shuffle_rate_mse: threshold(
+    "PARITY_MAX_SPLITTER_GROUP_SHUFFLE_RATE_MSE",
+    fixtureThresholds.splitter_group_shuffle_rate_mse ?? 0.12,
+  ),
+  splitter_stratified_group_rate_mse: threshold(
+    "PARITY_MAX_SPLITTER_STRATIFIED_GROUP_RATE_MSE",
+    fixtureThresholds.splitter_stratified_group_rate_mse ?? 0.12,
+  ),
+  inspection_permutation_mean_mse: threshold(
+    "PARITY_MAX_INSPECTION_PERMUTATION_MEAN_MSE",
+    fixtureThresholds.inspection_permutation_mean_mse ?? 0.08,
+  ),
+  inspection_permutation_rank_mismatch: threshold(
+    "PARITY_MAX_INSPECTION_PERMUTATION_RANK_MISMATCH",
+    fixtureThresholds.inspection_permutation_rank_mismatch ?? 0.5,
   ),
 };
 

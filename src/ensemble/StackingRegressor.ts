@@ -2,6 +2,11 @@ import type { Matrix, Vector } from "../types";
 import { r2Score } from "../metrics/regression";
 import { KFold } from "../model_selection/KFold";
 import { assertFiniteVector, validateRegressionInputs } from "../utils/validation";
+import {
+  fitWithSampleWeight,
+  subsetSampleWeight,
+  type FitSampleWeightRequest,
+} from "../utils/fitWithSampleWeight";
 
 type RegressorLike = {
   fit(X: Matrix, y: Vector, sampleWeight?: Vector): unknown;
@@ -46,6 +51,7 @@ function resolveEstimator(input: (() => RegressorLike) | RegressorLike): Regress
 export class StackingRegressor {
   estimators_: Array<[string, RegressorLike]> = [];
   finalEstimator_: RegressorLike | null = null;
+  sampleWeightRequest_ = true;
 
   private readonly estimatorSpecs: StackingRegressorEstimatorSpec[];
   private readonly finalEstimatorFactory: (() => RegressorLike) | RegressorLike;
@@ -75,6 +81,15 @@ export class StackingRegressor {
 
   fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateRegressionInputs(X, y);
+    if (sampleWeight) {
+      if (sampleWeight.length !== X.length) {
+        throw new Error(
+          `sampleWeight length must match sample count. Got ${sampleWeight.length} and ${X.length}.`,
+        );
+      }
+      assertFiniteVector(sampleWeight);
+    }
+    const routedSampleWeight = this.sampleWeightRequest_ ? sampleWeight : undefined;
     if (this.cv > X.length) {
       throw new Error(`cv (${this.cv}) cannot exceed sample count (${X.length}).`);
     }
@@ -103,7 +118,12 @@ export class StackingRegressor {
       for (let foldIndex = 0; foldIndex < folds.length; foldIndex += 1) {
         const fold = folds[foldIndex];
         const estimator = resolveEstimator(estimatorFactory);
-        estimator.fit(subsetMatrix(X, fold.trainIndices), subsetVector(y, fold.trainIndices));
+        fitWithSampleWeight(
+          estimator,
+          subsetMatrix(X, fold.trainIndices),
+          subsetVector(y, fold.trainIndices),
+          subsetSampleWeight(routedSampleWeight, fold.trainIndices),
+        );
         const predictions = estimator.predict(subsetMatrix(X, fold.testIndices));
         for (let i = 0; i < fold.testIndices.length; i += 1) {
           metaFeatures[fold.testIndices[i]][estimatorIndex] = predictions[i];
@@ -113,12 +133,12 @@ export class StackingRegressor {
 
     this.estimators_ = this.estimatorSpecs.map(([name, estimatorFactory]) => {
       const estimator = resolveEstimator(estimatorFactory);
-      estimator.fit(X, y);
+      fitWithSampleWeight(estimator, X, y, routedSampleWeight);
       return [name, estimator];
     });
 
     const finalEstimator = resolveEstimator(this.finalEstimatorFactory);
-    finalEstimator.fit(this.buildFinalFeatures(metaFeatures, X), y);
+    fitWithSampleWeight(finalEstimator, this.buildFinalFeatures(metaFeatures, X), y, routedSampleWeight);
     this.finalEstimator_ = finalEstimator;
     this.isFitted = true;
     return this;
@@ -145,6 +165,13 @@ export class StackingRegressor {
   score(X: Matrix, y: Vector): number {
     assertFiniteVector(y);
     return r2Score(y, this.predict(X));
+  }
+
+  setFitRequest(request: FitSampleWeightRequest): this {
+    if (typeof request.sampleWeight === "boolean") {
+      this.sampleWeightRequest_ = request.sampleWeight;
+    }
+    return this;
   }
 
   private buildFinalFeatures(metaFeatures: Matrix, X: Matrix): Matrix {

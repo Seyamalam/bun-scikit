@@ -82,6 +82,7 @@ export * from "./model_selection/RandomizedSearchCV";
 
 // Feature selection
 export * from "./feature_selection/VarianceThreshold";
+export * from "./feature_selection/univariateSelection";
 
 // Composition
 export * from "./pipeline/Pipeline";

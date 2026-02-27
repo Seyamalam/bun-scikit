@@ -19,7 +19,8 @@ from sklearn.ensemble import (
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import KFold, cross_val_predict
+from sklearn.model_selection import KFold, GroupShuffleSplit, StratifiedGroupKFold, cross_val_predict
+from sklearn.inspection import permutation_importance
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, StandardScaler
@@ -179,6 +180,70 @@ def build_fixtures(seed: int, seeds: list[int]) -> dict:
     kpca_train = kpca.fit_transform(X_kpca)
     kpca_probe = kpca.transform(np.array([[0.1, 0.1], [1.1, 1.0]], dtype=float))
 
+    X_split = np.array(
+        [
+            [0.0, 0.0, 1.0],
+            [0.2, 0.1, 1.2],
+            [0.4, 0.2, 1.1],
+            [1.5, 1.4, 0.9],
+            [1.6, 1.5, 1.0],
+            [1.7, 1.6, 1.1],
+            [3.0, 0.2, 0.8],
+            [3.2, 0.3, 0.7],
+            [3.4, 0.4, 0.9],
+            [4.2, 1.8, 1.3],
+            [4.3, 1.9, 1.4],
+            [4.4, 2.0, 1.5],
+        ],
+        dtype=float,
+    )
+    y_split = np.array([0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0], dtype=int)
+    groups_split = np.array([0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5], dtype=int)
+
+    gss = GroupShuffleSplit(n_splits=4, test_size=0.25, random_state=seed)
+    gss_test_indices: list[list[int]] = []
+    gss_test_group_ids: list[list[int]] = []
+    gss_test_positive_rate: list[float] = []
+    for _, test_idx in gss.split(X_split, y_split, groups_split):
+        idx_list = test_idx.tolist()
+        gss_test_indices.append(idx_list)
+        gss_test_group_ids.append(sorted(np.unique(groups_split[test_idx]).tolist()))
+        gss_test_positive_rate.append(float(np.mean(y_split[test_idx])))
+
+    sgkf = StratifiedGroupKFold(n_splits=3, shuffle=True, random_state=seed)
+    sgkf_test_indices: list[list[int]] = []
+    sgkf_test_group_ids: list[list[int]] = []
+    sgkf_test_positive_rate: list[float] = []
+    for _, test_idx in sgkf.split(X_split, y_split, groups_split):
+        idx_list = test_idx.tolist()
+        sgkf_test_indices.append(idx_list)
+        sgkf_test_group_ids.append(sorted(np.unique(groups_split[test_idx]).tolist()))
+        sgkf_test_positive_rate.append(float(np.mean(y_split[test_idx])))
+
+    X_perm = np.array(
+        [
+            [0.0, 0.0],
+            [1.0, 1.0],
+            [2.0, 0.0],
+            [3.0, 1.0],
+            [4.0, 0.0],
+            [5.0, 1.0],
+            [6.0, 0.0],
+            [7.0, 1.0],
+        ],
+        dtype=float,
+    )
+    y_perm = np.array([0, 0, 0, 1, 1, 1, 1, 1], dtype=int)
+    perm_estimator = LogisticRegression(max_iter=400, random_state=seed).fit(X_perm, y_perm)
+    perm = permutation_importance(
+        perm_estimator,
+        X_perm,
+        y_perm,
+        scoring="accuracy",
+        n_repeats=10,
+        random_state=11,
+    )
+
     multi_seed_dt_preds: list[list[int]] = []
     multi_seed_rf_preds: list[list[int]] = []
     for current_seed in seeds:
@@ -217,6 +282,10 @@ def build_fixtures(seed: int, seeds: list[int]) -> dict:
             "pipeline_cv_predict_mismatch": 0.2,
             "composition_pipeline_transform_mse": 1e-10,
             "composition_column_transformer_mse": 1e-10,
+            "splitter_group_shuffle_rate_mse": 0.25,
+            "splitter_stratified_group_rate_mse": 0.15,
+            "inspection_permutation_mean_mse": 0.08,
+            "inspection_permutation_rank_mismatch": 0.5,
         },
         "multiclass": {
             "X": X_multi.tolist(),
@@ -270,6 +339,30 @@ def build_fixtures(seed: int, seeds: list[int]) -> dict:
             "train_transform": kpca_train.tolist(),
             "probe": [[0.1, 0.1], [1.1, 1.0]],
             "probe_transform": kpca_probe.tolist(),
+        },
+        "splitters": {
+            "X": X_split.tolist(),
+            "y": y_split.tolist(),
+            "groups": groups_split.tolist(),
+            "group_shuffle_split": {
+                "test_indices": gss_test_indices,
+                "test_group_ids": gss_test_group_ids,
+                "test_positive_rate": gss_test_positive_rate,
+            },
+            "stratified_group_kfold": {
+                "test_indices": sgkf_test_indices,
+                "test_group_ids": sgkf_test_group_ids,
+                "test_positive_rate": sgkf_test_positive_rate,
+            },
+        },
+        "inspection": {
+            "permutation_importance": {
+                "X": X_perm.tolist(),
+                "y": y_perm.tolist(),
+                "importances_mean": perm.importances_mean.tolist(),
+                "importances_std": perm.importances_std.tolist(),
+                "importances": perm.importances.tolist(),
+            }
         },
     }
 

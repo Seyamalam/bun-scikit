@@ -7,6 +7,11 @@ import {
   uniqueSortedLabels,
 } from "../utils/classification";
 import { assertFiniteVector, validateClassificationInputs } from "../utils/validation";
+import {
+  fitWithSampleWeight,
+  subsetSampleWeight,
+  type FitSampleWeightRequest,
+} from "../utils/fitWithSampleWeight";
 
 type ClassifierLike = {
   classes_?: Vector | null;
@@ -56,6 +61,7 @@ export class StackingClassifier {
   classes_: Vector = [0, 1];
   estimators_: Array<[string, ClassifierLike]> = [];
   finalEstimator_: ClassifierLike | null = null;
+  sampleWeightRequest_ = true;
 
   private readonly estimatorSpecs: StackingEstimatorSpec[];
   private readonly finalEstimatorFactory: (() => ClassifierLike) | ClassifierLike;
@@ -88,6 +94,15 @@ export class StackingClassifier {
 
   fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
     validateClassificationInputs(X, y);
+    if (sampleWeight) {
+      if (sampleWeight.length !== X.length) {
+        throw new Error(
+          `sampleWeight length must match sample count. Got ${sampleWeight.length} and ${X.length}.`,
+        );
+      }
+      assertFiniteVector(sampleWeight);
+    }
+    const routedSampleWeight = this.sampleWeightRequest_ ? sampleWeight : undefined;
     if (this.cv > X.length) {
       throw new Error(`cv (${this.cv}) cannot exceed sample count (${X.length}).`);
     }
@@ -119,7 +134,12 @@ export class StackingClassifier {
       for (let foldIndex = 0; foldIndex < folds.length; foldIndex += 1) {
         const fold = folds[foldIndex];
         const estimator = resolveEstimator(estimatorFactory);
-        estimator.fit(subsetMatrix(X, fold.trainIndices), subsetVector(y, fold.trainIndices));
+        fitWithSampleWeight(
+          estimator,
+          subsetMatrix(X, fold.trainIndices),
+          subsetVector(y, fold.trainIndices),
+          subsetSampleWeight(routedSampleWeight, fold.trainIndices),
+        );
         const stackBlock = this.stackBlock(estimator, subsetMatrix(X, fold.testIndices));
         if (blockWidth === -1) {
           blockWidth = stackBlock[0].length;
@@ -135,12 +155,12 @@ export class StackingClassifier {
     const metaFeatures = this.hstack(metaBlocks);
     this.estimators_ = this.estimatorSpecs.map(([name, estimatorFactory]) => {
       const estimator = resolveEstimator(estimatorFactory);
-      estimator.fit(X, y);
+      fitWithSampleWeight(estimator, X, y, routedSampleWeight);
       return [name, estimator];
     });
 
     const finalEstimator = resolveEstimator(this.finalEstimatorFactory);
-    finalEstimator.fit(this.buildFinalFeatures(metaFeatures, X), y);
+    fitWithSampleWeight(finalEstimator, this.buildFinalFeatures(metaFeatures, X), y, routedSampleWeight);
     this.finalEstimator_ = finalEstimator;
     this.isFitted = true;
     return this;
@@ -178,6 +198,13 @@ export class StackingClassifier {
   score(X: Matrix, y: Vector): number {
     assertFiniteVector(y);
     return accuracyScore(y, this.predict(X));
+  }
+
+  setFitRequest(request: FitSampleWeightRequest): this {
+    if (typeof request.sampleWeight === "boolean") {
+      this.sampleWeightRequest_ = request.sampleWeight;
+    }
+    return this;
   }
 
   private stackBlock(estimator: ClassifierLike, X: Matrix): Matrix {

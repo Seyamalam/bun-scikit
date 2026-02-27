@@ -1,5 +1,9 @@
 import type { Matrix, Vector } from "../types";
 import { assertConsistentRowSize, assertFiniteMatrix, assertNonEmptyMatrix } from "../utils/validation";
+import {
+  fitWithSampleWeight,
+  type FitSampleWeightRequest,
+} from "../utils/fitWithSampleWeight";
 
 interface TransformerLike {
   fit(X: Matrix, y?: Vector, sampleWeight?: Vector): unknown;
@@ -59,9 +63,12 @@ function fitTransform(
   sampleWeight?: Vector,
 ): Matrix {
   if (typeof transformer.fitTransform === "function") {
-    return transformer.fitTransform(X, y, sampleWeight);
+    if (sampleWeight) {
+      return transformer.fitTransform(X, y, sampleWeight);
+    }
+    return transformer.fitTransform(X, y);
   }
-  transformer.fit(X, y, sampleWeight);
+  fitWithSampleWeight(transformer, X, y, sampleWeight);
   return transformer.transform(X);
 }
 
@@ -85,6 +92,7 @@ export class ColumnTransformer {
   private passthroughColumns: number[] = [];
   private nFeaturesIn: number | null = null;
   private isFitted = false;
+  sampleWeightRequest_ = true;
 
   constructor(specs: ColumnTransformerSpec[], options: ColumnTransformerOptions = {}) {
     if (!Array.isArray(specs) || specs.length === 0) {
@@ -100,6 +108,7 @@ export class ColumnTransformer {
     assertConsistentRowSize(X);
     assertFiniteMatrix(X);
 
+    const routedSampleWeight = this.sampleWeightRequest_ ? sampleWeight : undefined;
     const featureCount = X[0].length;
     this.nFeaturesIn = featureCount;
     const used = new Uint8Array(featureCount);
@@ -113,7 +122,7 @@ export class ColumnTransformer {
       }
       if (transformer !== "drop" && transformer !== "passthrough") {
         const subX = selectColumns(X, columns);
-        transformer.fit(subX, y, sampleWeight);
+        fitWithSampleWeight(transformer, subX, y, routedSampleWeight);
       }
       this.runtimeSpecs.push({ name, transformer, columns });
     }
@@ -175,6 +184,7 @@ export class ColumnTransformer {
     assertConsistentRowSize(X);
     assertFiniteMatrix(X);
 
+    const routedSampleWeight = this.sampleWeightRequest_ ? sampleWeight : undefined;
     const featureCount = X[0].length;
     this.nFeaturesIn = featureCount;
     const used = new Uint8Array(featureCount);
@@ -194,7 +204,7 @@ export class ColumnTransformer {
       } else if (transformer === "passthrough") {
         transformedBlocks.push(subX);
       } else {
-        transformedBlocks.push(fitTransform(transformer, subX, y, sampleWeight));
+        transformedBlocks.push(fitTransform(transformer, subX, y, routedSampleWeight));
       }
       this.runtimeSpecs.push({ name, transformer, columns });
     }
@@ -315,6 +325,13 @@ export class ColumnTransformer {
 
     this.validateSpecNames();
     this.refreshViews();
+    return this;
+  }
+
+  setFitRequest(request: FitSampleWeightRequest): this {
+    if (typeof request.sampleWeight === "boolean") {
+      this.sampleWeightRequest_ = request.sampleWeight;
+    }
     return this;
   }
 
