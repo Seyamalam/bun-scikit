@@ -9,16 +9,16 @@ Deliver practical scikit-learn parity for Bun/TypeScript without stalling releas
 - Releases continue on small increments instead of a single "big bang" parity attempt.
 
 ## In Scope (Current Wave)
-- Add foundational clustering parity: `KMeans`, `DBSCAN`, `AgglomerativeClustering`.
-- Add foundational decomposition parity: `PCA`.
-- Add classification calibration/meta-estimator baseline parity: `CalibratedClassifierCV`, `VotingClassifier`, `StackingClassifier`.
+- Maintain shipped clustering parity: `KMeans`, `DBSCAN`, `AgglomerativeClustering`.
+- Maintain shipped decomposition parity: `PCA`, `TruncatedSVD`, `FastICA`.
+- Maintain shipped calibration/meta-estimator parity: `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier`.
 - Keep API style aligned with existing estimator conventions (`fit`/`predict`/`transform`, learned attrs).
 
 ## Explicitly Out of Scope (Current Wave)
 - Full scikit module parity in one release.
-- Advanced clustering families (`DBSCAN`, agglomerative, spectral).
-- Advanced decomposition (`TruncatedSVD`, `FastICA`, kernel methods).
-- Calibration/meta-estimators and manifold modules.
+- Advanced clustering families (spectral/OPTICS/HDBSCAN-like parity).
+- Advanced decomposition beyond current baseline (kernel PCA, NMF, sparse coding).
+- Boosting/manifold/inspection module breadth.
 
 ## Non-Negotiables
 - New APIs must have unit tests.

@@ -32,10 +32,15 @@ export * from "./ensemble/RandomForestClassifier";
 export * from "./ensemble/RandomForestRegressor";
 export * from "./ensemble/VotingClassifier";
 export * from "./ensemble/StackingClassifier";
+export * from "./ensemble/VotingRegressor";
+export * from "./ensemble/StackingRegressor";
+export * from "./ensemble/BaggingClassifier";
 export * from "./cluster/KMeans";
 export * from "./cluster/DBSCAN";
 export * from "./cluster/AgglomerativeClustering";
 export * from "./decomposition/PCA";
+export * from "./decomposition/TruncatedSVD";
+export * from "./decomposition/FastICA";
 export * from "./calibration/CalibratedClassifierCV";
 
 // Model selection

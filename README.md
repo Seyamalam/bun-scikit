@@ -88,8 +88,8 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 ## Included APIs
 
 - Models: `LinearRegression`, `LogisticRegression`, `KNeighborsClassifier`, `DecisionTreeClassifier`, `RandomForestClassifier`, plus additional parity models (`LinearSVC`, `GaussianNB`, `SGDClassifier`, `SGDRegressor`, regressors for tree/forest).
-- Clustering / decomposition: `KMeans`, `DBSCAN`, `AgglomerativeClustering`, `PCA`.
-- Calibration / meta-estimators: `CalibratedClassifierCV`, `VotingClassifier`, `StackingClassifier`.
+- Clustering / decomposition: `KMeans`, `DBSCAN`, `AgglomerativeClustering`, `PCA`, `TruncatedSVD`, `FastICA`.
+- Calibration / meta-estimators: `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier`.
 - Baselines: `DummyClassifier`, `DummyRegressor`.
 - Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`.
 - Composition: `Pipeline`, `ColumnTransformer`, `FeatureUnion`.
@@ -105,8 +105,8 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 | Tree/ensemble | `DecisionTreeClassifier`, `DecisionTreeRegressor`, `RandomForestClassifier`, `RandomForestRegressor` |
 | Neighbors / Bayes | `KNeighborsClassifier`, `GaussianNB` |
 | Clustering | `KMeans`, `DBSCAN`, `AgglomerativeClustering` |
-| Decomposition | `PCA` |
-| Calibration / Meta | `CalibratedClassifierCV`, `VotingClassifier`, `StackingClassifier` |
+| Decomposition | `PCA`, `TruncatedSVD`, `FastICA` |
+| Calibration / Meta | `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier` |
 | Baselines | `DummyClassifier`, `DummyRegressor` |
 | Preprocessing | `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder` |
 | Feature selection | `VarianceThreshold` |
@@ -114,7 +114,7 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 | Metrics (regression) | `meanSquaredError`, `meanAbsoluteError`, `r2Score`, `meanAbsolutePercentageError`, `explainedVarianceScore` |
 | Metrics (classification) | `accuracyScore`, `precisionScore`, `recallScore`, `f1Score`, `balancedAccuracyScore`, `matthewsCorrcoef`, `logLoss`, `brierScoreLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport` |
 
-Near-term parity gaps vs scikit-learn include decomposition breadth (e.g. TruncatedSVD/FastICA), clustering breadth (e.g. spectral), advanced feature selection, inspection/manifold modules, and broader meta-estimator coverage (bagging/boosting/stacking-regression variants).
+Near-term parity gaps vs scikit-learn include clustering breadth (e.g. spectral), advanced feature selection, inspection/manifold modules, boosting/adaboost families, and decomposition variants beyond the current PCA/SVD/ICA baseline (e.g. NMF/kernel PCA).
 
 ## Native Runtime
 

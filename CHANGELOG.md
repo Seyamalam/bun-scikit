@@ -13,9 +13,12 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 - Per-kernel tree hot-path regression guard (`bench:hotpaths:check`) using `bench/results/tree-hotpaths-baseline.json`.
 - `KMeans` clustering estimator with deterministic `randomState`, `fitPredict`, `transform`, and `score`.
 - `PCA` decomposition estimator with explained-variance attributes, `fitTransform`, `transform`, and `inverseTransform`.
+- `TruncatedSVD` decomposition estimator with deterministic power-iteration components, variance attribution, `fitTransform`, and `inverseTransform`.
+- `FastICA` decomposition estimator with whitening, independent component extraction, and inverse projection support.
 - `DBSCAN` and `AgglomerativeClustering` for density-based and hierarchical clustering parity.
 - `CalibratedClassifierCV` with `sigmoid` and `isotonic` calibration methods.
 - `VotingClassifier` (hard/soft) and `StackingClassifier` baseline meta-estimators.
+- `VotingRegressor`, `StackingRegressor`, and `BaggingClassifier` meta-estimator parity additions.
 
 ### Changed
 - README install docs now include a post-install Zig backend smoke check for `DecisionTreeClassifier` and `RandomForestClassifier`.
@@ -24,6 +27,8 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 - `Benchmark Snapshot` workflow now commits README benchmark updates.
 - CI benchmark gating now enforces tighter zig/js slowdown limits and README benchmark sync.
 - CI and release-prep now run tree hot-path microbench + regression checks.
+- Release-native-prebuild workflow now runs only on published releases (plus manual dispatch) to avoid duplicate tag-triggered asset jobs.
+- Hot-path predict retention guard for random-forest is relaxed to `0.55` in CI/release-prep to match observed stable baseline variance.
 
 ### Improved
 - Zig tree codebase split into modules: `zig/src/tree/split.zig`, `zig/src/tree/fit.zig`, and `zig/src/tree/predict.zig`.

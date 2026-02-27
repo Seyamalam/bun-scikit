@@ -152,6 +152,58 @@ Methods:
 - `predictProba(X: number[][]): number[][]`
 - `score(X: number[][], y: number[]): number`
 
+### `VotingRegressorOptions`
+
+- `weights?: number[]`
+
+### `VotingRegressor`
+
+Methods:
+
+- `fit(X: number[][], y: number[]): this`
+- `predict(X: number[][]): number[]`
+- `score(X: number[][], y: number[]): number`
+
+Types:
+
+- `VotingRegressorEstimatorSpec`
+
+### `StackingRegressorOptions`
+
+- `cv?: number`
+- `passthrough?: boolean`
+- `randomState?: number`
+
+### `StackingRegressor`
+
+Methods:
+
+- `fit(X: number[][], y: number[]): this`
+- `predict(X: number[][]): number[]`
+- `score(X: number[][], y: number[]): number`
+
+Types:
+
+- `StackingRegressorEstimatorSpec`
+
+### `BaggingClassifierOptions`
+
+- `nEstimators?: number`
+- `maxSamples?: number`
+- `maxFeatures?: number`
+- `bootstrap?: boolean`
+- `bootstrapFeatures?: boolean`
+- `randomState?: number`
+
+### `BaggingClassifier`
+
+Methods:
+
+- `fit(X: number[][], y: number[]): this`
+- `predict(X: number[][]): number[]`
+- `predictProba(X: number[][]): number[][]`
+- `score(X: number[][], y: number[]): number`
+
 ## Neighbors
 
 ### `KNeighborsClassifierOptions`
@@ -269,6 +321,56 @@ Learned attributes:
 - `mean_: number[] | null`
 - `nFeaturesIn_: number | null`
 
+### `TruncatedSVDOptions`
+
+- `nComponents?: number`
+- `nIter?: number`
+- `tolerance?: number`
+- `randomState?: number`
+
+### `TruncatedSVD`
+
+Methods:
+
+- `fit(X: number[][]): this`
+- `transform(X: number[][]): number[][]`
+- `fitTransform(X: number[][]): number[][]`
+- `inverseTransform(X: number[][]): number[][]`
+
+Learned attributes:
+
+- `components_: number[][] | null`
+- `explainedVariance_: number[] | null`
+- `explainedVarianceRatio_: number[] | null`
+- `singularValues_: number[] | null`
+- `nFeaturesIn_: number | null`
+- `nComponents_: number | null`
+
+### `FastICAOptions`
+
+- `nComponents?: number`
+- `maxIter?: number`
+- `tolerance?: number`
+- `randomState?: number`
+
+### `FastICA`
+
+Methods:
+
+- `fit(X: number[][]): this`
+- `transform(X: number[][]): number[][]`
+- `fitTransform(X: number[][]): number[][]`
+- `inverseTransform(X: number[][]): number[][]`
+
+Learned attributes:
+
+- `components_: number[][] | null`
+- `mixing_: number[][] | null`
+- `mean_: number[] | null`
+- `nIter_: number | null`
+- `nFeaturesIn_: number | null`
+- `nComponents_: number | null`
+
 ## Calibration
 
 ### `CalibratedClassifierCVOptions`
@@ -321,4 +423,4 @@ Methods:
 
 ## API Symbol Index
 
-`AgglomerativeClustering`, `AgglomerativeClusteringOptions`, `AgglomerativeLinkage`, `AgglomerativeMetric`, `balancedAccuracyScore`, `Binarizer`, `BinarizerOptions`, `brierScoreLoss`, `BuiltInScoring`, `CalibratedClassifierCV`, `CalibratedClassifierCVOptions`, `CalibrationMethod`, `classificationReport`, `ClassificationReportLabelMetrics`, `ClassificationReportResult`, `ColumnSelector`, `ColumnTransformer`, `ColumnTransformerOptions`, `ColumnTransformerSpec`, `confusionMatrix`, `ConfusionMatrixResult`, `CrossValEstimator`, `crossValScore`, `CrossValScoreOptions`, `CrossValSplitter`, `DBSCAN`, `DBSCANOptions`, `DecisionTreeRegressor`, `DecisionTreeRegressorOptions`, `DummyClassifier`, `DummyClassifierOptions`, `DummyClassifierStrategy`, `DummyRegressor`, `DummyRegressorOptions`, `DummyRegressorStrategy`, `explainedVarianceScore`, `FeatureUnion`, `FeatureUnionSpec`, `FoldIndices`, `GaussianNB`, `GaussianNBOptions`, `GridSearchCV`, `GridSearchCVOptions`, `GridSearchResultRow`, `ImputerStrategy`, `KFold`, `KFoldOptions`, `KMeans`, `KMeansOptions`, `LabelEncoder`, `LinearSVC`, `LinearSVCOptions`, `logLoss`, `matthewsCorrcoef`, `MaxAbsScaler`, `meanAbsolutePercentageError`, `MinMaxScaler`, `MinMaxScalerOptions`, `Normalizer`, `NormalizerOptions`, `OneHotEncoder`, `OneHotEncoderOptions`, `PCA`, `PCAOptions`, `ParamDistributions`, `ParamGrid`, `Pipeline`, `PipelineStep`, `PolynomialFeatures`, `PolynomialFeaturesOptions`, `RandomForestRegressor`, `RandomForestRegressorOptions`, `RandomizedSearchCV`, `RandomizedSearchCVOptions`, `RandomizedSearchResultRow`, `RepeatedKFold`, `RepeatedKFoldOptions`, `RepeatedStratifiedKFold`, `RepeatedStratifiedKFoldOptions`, `RobustScaler`, `RobustScalerOptions`, `rocAucScore`, `ScoringFn`, `SGDClassifier`, `SGDClassifierLoss`, `SGDClassifierOptions`, `SGDRegressor`, `SGDRegressorOptions`, `SimpleImputer`, `SimpleImputerOptions`, `StackingClassifier`, `StackingClassifierOptions`, `StackingEstimatorSpec`, `StackingMethod`, `StratifiedKFold`, `StratifiedKFoldOptions`, `StratifiedShuffleSplit`, `StratifiedShuffleSplitOptions`, `Transformer`, `VarianceThreshold`, `VarianceThresholdOptions`, `VotingClassifier`, `VotingClassifierOptions`, `VotingEstimatorSpec`, `VotingStrategy`.
+`AgglomerativeClustering`, `AgglomerativeClusteringOptions`, `AgglomerativeLinkage`, `AgglomerativeMetric`, `BaggingClassifier`, `BaggingClassifierOptions`, `balancedAccuracyScore`, `Binarizer`, `BinarizerOptions`, `brierScoreLoss`, `BuiltInScoring`, `CalibratedClassifierCV`, `CalibratedClassifierCVOptions`, `CalibrationMethod`, `classificationReport`, `ClassificationReportLabelMetrics`, `ClassificationReportResult`, `ColumnSelector`, `ColumnTransformer`, `ColumnTransformerOptions`, `ColumnTransformerSpec`, `confusionMatrix`, `ConfusionMatrixResult`, `CrossValEstimator`, `crossValScore`, `CrossValScoreOptions`, `CrossValSplitter`, `DBSCAN`, `DBSCANOptions`, `DecisionTreeRegressor`, `DecisionTreeRegressorOptions`, `DummyClassifier`, `DummyClassifierOptions`, `DummyClassifierStrategy`, `DummyRegressor`, `DummyRegressorOptions`, `DummyRegressorStrategy`, `explainedVarianceScore`, `FastICA`, `FastICAOptions`, `FeatureUnion`, `FeatureUnionSpec`, `FoldIndices`, `GaussianNB`, `GaussianNBOptions`, `GridSearchCV`, `GridSearchCVOptions`, `GridSearchResultRow`, `ImputerStrategy`, `KFold`, `KFoldOptions`, `KMeans`, `KMeansOptions`, `LabelEncoder`, `LinearSVC`, `LinearSVCOptions`, `logLoss`, `matthewsCorrcoef`, `MaxAbsScaler`, `meanAbsolutePercentageError`, `MinMaxScaler`, `MinMaxScalerOptions`, `Normalizer`, `NormalizerOptions`, `OneHotEncoder`, `OneHotEncoderOptions`, `PCA`, `PCAOptions`, `ParamDistributions`, `ParamGrid`, `Pipeline`, `PipelineStep`, `PolynomialFeatures`, `PolynomialFeaturesOptions`, `RandomForestRegressor`, `RandomForestRegressorOptions`, `RandomizedSearchCV`, `RandomizedSearchCVOptions`, `RandomizedSearchResultRow`, `RepeatedKFold`, `RepeatedKFoldOptions`, `RepeatedStratifiedKFold`, `RepeatedStratifiedKFoldOptions`, `RobustScaler`, `RobustScalerOptions`, `rocAucScore`, `ScoringFn`, `SGDClassifier`, `SGDClassifierLoss`, `SGDClassifierOptions`, `SGDRegressor`, `SGDRegressorOptions`, `SimpleImputer`, `SimpleImputerOptions`, `StackingClassifier`, `StackingClassifierOptions`, `StackingEstimatorSpec`, `StackingMethod`, `StackingRegressor`, `StackingRegressorEstimatorSpec`, `StackingRegressorOptions`, `StratifiedKFold`, `StratifiedKFoldOptions`, `StratifiedShuffleSplit`, `StratifiedShuffleSplitOptions`, `Transformer`, `TruncatedSVD`, `TruncatedSVDOptions`, `VarianceThreshold`, `VarianceThresholdOptions`, `VotingClassifier`, `VotingClassifierOptions`, `VotingEstimatorSpec`, `VotingRegressor`, `VotingRegressorEstimatorSpec`, `VotingRegressorOptions`, `VotingStrategy`.
