@@ -16,6 +16,7 @@ export interface DecisionTreeClassifierOptions {
   minSamplesSplit?: number;
   minSamplesLeaf?: number;
   maxFeatures?: MaxFeaturesOption;
+  splitter?: "best" | "random";
   randomState?: number;
 }
 
@@ -94,6 +95,7 @@ export class DecisionTreeClassifier implements ClassificationModel {
   private readonly minSamplesSplit: number;
   private readonly minSamplesLeaf: number;
   private readonly maxFeatures: MaxFeaturesOption;
+  private readonly splitter: "best" | "random";
   private readonly randomState?: number;
   private random: () => number = Math.random;
   private root: TreeNode | null = null;
@@ -115,7 +117,11 @@ export class DecisionTreeClassifier implements ClassificationModel {
     this.minSamplesSplit = options.minSamplesSplit ?? 2;
     this.minSamplesLeaf = options.minSamplesLeaf ?? 1;
     this.maxFeatures = options.maxFeatures ?? null;
+    this.splitter = options.splitter ?? "best";
     this.randomState = options.randomState;
+    if (this.splitter !== "best" && this.splitter !== "random") {
+      throw new Error(`splitter must be 'best' or 'random'. Got ${this.splitter}.`);
+    }
   }
 
   fit(
@@ -488,6 +494,37 @@ export class DecisionTreeClassifier implements ClassificationModel {
 
     if (!Number.isFinite(minValue) || !Number.isFinite(maxValue) || minValue === maxValue) {
       return null;
+    }
+    if (this.splitter === "random") {
+      const threshold = minValue + this.random() * (maxValue - minValue);
+      const leftClassCounts = new Uint32Array(this.classCount);
+      let leftCount = 0;
+      for (let i = 0; i < sampleCount; i += 1) {
+        const sampleIndex = indices[i];
+        if (x[sampleIndex * stride + featureIndex] <= threshold) {
+          leftCount += 1;
+          leftClassCounts[y[sampleIndex]] += 1;
+        }
+      }
+      const rightCount = sampleCount - leftCount;
+      if (leftCount < this.minSamplesLeaf || rightCount < this.minSamplesLeaf) {
+        return null;
+      }
+
+      let leftGiniSum = 0;
+      let rightGiniSum = 0;
+      for (let classIndex = 0; classIndex < this.classCount; classIndex += 1) {
+        const leftClassCount = leftClassCounts[classIndex];
+        const rightClassCount = totalClassCounts[classIndex] - leftClassCount;
+        const lp = leftClassCount / leftCount;
+        const rp = rightClassCount / rightCount;
+        leftGiniSum += lp * lp;
+        rightGiniSum += rp * rp;
+      }
+      const impurity =
+        (leftCount / sampleCount) * (1 - leftGiniSum) +
+        (rightCount / sampleCount) * (1 - rightGiniSum);
+      return { threshold, impurity };
     }
 
     const dynamicBins = Math.floor(Math.sqrt(sampleCount));

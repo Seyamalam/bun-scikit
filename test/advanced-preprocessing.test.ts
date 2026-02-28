@@ -24,6 +24,14 @@ test("PowerTransformer transforms and inverts positive values", () => {
   expect(Math.abs(restored[3][0] - X[3][0])).toBeLessThan(0.2);
 });
 
+test("PowerTransformer estimates per-feature lambdas", () => {
+  const X = [[1], [1.2], [1.3], [10], [20], [30]];
+  const pt = new PowerTransformer({ method: "box-cox", standardize: false }).fit(X);
+  expect(pt.lambdas_).not.toBeNull();
+  expect(Number.isFinite(pt.lambdas_![0])).toBeTrue();
+  expect(Math.abs(pt.lambdas_![0])).toBeGreaterThan(1e-6);
+});
+
 test("KBinsDiscretizer supports ordinal and onehot encodings", () => {
   const X = [[0], [1], [2], [3], [4], [5]];
   const kbOrdinal = new KBinsDiscretizer({

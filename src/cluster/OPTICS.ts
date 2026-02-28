@@ -13,6 +13,7 @@ export interface OPTICSOptions {
   maxEps?: number;
   eps?: number;
   clusterMethod?: OPTICSClusterMethod;
+  xi?: number;
 }
 
 function squaredEuclideanDistance(a: Vector, b: Vector): number {
@@ -54,6 +55,105 @@ function chooseDbscanEps(
   return finite[Math.floor((finite.length - 1) * 0.75)];
 }
 
+function chooseXiEps(reachability: Vector, coreDistances: Vector, maxEps: number): number {
+  if (Number.isFinite(maxEps)) {
+    return maxEps;
+  }
+  const combined = new Array<number>();
+  for (let i = 0; i < reachability.length; i += 1) {
+    const value = Math.max(reachability[i], coreDistances[i]);
+    if (Number.isFinite(value)) {
+      combined.push(value);
+    }
+  }
+  if (combined.length === 0) {
+    return 1;
+  }
+  combined.sort((a, b) => a - b);
+  return combined[Math.floor((combined.length - 1) * 0.9)];
+}
+
+function extractXiClusters(
+  ordering: Vector,
+  reachability: Vector,
+  coreDistances: Vector,
+  minSamples: number,
+  xi: number,
+  epsCutoff: number,
+): Vector {
+  const orderedReach = ordering.map((index) => reachability[index]);
+  const orderedCore = ordering.map((index) => coreDistances[index]);
+  const effective = orderedReach.map((value, idx) => Math.max(value, orderedCore[idx]));
+
+  const labels = new Array<number>(ordering.length).fill(-1);
+  let clusterId = 0;
+  let segmentStart: number | null = null;
+
+  for (let pos = 0; pos <= effective.length; pos += 1) {
+    const inDenseRegion =
+      pos < effective.length && Number.isFinite(effective[pos]) && effective[pos] <= epsCutoff;
+    if (inDenseRegion) {
+      if (segmentStart === null) {
+        segmentStart = pos;
+      }
+      continue;
+    }
+
+    if (segmentStart !== null) {
+      const segmentEnd = pos - 1;
+      const segmentSize = segmentEnd - segmentStart + 1;
+      if (segmentSize >= minSamples) {
+        let valley = Number.POSITIVE_INFINITY;
+        for (let i = segmentStart; i <= segmentEnd; i += 1) {
+          if (effective[i] < valley) {
+            valley = effective[i];
+          }
+        }
+
+        const leftBoundary =
+          segmentStart > 0 ? effective[segmentStart - 1] : Number.POSITIVE_INFINITY;
+        const rightBoundary =
+          segmentEnd + 1 < effective.length ? effective[segmentEnd + 1] : Number.POSITIVE_INFINITY;
+        const leftRise = leftBoundary / Math.max(valley, 1e-12) > 1 + xi;
+        const rightRise = rightBoundary / Math.max(valley, 1e-12) > 1 + xi;
+        if (leftRise || rightRise) {
+          for (let i = segmentStart; i <= segmentEnd; i += 1) {
+            labels[ordering[i]] = clusterId;
+          }
+          clusterId += 1;
+        }
+      }
+      segmentStart = null;
+    }
+  }
+
+  if (clusterId === 0) {
+    const fallbackThreshold = epsCutoff * (1 - xi);
+    let fallbackStart: number | null = null;
+    for (let pos = 0; pos <= effective.length; pos += 1) {
+      const active =
+        pos < effective.length &&
+        Number.isFinite(effective[pos]) &&
+        effective[pos] <= fallbackThreshold;
+      if (active) {
+        if (fallbackStart === null) {
+          fallbackStart = pos;
+        }
+        continue;
+      }
+      if (fallbackStart !== null && pos - fallbackStart >= minSamples) {
+        for (let i = fallbackStart; i < pos; i += 1) {
+          labels[ordering[i]] = clusterId;
+        }
+        clusterId += 1;
+      }
+      fallbackStart = null;
+    }
+  }
+
+  return labels;
+}
+
 export class OPTICS {
   labels_: Vector | null = null;
   ordering_: Vector | null = null;
@@ -66,12 +166,14 @@ export class OPTICS {
   private maxEps: number;
   private eps?: number;
   private clusterMethod: OPTICSClusterMethod;
+  private xi: number;
 
   constructor(options: OPTICSOptions = {}) {
     this.minSamples = options.minSamples ?? 5;
     this.maxEps = options.maxEps ?? Number.POSITIVE_INFINITY;
     this.eps = options.eps;
     this.clusterMethod = options.clusterMethod ?? "dbscan";
+    this.xi = options.xi ?? 0.05;
 
     if (!Number.isInteger(this.minSamples) || this.minSamples < 2) {
       throw new Error(`minSamples must be an integer >= 2. Got ${this.minSamples}.`);
@@ -81,6 +183,9 @@ export class OPTICS {
     }
     if (this.eps !== undefined && (!Number.isFinite(this.eps) || this.eps <= 0)) {
       throw new Error(`eps must be finite and > 0 when provided. Got ${this.eps}.`);
+    }
+    if (!Number.isFinite(this.xi) || this.xi <= 0 || this.xi >= 1) {
+      throw new Error(`xi must be finite and in (0, 1). Got ${this.xi}.`);
     }
   }
 
@@ -155,9 +260,8 @@ export class OPTICS {
       const eps = chooseDbscanEps(coreDistances, this.eps, this.maxEps);
       labels = new DBSCAN({ eps, minSamples: this.minSamples }).fit(X).labels_!.slice();
     } else {
-      // Lightweight xi fallback: defer to DBSCAN-style extraction using the same epsilon selection.
-      const eps = chooseDbscanEps(coreDistances, this.eps, this.maxEps);
-      labels = new DBSCAN({ eps, minSamples: this.minSamples }).fit(X).labels_!.slice();
+      const epsCutoff = chooseXiEps(reachability, coreDistances, this.maxEps);
+      labels = extractXiClusters(ordering, reachability, coreDistances, this.minSamples, this.xi, epsCutoff);
     }
 
     this.labels_ = labels;

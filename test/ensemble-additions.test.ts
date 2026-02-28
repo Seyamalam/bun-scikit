@@ -24,3 +24,16 @@ test("ExtraTreesRegressor fits a smooth signal", () => {
   const model = new ExtraTreesRegressor({ nEstimators: 60, randomState: 11, maxDepth: 8 }).fit(X, y);
   expect(model.score(X, y)).toBeGreaterThan(0.9);
 });
+
+test("ExtraTrees estimators accept sampleWeight", () => {
+  const X = [[0], [1], [2], [3], [4], [5]];
+  const yCls = [0, 0, 0, 1, 1, 1];
+  const wCls = [0.1, 0.1, 0.1, 1, 1, 1];
+  const cls = new ExtraTreesClassifier({ nEstimators: 20, randomState: 3 }).fit(X, yCls, wCls);
+  expect(cls.score(X, yCls)).toBeGreaterThan(0.8);
+
+  const yReg = [0, 1, 4, 9, 16, 25];
+  const wReg = [0.1, 0.1, 0.2, 1, 1, 1];
+  const reg = new ExtraTreesRegressor({ nEstimators: 40, randomState: 9 }).fit(X, yReg, wReg);
+  expect(reg.score(X, yReg)).toBeGreaterThan(0.8);
+});

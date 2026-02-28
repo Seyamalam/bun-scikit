@@ -16,7 +16,7 @@ const X = [
 ];
 
 test("TSNE fitTransform returns requested dimensionality", () => {
-  const emb = new TSNE({ nComponents: 2, randomState: 42 }).fitTransform(X);
+  const emb = new TSNE({ nComponents: 2, perplexity: 2, randomState: 42 }).fitTransform(X);
   expect(emb.length).toBe(X.length);
   expect(emb[0].length).toBe(2);
 });

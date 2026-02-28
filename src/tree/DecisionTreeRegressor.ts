@@ -13,6 +13,7 @@ export interface DecisionTreeRegressorOptions {
   minSamplesSplit?: number;
   minSamplesLeaf?: number;
   maxFeatures?: MaxFeaturesOption;
+  splitter?: "best" | "random";
   randomState?: number;
 }
 
@@ -62,6 +63,7 @@ export class DecisionTreeRegressor implements RegressionModel {
   private readonly minSamplesSplit: number;
   private readonly minSamplesLeaf: number;
   private readonly maxFeatures: MaxFeaturesOption;
+  private readonly splitter: "best" | "random";
   private readonly randomState?: number;
   private random: () => number = Math.random;
   private root: TreeNode | null = null;
@@ -80,7 +82,11 @@ export class DecisionTreeRegressor implements RegressionModel {
     this.minSamplesSplit = options.minSamplesSplit ?? 2;
     this.minSamplesLeaf = options.minSamplesLeaf ?? 1;
     this.maxFeatures = options.maxFeatures ?? null;
+    this.splitter = options.splitter ?? "best";
     this.randomState = options.randomState;
+    if (this.splitter !== "best" && this.splitter !== "random") {
+      throw new Error(`splitter must be 'best' or 'random'. Got ${this.splitter}.`);
+    }
   }
 
   fit(
@@ -292,6 +298,33 @@ export class DecisionTreeRegressor implements RegressionModel {
 
     if (!Number.isFinite(minValue) || !Number.isFinite(maxValue) || minValue === maxValue) {
       return null;
+    }
+    if (this.splitter === "random") {
+      const threshold = minValue + this.random() * (maxValue - minValue);
+      let leftCount = 0;
+      let leftSum = 0;
+      let leftSumSquares = 0;
+      for (let i = 0; i < sampleCount; i += 1) {
+        const sampleIndex = indices[i];
+        if (x[sampleIndex * stride + featureIndex] <= threshold) {
+          const target = y[sampleIndex];
+          leftCount += 1;
+          leftSum += target;
+          leftSumSquares += target * target;
+        }
+      }
+
+      const rightCount = sampleCount - leftCount;
+      if (leftCount < this.minSamplesLeaf || rightCount < this.minSamplesLeaf) {
+        return null;
+      }
+      const rightSum = totalSum - leftSum;
+      const rightSumSquares = totalSumSquares - leftSumSquares;
+      const leftVariance = safeVariance(leftSum, leftSumSquares, leftCount);
+      const rightVariance = safeVariance(rightSum, rightSumSquares, rightCount);
+      const impurity =
+        (leftCount / sampleCount) * leftVariance + (rightCount / sampleCount) * rightVariance;
+      return { threshold, impurity };
     }
 
     const dynamicBins = Math.floor(Math.sqrt(sampleCount));

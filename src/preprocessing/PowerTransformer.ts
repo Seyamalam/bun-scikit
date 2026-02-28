@@ -52,6 +52,106 @@ function yeoJohnsonInverse(value: number, lambda: number): number {
   return 1 - Math.pow(1 - (2 - lambda) * value, 1 / (2 - lambda));
 }
 
+function mean(values: Vector): number {
+  let total = 0;
+  for (let i = 0; i < values.length; i += 1) {
+    total += values[i];
+  }
+  return total / values.length;
+}
+
+function variance(values: Vector): number {
+  const mu = mean(values);
+  let total = 0;
+  for (let i = 0; i < values.length; i += 1) {
+    const diff = values[i] - mu;
+    total += diff * diff;
+  }
+  return total / values.length;
+}
+
+function transformColumn(values: Vector, method: PowerTransformerMethod, lambda: number): Vector {
+  const out = new Array<number>(values.length);
+  for (let i = 0; i < values.length; i += 1) {
+    out[i] = method === "box-cox" ? boxCox(values[i], lambda) : yeoJohnson(values[i], lambda);
+  }
+  return out;
+}
+
+function logLikelihood(values: Vector, method: PowerTransformerMethod, lambda: number): number {
+  const transformed = transformColumn(values, method, lambda);
+  const varTransformed = variance(transformed);
+  if (!Number.isFinite(varTransformed) || varTransformed <= 1e-24) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  let jacobian = 0;
+  if (method === "box-cox") {
+    for (let i = 0; i < values.length; i += 1) {
+      jacobian += Math.log(values[i]);
+    }
+    jacobian *= lambda - 1;
+  } else {
+    let positive = 0;
+    let negative = 0;
+    for (let i = 0; i < values.length; i += 1) {
+      if (values[i] >= 0) {
+        positive += Math.log(values[i] + 1);
+      } else {
+        negative += Math.log(1 - values[i]);
+      }
+    }
+    jacobian = (lambda - 1) * (positive - negative);
+  }
+
+  return -0.5 * values.length * Math.log(varTransformed) + jacobian;
+}
+
+function maximizeLambda(
+  values: Vector,
+  method: PowerTransformerMethod,
+  minLambda = -2,
+  maxLambda = 2,
+): number {
+  let bestLambda = 0;
+  let bestScore = Number.NEGATIVE_INFINITY;
+
+  for (let step = 0; step <= 80; step += 1) {
+    const lambda = minLambda + ((maxLambda - minLambda) * step) / 80;
+    const score = logLikelihood(values, method, lambda);
+    if (score > bestScore) {
+      bestScore = score;
+      bestLambda = lambda;
+    }
+  }
+
+  let left = Math.max(minLambda, bestLambda - 0.2);
+  let right = Math.min(maxLambda, bestLambda + 0.2);
+  const phi = (1 + Math.sqrt(5)) / 2;
+  let x1 = right - (right - left) / phi;
+  let x2 = left + (right - left) / phi;
+  let f1 = logLikelihood(values, method, x1);
+  let f2 = logLikelihood(values, method, x2);
+
+  for (let iter = 0; iter < 40; iter += 1) {
+    if (f1 > f2) {
+      right = x2;
+      x2 = x1;
+      f2 = f1;
+      x1 = right - (right - left) / phi;
+      f1 = logLikelihood(values, method, x1);
+    } else {
+      left = x1;
+      x1 = x2;
+      f1 = f2;
+      x2 = left + (right - left) / phi;
+      f2 = logLikelihood(values, method, x2);
+    }
+  }
+
+  return f1 > f2 ? x1 : x2;
+}
+
 export class PowerTransformer {
   lambdas_: Vector | null = null;
   nFeaturesIn_: number | null = null;
@@ -86,7 +186,14 @@ export class PowerTransformer {
 
     const nFeatures = X[0].length;
     const lambdas = new Array<number>(nFeatures).fill(0);
-    // Lightweight default estimator: lambda=0 per feature (log-like transform).
+    for (let feature = 0; feature < nFeatures; feature += 1) {
+      const column = new Array<number>(X.length);
+      for (let sample = 0; sample < X.length; sample += 1) {
+        column[sample] = X[sample][feature];
+      }
+      lambdas[feature] = maximizeLambda(column, this.method);
+    }
+
     this.lambdas_ = lambdas;
     this.nFeaturesIn_ = nFeatures;
 

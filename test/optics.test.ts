@@ -30,3 +30,28 @@ test("OPTICS computes ordering/reachability and extracts clusters", () => {
   const clusterSet = new Set(labels.filter((label) => label >= 0));
   expect(clusterSet.size).toBe(2);
 });
+
+test("OPTICS supports xi-based extraction", () => {
+  const X = [
+    [0.0, 0.0],
+    [0.1, 0.0],
+    [0.0, 0.1],
+    [5.0, 5.0],
+    [5.1, 5.0],
+    [5.0, 5.1],
+    [20.0, 20.0],
+  ];
+
+  const model = new OPTICS({
+    minSamples: 2,
+    maxEps: 0.25,
+    clusterMethod: "xi",
+    xi: 0.05,
+  }).fit(X);
+
+  expect(model.labels_).not.toBeNull();
+  const labels = model.labels_!;
+  expect(labels[6]).toBe(-1);
+  const clusterSet = new Set(labels.filter((label) => label >= 0));
+  expect(clusterSet.size).toBeGreaterThanOrEqual(2);
+});
