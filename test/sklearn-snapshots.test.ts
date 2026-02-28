@@ -2,21 +2,32 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
+  AffinityPropagation,
   CalibratedClassifierCV,
+  ClassifierChain,
   ColumnTransformer,
   DecisionTreeClassifier,
+  FactorAnalysis,
   GaussianNB,
   HistGradientBoostingClassifier,
   HistGradientBoostingRegressor,
+  IncrementalPCA,
   GroupShuffleSplit,
   KFold,
   KernelPCA,
   KNeighborsClassifier,
   LogisticRegression,
+  MeanShift,
   MinMaxScaler,
+  MiniBatchKMeans,
+  MiniBatchNMF,
+  MultiOutputClassifier,
+  MultiOutputRegressor,
   NMF,
   OneHotEncoder,
   Pipeline,
+  RegressorChain,
+  LinearRegression,
   StratifiedGroupKFold,
   RandomForestClassifier,
   StandardScaler,
@@ -57,6 +68,50 @@ function meanSquaredErrorVector(a: number[], b: number[]): number {
     total += d * d;
   }
   return total / Math.max(1, a.length);
+}
+
+function mismatchRateMatrix(a: number[][], b: number[][]): number {
+  let mismatches = 0;
+  let count = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    for (let j = 0; j < a[i].length; j += 1) {
+      if (a[i][j] !== b[i][j]) {
+        mismatches += 1;
+      }
+      count += 1;
+    }
+  }
+  return mismatches / Math.max(1, count);
+}
+
+function sortRowsLexicographic(X: number[][]): number[][] {
+  return X
+    .map((row) => row.slice())
+    .sort((a, b) => {
+      for (let i = 0; i < Math.min(a.length, b.length); i += 1) {
+        if (a[i] !== b[i]) {
+          return a[i] - b[i];
+        }
+      }
+      return a.length - b.length;
+    });
+}
+
+function pairwiseDistanceMatrix(X: number[][]): number[][] {
+  const out: number[][] = Array.from({ length: X.length }, () => new Array<number>(X.length).fill(0));
+  for (let i = 0; i < X.length; i += 1) {
+    for (let j = i + 1; j < X.length; j += 1) {
+      let sum = 0;
+      for (let k = 0; k < X[i].length; k += 1) {
+        const d = X[i][k] - X[j][k];
+        sum += d * d;
+      }
+      const dist = Math.sqrt(sum);
+      out[i][j] = dist;
+      out[j][i] = dist;
+    }
+  }
+  return out;
 }
 
 const fixture = JSON.parse(
@@ -191,27 +246,12 @@ test("KernelPCA pairwise distances stay close to sklearn snapshot", () => {
   }).fit(fixture.kernel_pca.X);
 
   const transformed = model.transform(fixture.kernel_pca.X);
-  const a = transformed;
-  const b = fixture.kernel_pca.train_transform;
-  const distance = (X: number[][]): number[][] => {
-    const out: number[][] = Array.from({ length: X.length }, () =>
-      new Array<number>(X.length).fill(0),
-    );
-    for (let i = 0; i < X.length; i += 1) {
-      for (let j = i + 1; j < X.length; j += 1) {
-        let sum = 0;
-        for (let k = 0; k < X[i].length; k += 1) {
-          const d = X[i][k] - X[j][k];
-          sum += d * d;
-        }
-        const dist = Math.sqrt(sum);
-        out[i][j] = dist;
-        out[j][i] = dist;
-      }
-    }
-    return out;
-  };
-  expect(meanSquaredError(distance(a), distance(b))).toBeLessThan(0.2);
+  expect(
+    meanSquaredError(
+      pairwiseDistanceMatrix(transformed),
+      pairwiseDistanceMatrix(fixture.kernel_pca.train_transform),
+    ),
+  ).toBeLessThan(0.2);
 });
 
 test("Pipeline LogisticRegression probabilities stay close to sklearn snapshot", () => {
@@ -327,6 +367,121 @@ test("StratifiedGroupKFold preserves sklearn split-rate profile", () => {
   }
   mse /= rates.length;
   expect(mse).toBeLessThan(fixture.thresholds.splitter_stratified_group_rate_mse);
+});
+
+test("MiniBatchKMeans centers and inertia stay close to sklearn snapshot", () => {
+  const section = fixture.additional_estimators.cluster;
+  const model = new MiniBatchKMeans({
+    nClusters: 2,
+    batchSize: 3,
+    maxIter: 120,
+    randomState: 42,
+  }).fit(section.X);
+  const centers = sortRowsLexicographic(model.clusterCenters_!);
+  const expectedCenters = sortRowsLexicographic(section.minibatch_kmeans_centers);
+  expect(meanSquaredError(centers, expectedCenters)).toBeLessThan(
+    fixture.thresholds.minibatch_kmeans_center_mse,
+  );
+  const inertiaDiff = model.inertia_! - section.minibatch_kmeans_inertia;
+  expect(inertiaDiff * inertiaDiff).toBeLessThan(fixture.thresholds.minibatch_kmeans_inertia_mse);
+});
+
+test("MeanShift and AffinityPropagation centers stay close to sklearn snapshot", () => {
+  const section = fixture.additional_estimators.cluster;
+  const meanShift = new MeanShift({
+    bandwidth: 1.2,
+    maxIter: 50,
+    clusterAll: true,
+  }).fit(section.X);
+  const meanShiftCenters = sortRowsLexicographic(meanShift.clusterCenters_!);
+  const expectedMeanShiftCenters = sortRowsLexicographic(section.meanshift_centers);
+  expect(meanSquaredError(meanShiftCenters, expectedMeanShiftCenters)).toBeLessThan(
+    fixture.thresholds.meanshift_center_mse,
+  );
+
+  const affinity = new AffinityPropagation({
+    damping: 0.7,
+    maxIter: 300,
+    convergenceIter: 30,
+    randomState: 42,
+  }).fit(section.X);
+  const affinityCenters = sortRowsLexicographic(affinity.clusterCenters_!);
+  const expectedAffinityCenters = sortRowsLexicographic(section.affinity_centers);
+  expect(meanSquaredError(affinityCenters, expectedAffinityCenters)).toBeLessThan(
+    fixture.thresholds.affinity_center_mse,
+  );
+});
+
+test("IncrementalPCA and FactorAnalysis latent geometry stays close to sklearn snapshot", () => {
+  const section = fixture.additional_estimators.decomposition;
+  const ipca = new IncrementalPCA({ nComponents: 2, batchSize: 2 });
+  ipca.partialFit(section.incremental_pca_X.slice(0, 2));
+  ipca.partialFit(section.incremental_pca_X.slice(2));
+  const ipcaOut = ipca.transform(section.incremental_pca_X);
+  expect(
+    meanSquaredError(
+      pairwiseDistanceMatrix(ipcaOut),
+      pairwiseDistanceMatrix(section.incremental_pca_transform),
+    ),
+  ).toBeLessThan(fixture.thresholds.incremental_pca_transform_distance_mse);
+
+  const fa = new FactorAnalysis({ nComponents: 2 }).fit(section.factor_analysis_X);
+  const faOut = fa.transform(section.factor_analysis_X);
+  expect(
+    meanSquaredError(
+      pairwiseDistanceMatrix(faOut),
+      pairwiseDistanceMatrix(section.factor_analysis_latent),
+    ),
+  ).toBeLessThan(fixture.thresholds.factor_analysis_latent_distance_mse);
+});
+
+test("MiniBatchNMF reconstruction stays close to sklearn snapshot", () => {
+  const section = fixture.additional_estimators.decomposition;
+  const model = new MiniBatchNMF({
+    nComponents: 2,
+    batchSize: 2,
+    maxIter: 120,
+    randomState: 42,
+  });
+  const W = model.fitTransform(section.minibatch_nmf_X);
+  const recon = model.inverseTransform(W);
+  expect(meanSquaredError(recon, section.minibatch_nmf_reconstruction)).toBeLessThan(
+    fixture.thresholds.minibatch_nmf_reconstruction_mse,
+  );
+});
+
+test("Multioutput predictions stay close to sklearn snapshot", () => {
+  const section = fixture.additional_estimators.multioutput;
+
+  const moClassifier = new MultiOutputClassifier(
+    () => new DecisionTreeClassifier({ maxDepth: 3, randomState: 42 }),
+  ).fit(section.X, section.Y_classifier);
+  expect(
+    mismatchRateMatrix(moClassifier.predict(section.X), section.multioutput_classifier_pred),
+  ).toBeLessThan(fixture.thresholds.multioutput_classifier_mismatch);
+
+  const classifierChain = new ClassifierChain(
+    () => new DecisionTreeClassifier({ maxDepth: 3, randomState: 42 }),
+    { order: [1, 0] },
+  ).fit(section.X, section.Y_classifier);
+  expect(
+    mismatchRateMatrix(classifierChain.predict(section.X), section.classifier_chain_pred),
+  ).toBeLessThan(fixture.thresholds.classifier_chain_mismatch);
+
+  const moRegressor = new MultiOutputRegressor(
+    () => new LinearRegression({ solver: "normal" }),
+  ).fit(section.X, section.Y_regressor);
+  expect(
+    meanSquaredError(moRegressor.predict(section.X), section.multioutput_regressor_pred),
+  ).toBeLessThan(fixture.thresholds.multioutput_regressor_mse);
+
+  const regressorChain = new RegressorChain(
+    () => new LinearRegression({ solver: "normal" }),
+    { order: [1, 0] },
+  ).fit(section.X, section.Y_regressor);
+  expect(
+    meanSquaredError(regressorChain.predict(section.X), section.regressor_chain_pred),
+  ).toBeLessThan(fixture.thresholds.regressor_chain_mse);
 });
 
 test("permutationImportance stays close to sklearn snapshot", () => {

@@ -71,22 +71,28 @@ export * from "./ensemble/BaggingRegressor";
 export * from "./ensemble/ExtraTreesClassifier";
 export * from "./ensemble/ExtraTreesRegressor";
 export * from "./cluster/KMeans";
+export * from "./cluster/MiniBatchKMeans";
 export * from "./cluster/DBSCAN";
 export * from "./cluster/AgglomerativeClustering";
 export * from "./cluster/SpectralClustering";
 export * from "./cluster/Birch";
 export * from "./cluster/OPTICS";
+export * from "./cluster/MeanShift";
+export * from "./cluster/AffinityPropagation";
 export * from "./anomaly/IsolationForest";
 export * from "./anomaly/LocalOutlierFactor";
 export * from "./decomposition/PCA";
 export * from "./decomposition/TruncatedSVD";
 export * from "./decomposition/FastICA";
 export * from "./decomposition/NMF";
+export * from "./decomposition/MiniBatchNMF";
 export * from "./decomposition/KernelPCA";
 export * from "./decomposition/SparsePCA";
 export * from "./decomposition/MiniBatchSparsePCA";
 export * from "./decomposition/DictionaryLearning";
 export * from "./decomposition/MiniBatchDictionaryLearning";
+export * from "./decomposition/IncrementalPCA";
+export * from "./decomposition/FactorAnalysis";
 export * from "./cross_decomposition/PLSSVD";
 export * from "./cross_decomposition/PLSRegression";
 export * from "./cross_decomposition/PLSCanonical";
@@ -126,6 +132,8 @@ export * from "./model_selection/learningCurve";
 export * from "./model_selection/validationCurve";
 export * from "./model_selection/GridSearchCV";
 export * from "./model_selection/RandomizedSearchCV";
+export * from "./model_selection/ParameterGrid";
+export * from "./model_selection/ParameterSampler";
 
 // Feature selection
 export * from "./feature_selection/VarianceThreshold";
@@ -151,3 +159,9 @@ export * from "./inspection/permutationTestScore";
 // Multiclass
 export * from "./multiclass/OneVsRestClassifier";
 export * from "./multiclass/OneVsOneClassifier";
+
+// Multioutput
+export * from "./multioutput/MultiOutputClassifier";
+export * from "./multioutput/MultiOutputRegressor";
+export * from "./multioutput/ClassifierChain";
+export * from "./multioutput/RegressorChain";

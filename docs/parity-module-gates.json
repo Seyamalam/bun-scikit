@@ -1,0 +1,13 @@
+{
+  "metadata": {
+    "updatedAt": "2026-02-28",
+    "policy": "minimum-module-coverage-percent"
+  },
+  "moduleMinCoveragePercent": {
+    "sklearn.cross_decomposition": 100,
+    "sklearn.multioutput": 100,
+    "sklearn.model_selection": 55,
+    "sklearn.decomposition": 55,
+    "sklearn.cluster": 30
+  }
+}

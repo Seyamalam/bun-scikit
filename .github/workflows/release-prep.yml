@@ -103,6 +103,7 @@ jobs:
         env:
           PARITY_FULL_REPORT_PATH: "bench/results/parity/parity-full-report.json"
           PARITY_FULL_STRICT: "0"
+          PARITY_FULL_MODULE_GATES_PATH: "docs/parity-module-gates.json"
         run: bun run parity:full:check
 
       - name: Build parity report bundle

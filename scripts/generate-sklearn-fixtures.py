@@ -9,18 +9,31 @@ from pathlib import Path
 
 import numpy as np
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.decomposition import KernelPCA, NMF
+from sklearn.cluster import AffinityPropagation, MeanShift, MiniBatchKMeans
+from sklearn.decomposition import (
+    FactorAnalysis,
+    IncrementalPCA,
+    KernelPCA,
+    MiniBatchNMF,
+    NMF,
+)
 from sklearn.ensemble import (
     HistGradientBoostingClassifier,
     HistGradientBoostingRegressor,
     RandomForestClassifier,
     VotingClassifier,
 )
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import KFold, GroupShuffleSplit, StratifiedGroupKFold, cross_val_predict
 from sklearn.inspection import permutation_importance
+from sklearn.multioutput import (
+    ClassifierChain,
+    MultiOutputClassifier,
+    MultiOutputRegressor,
+    RegressorChain,
+)
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, StandardScaler
@@ -39,9 +52,15 @@ def parse_seed_list(raw: str) -> list[int]:
     return out
 
 
-def build_fixtures(seed: int, seeds: list[int]) -> dict:
-    rng = np.random.default_rng(seed)
+def sort_rows_lexicographic(X: np.ndarray) -> np.ndarray:
+    if X.size == 0:
+        return X.copy()
+    keys = tuple(X[:, col] for col in range(X.shape[1] - 1, -1, -1))
+    order = np.lexsort(keys)
+    return X[order]
 
+
+def build_fixtures(seed: int, seeds: list[int]) -> dict:
     X_multi = np.array(
         [
             [0.0, 0.0],
@@ -180,6 +199,123 @@ def build_fixtures(seed: int, seeds: list[int]) -> dict:
     kpca_train = kpca.fit_transform(X_kpca)
     kpca_probe = kpca.transform(np.array([[0.1, 0.1], [1.1, 1.0]], dtype=float))
 
+    X_cluster_extra = np.array(
+        [
+            [0.0, 0.0],
+            [0.1, -0.1],
+            [0.2, 0.1],
+            [5.0, 5.0],
+            [5.1, 4.9],
+            [4.9, 5.2],
+        ],
+        dtype=float,
+    )
+    mbk = MiniBatchKMeans(
+        n_clusters=2,
+        batch_size=3,
+        max_iter=120,
+        random_state=seed,
+        n_init=5,
+    ).fit(X_cluster_extra)
+    mbk_centers = sort_rows_lexicographic(mbk.cluster_centers_)
+
+    meanshift = MeanShift(bandwidth=1.2, max_iter=50, cluster_all=True).fit(X_cluster_extra)
+    meanshift_centers = sort_rows_lexicographic(meanshift.cluster_centers_)
+
+    affinity = AffinityPropagation(
+        damping=0.7,
+        max_iter=300,
+        convergence_iter=30,
+        random_state=seed,
+    ).fit(X_cluster_extra)
+    affinity_centers = sort_rows_lexicographic(affinity.cluster_centers_)
+
+    X_ipca = np.array(
+        [
+            [1.0, 2.0, 3.0],
+            [2.0, 3.0, 4.0],
+            [3.0, 4.0, 5.0],
+            [4.0, 5.0, 6.0],
+        ],
+        dtype=float,
+    )
+    ipca = IncrementalPCA(n_components=2, batch_size=2)
+    ipca.partial_fit(X_ipca[:2])
+    ipca.partial_fit(X_ipca[2:])
+    ipca_transform = ipca.transform(X_ipca)
+
+    X_fa = np.array(
+        [
+            [1.0, 2.0, 0.0],
+            [2.0, 3.0, 1.0],
+            [3.0, 4.0, 1.0],
+            [4.0, 5.0, 2.0],
+            [5.0, 6.0, 2.0],
+        ],
+        dtype=float,
+    )
+    fa = FactorAnalysis(n_components=2, random_state=seed).fit(X_fa)
+    fa_latent = fa.transform(X_fa)
+
+    X_mbnmf = np.array(
+        [
+            [1.0, 0.5, 0.2],
+            [0.8, 0.4, 0.1],
+            [0.2, 0.9, 1.1],
+            [0.1, 1.0, 1.2],
+        ],
+        dtype=float,
+    )
+    mbnmf = MiniBatchNMF(
+        n_components=2,
+        batch_size=2,
+        max_iter=120,
+        random_state=seed,
+    )
+    mbnmf_W = mbnmf.fit_transform(X_mbnmf)
+    mbnmf_H = mbnmf.components_
+    mbnmf_recon = mbnmf_W @ mbnmf_H
+
+    X_multioutput = np.array(
+        [[0.0], [1.0], [2.0], [3.0], [4.0], [5.0]],
+        dtype=float,
+    )
+    Y_multioutput_clf = np.array(
+        [
+            [0, 0],
+            [0, 0],
+            [0, 1],
+            [1, 1],
+            [1, 1],
+            [1, 1],
+        ],
+        dtype=int,
+    )
+    Y_multioutput_reg = np.array(
+        [
+            [0.0, 1.0],
+            [1.0, 2.0],
+            [2.0, 3.0],
+            [3.0, 4.0],
+            [4.0, 5.0],
+            [5.0, 6.0],
+        ],
+        dtype=float,
+    )
+    mo_clf = MultiOutputClassifier(DecisionTreeClassifier(max_depth=3, random_state=seed)).fit(
+        X_multioutput,
+        Y_multioutput_clf,
+    )
+    chain_clf = ClassifierChain(
+        DecisionTreeClassifier(max_depth=3, random_state=seed),
+        order=np.array([1, 0]),
+    ).fit(X_multioutput, Y_multioutput_clf)
+    mo_reg = MultiOutputRegressor(LinearRegression()).fit(X_multioutput, Y_multioutput_reg)
+    chain_reg = RegressorChain(LinearRegression(), order=np.array([1, 0])).fit(
+        X_multioutput,
+        Y_multioutput_reg,
+    )
+
     X_split = np.array(
         [
             [0.0, 0.0, 1.0],
@@ -286,6 +422,17 @@ def build_fixtures(seed: int, seeds: list[int]) -> dict:
             "splitter_stratified_group_rate_mse": 0.15,
             "inspection_permutation_mean_mse": 0.08,
             "inspection_permutation_rank_mismatch": 0.5,
+            "minibatch_kmeans_center_mse": 0.5,
+            "minibatch_kmeans_inertia_mse": 5.0,
+            "meanshift_center_mse": 0.6,
+            "affinity_center_mse": 1.2,
+            "incremental_pca_transform_distance_mse": 1e-8,
+            "factor_analysis_latent_distance_mse": 0.7,
+            "minibatch_nmf_reconstruction_mse": 0.2,
+            "multioutput_classifier_mismatch": 0.35,
+            "classifier_chain_mismatch": 0.4,
+            "multioutput_regressor_mse": 0.2,
+            "regressor_chain_mse": 0.25,
         },
         "multiclass": {
             "X": X_multi.tolist(),
@@ -339,6 +486,32 @@ def build_fixtures(seed: int, seeds: list[int]) -> dict:
             "train_transform": kpca_train.tolist(),
             "probe": [[0.1, 0.1], [1.1, 1.0]],
             "probe_transform": kpca_probe.tolist(),
+        },
+        "additional_estimators": {
+            "cluster": {
+                "X": X_cluster_extra.tolist(),
+                "minibatch_kmeans_centers": mbk_centers.tolist(),
+                "minibatch_kmeans_inertia": float(mbk.inertia_),
+                "meanshift_centers": meanshift_centers.tolist(),
+                "affinity_centers": affinity_centers.tolist(),
+            },
+            "decomposition": {
+                "incremental_pca_X": X_ipca.tolist(),
+                "incremental_pca_transform": ipca_transform.tolist(),
+                "factor_analysis_X": X_fa.tolist(),
+                "factor_analysis_latent": fa_latent.tolist(),
+                "minibatch_nmf_X": X_mbnmf.tolist(),
+                "minibatch_nmf_reconstruction": mbnmf_recon.tolist(),
+            },
+            "multioutput": {
+                "X": X_multioutput.tolist(),
+                "Y_classifier": Y_multioutput_clf.tolist(),
+                "Y_regressor": Y_multioutput_reg.tolist(),
+                "multioutput_classifier_pred": mo_clf.predict(X_multioutput).tolist(),
+                "classifier_chain_pred": chain_clf.predict(X_multioutput).tolist(),
+                "multioutput_regressor_pred": mo_reg.predict(X_multioutput).tolist(),
+                "regressor_chain_pred": chain_reg.predict(X_multioutput).tolist(),
+            },
         },
         "splitters": {
             "X": X_split.tolist(),

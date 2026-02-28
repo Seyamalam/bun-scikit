@@ -2,15 +2,21 @@ import { CalibratedClassifierCV } from "../calibration/CalibratedClassifierCV";
 import { IsolationForest } from "../anomaly/IsolationForest";
 import { LocalOutlierFactor } from "../anomaly/LocalOutlierFactor";
 import { AgglomerativeClustering } from "../cluster/AgglomerativeClustering";
+import { AffinityPropagation } from "../cluster/AffinityPropagation";
 import { Birch } from "../cluster/Birch";
 import { DBSCAN } from "../cluster/DBSCAN";
 import { KMeans } from "../cluster/KMeans";
+import { MeanShift } from "../cluster/MeanShift";
+import { MiniBatchKMeans } from "../cluster/MiniBatchKMeans";
 import { OPTICS } from "../cluster/OPTICS";
 import { SpectralClustering } from "../cluster/SpectralClustering";
 import { FastICA } from "../decomposition/FastICA";
+import { FactorAnalysis } from "../decomposition/FactorAnalysis";
 import { DictionaryLearning } from "../decomposition/DictionaryLearning";
+import { IncrementalPCA } from "../decomposition/IncrementalPCA";
 import { KernelPCA } from "../decomposition/KernelPCA";
 import { MiniBatchDictionaryLearning } from "../decomposition/MiniBatchDictionaryLearning";
+import { MiniBatchNMF } from "../decomposition/MiniBatchNMF";
 import { MiniBatchSparsePCA } from "../decomposition/MiniBatchSparsePCA";
 import { NMF } from "../decomposition/NMF";
 import { PCA } from "../decomposition/PCA";
@@ -104,6 +110,10 @@ import { DecisionTreeClassifier } from "../tree/DecisionTreeClassifier";
 import { DecisionTreeRegressor } from "../tree/DecisionTreeRegressor";
 import { OneVsOneClassifier } from "../multiclass/OneVsOneClassifier";
 import { OneVsRestClassifier } from "../multiclass/OneVsRestClassifier";
+import { ClassifierChain } from "../multioutput/ClassifierChain";
+import { MultiOutputClassifier } from "../multioutput/MultiOutputClassifier";
+import { MultiOutputRegressor } from "../multioutput/MultiOutputRegressor";
+import { RegressorChain } from "../multioutput/RegressorChain";
 import { EmpiricalCovariance } from "../covariance/EmpiricalCovariance";
 import { LedoitWolf } from "../covariance/LedoitWolf";
 import { MinCovDet } from "../covariance/MinCovDet";
@@ -311,9 +321,22 @@ installParamsApi(StackingClassifier, { params: ["cv", "passthrough", "stackMetho
 installParamsApi(StackingRegressor, { params: ["cv", "passthrough", "randomState"] });
 installParamsApi(OneVsRestClassifier, { params: ["normalizeProba"] });
 installParamsApi(OneVsOneClassifier, { params: [] });
+installParamsApi(MultiOutputClassifier, { params: [] });
+installParamsApi(MultiOutputRegressor, { params: [] });
+installParamsApi(ClassifierChain, {
+  params: ["order", "randomState"],
+  aliases: { order: "orderOption" },
+});
+installParamsApi(RegressorChain, {
+  params: ["order", "randomState"],
+  aliases: { order: "orderOption" },
+});
 installParamsApi(CalibratedClassifierCV, { params: ["cv", "method", "ensemble", "randomState"] });
 
 installParamsApi(KMeans, { params: ["nClusters", "nInit", "maxIter", "tolerance", "randomState"] });
+installParamsApi(MiniBatchKMeans, {
+  params: ["nClusters", "batchSize", "maxIter", "tolerance", "randomState"],
+});
 installParamsApi(DBSCAN, { params: ["eps", "minSamples"] });
 installParamsApi(AgglomerativeClustering, { params: ["nClusters", "linkage", "metric"] });
 installParamsApi(SpectralClustering, {
@@ -321,17 +344,32 @@ installParamsApi(SpectralClustering, {
 });
 installParamsApi(Birch, { params: ["threshold", "branchingFactor", "nClusters", "computeLabels"] });
 installParamsApi(OPTICS, { params: ["minSamples", "maxEps", "eps", "clusterMethod"] });
+installParamsApi(MeanShift, {
+  params: ["bandwidth", "maxIter", "tolerance", "binSeeding", "minBinFreq", "clusterAll"],
+});
+installParamsApi(AffinityPropagation, {
+  params: ["damping", "maxIter", "convergenceIter", "preference", "randomState"],
+});
 installParamsApi(IsolationForest, {
   params: ["nEstimators", "maxSamples", "contamination", "randomState"],
 });
 installParamsApi(LocalOutlierFactor, { params: ["nNeighbors", "contamination", "novelty"] });
 
 installParamsApi(PCA, { params: ["nComponents", "whiten", "tolerance", "maxIter"] });
+installParamsApi(IncrementalPCA, {
+  params: ["nComponents", "batchSize", "whiten", "tolerance", "maxIter"],
+});
 installParamsApi(TruncatedSVD, { params: ["nComponents", "nIter", "tolerance", "randomState"] });
 installParamsApi(FastICA, { params: ["nComponents", "maxIter", "tolerance", "randomState"] });
 installParamsApi(NMF, { params: ["nComponents", "maxIter", "tolerance", "randomState"] });
+installParamsApi(MiniBatchNMF, {
+  params: ["nComponents", "maxIter", "tolerance", "randomState", "batchSize"],
+});
 installParamsApi(KernelPCA, {
   params: ["nComponents", "kernel", "gamma", "degree", "coef0", "tolerance", "maxIter"],
+});
+installParamsApi(FactorAnalysis, {
+  params: ["nComponents", "tolerance", "maxIter", "randomState"],
 });
 installParamsApi(SparsePCA, { params: ["nComponents", "alpha", "maxIter", "tolerance", "randomState"] });
 installParamsApi(MiniBatchSparsePCA, {

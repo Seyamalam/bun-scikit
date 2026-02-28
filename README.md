@@ -88,15 +88,16 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 ## Included APIs
 
 - Models: `LinearRegression`, `LogisticRegression`, `KNeighborsClassifier`, `DecisionTreeClassifier`, `RandomForestClassifier`, plus additional parity models (`LinearSVC`, `GaussianNB`, `SGDClassifier`, `SGDRegressor`, regressors for tree/forest, `OneClassSVM`).
-- Clustering / decomposition / manifold: `KMeans`, `DBSCAN`, `AgglomerativeClustering`, `SpectralClustering`, `Birch`, `OPTICS`, `PCA`, `TruncatedSVD`, `FastICA`, `NMF`, `KernelPCA`, `PLSSVD`, `PLSRegression`, `PLSCanonical`, `CCA`, `TSNE`, `Isomap`, `LocallyLinearEmbedding`, `MDS`.
+- Clustering / decomposition / manifold: `KMeans`, `MiniBatchKMeans`, `DBSCAN`, `AgglomerativeClustering`, `SpectralClustering`, `Birch`, `OPTICS`, `MeanShift`, `AffinityPropagation`, `PCA`, `IncrementalPCA`, `TruncatedSVD`, `FastICA`, `NMF`, `MiniBatchNMF`, `FactorAnalysis`, `KernelPCA`, `PLSSVD`, `PLSRegression`, `PLSCanonical`, `CCA`, `TSNE`, `Isomap`, `LocallyLinearEmbedding`, `MDS`.
 - Anomaly detection: `IsolationForest`, `LocalOutlierFactor`, `OneClassSVM`.
 - Calibration / meta-estimators: `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier`.
+- Multioutput: `MultiOutputClassifier`, `MultiOutputRegressor`, `ClassifierChain`, `RegressorChain`.
 - Boosting: `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor`.
 - Baselines: `DummyClassifier`, `DummyRegressor`.
 - Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`.
 - Composition: `Pipeline`, `ColumnTransformer`, `FeatureUnion`.
 - Feature selection: `VarianceThreshold`, `SelectKBest`, `SelectPercentile`, `SelectFromModel`, `RFE`, `RFECV`, `chi2`, `f_classif`, `f_regression`, `mutualInfoClassif`, `mutualInfoRegression`.
-- Model selection: `trainTestSplit`, `KFold`, `GroupKFold`, `GroupShuffleSplit`, `StratifiedKFold`, `StratifiedGroupKFold`, stratified/repeated splitters, `crossValScore`, `crossValidate`, `crossValPredict`, `learningCurve`, `validationCurve`, `GridSearchCV`, `RandomizedSearchCV`.
+- Model selection: `trainTestSplit`, `KFold`, `GroupKFold`, `GroupShuffleSplit`, `StratifiedKFold`, `StratifiedGroupKFold`, stratified/repeated splitters, `crossValScore`, `crossValidate`, `crossValPredict`, `learningCurve`, `validationCurve`, `GridSearchCV`, `RandomizedSearchCV`, `ParameterGrid`, `ParameterSampler`.
 - Metrics: regression/classification metrics plus clustering metrics (`silhouetteScore`, `calinskiHarabaszScore`, `daviesBouldinScore`, `adjustedRandScore`).
 - Inspection: `permutationImportance`, `partialDependence`, `permutationTestScore`.
 
@@ -107,14 +108,15 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 | Linear models | `LinearRegression`, `LogisticRegression`, `SGDClassifier`, `SGDRegressor`, `LinearSVC` |
 | Tree/ensemble | `DecisionTreeClassifier`, `DecisionTreeRegressor`, `RandomForestClassifier`, `RandomForestRegressor`, `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor` |
 | Neighbors / Bayes | `KNeighborsClassifier`, `KNeighborsRegressor`, `GaussianNB` |
-| Clustering | `KMeans`, `DBSCAN`, `AgglomerativeClustering`, `SpectralClustering`, `Birch`, `OPTICS` |
-| Decomposition / Manifold | `PCA`, `TruncatedSVD`, `FastICA`, `NMF`, `KernelPCA`, `PLSSVD`, `PLSRegression`, `PLSCanonical`, `CCA`, `TSNE`, `Isomap`, `LocallyLinearEmbedding`, `MDS` |
+| Clustering | `KMeans`, `MiniBatchKMeans`, `DBSCAN`, `AgglomerativeClustering`, `SpectralClustering`, `Birch`, `OPTICS`, `MeanShift`, `AffinityPropagation` |
+| Decomposition / Manifold | `PCA`, `IncrementalPCA`, `TruncatedSVD`, `FastICA`, `NMF`, `MiniBatchNMF`, `FactorAnalysis`, `KernelPCA`, `PLSSVD`, `PLSRegression`, `PLSCanonical`, `CCA`, `TSNE`, `Isomap`, `LocallyLinearEmbedding`, `MDS` |
 | Anomaly detection | `IsolationForest`, `LocalOutlierFactor`, `OneClassSVM` |
 | Calibration / Meta | `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier`, `BaggingRegressor`, `OneVsRestClassifier`, `OneVsOneClassifier` |
+| Multioutput | `MultiOutputClassifier`, `MultiOutputRegressor`, `ClassifierChain`, `RegressorChain` |
 | Baselines | `DummyClassifier`, `DummyRegressor` |
 | Preprocessing | `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder` |
 | Feature selection | `VarianceThreshold`, `SelectKBest`, `SelectPercentile`, `SelectFromModel`, `RFE`, `RFECV`, `chi2`, `f_classif`, `f_regression`, `mutualInfoClassif`, `mutualInfoRegression` |
-| Model selection | `trainTestSplit`, `KFold`, `StratifiedKFold`, `StratifiedShuffleSplit`, `RepeatedKFold`, `RepeatedStratifiedKFold`, `crossValScore`, `GridSearchCV`, `RandomizedSearchCV` |
+| Model selection | `trainTestSplit`, `KFold`, `StratifiedKFold`, `StratifiedShuffleSplit`, `RepeatedKFold`, `RepeatedStratifiedKFold`, `crossValScore`, `crossValidate`, `crossValPredict`, `learningCurve`, `validationCurve`, `GridSearchCV`, `RandomizedSearchCV`, `ParameterGrid`, `ParameterSampler` |
 | Metrics (regression) | `meanSquaredError`, `meanAbsoluteError`, `r2Score`, `meanAbsolutePercentageError`, `explainedVarianceScore` |
 | Metrics (classification) | `accuracyScore`, `precisionScore`, `recallScore`, `f1Score`, `balancedAccuracyScore`, `matthewsCorrcoef`, `logLoss`, `brierScoreLoss`, `rocAucScore`, `confusionMatrix`, `classificationReport` |
 | Metrics (clustering) | `silhouetteScore`, `calinskiHarabaszScore`, `daviesBouldinScore`, `adjustedRandScore` |
@@ -124,37 +126,38 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 
 Parity status is now aligned across runtime, parity matrix, and README surface.
 
-Source of required surface: `docs/parity-matrix.json` (`159` total exports).
+Source of required surface: `docs/parity-matrix.json` (`173` total exports).
 
 | Area | Required | Documented in README | Missing in README |
 | --- | ---: | ---: | ---: |
 | Anomaly | 3 | 3 | 0 |
 | Baselines | 2 | 2 | 0 |
 | Calibration / Meta | 9 | 9 | 0 |
-| Clustering | 6 | 6 | 0 |
+| Clustering | 9 | 9 | 0 |
 | Composition | 3 | 3 | 0 |
 | Covariance | 4 | 4 | 0 |
-| Decomposition / Manifold | 17 | 17 | 0 |
+| Decomposition / Manifold | 20 | 20 | 0 |
 | Discriminant | 2 | 2 | 0 |
 | Feature selection | 16 | 16 | 0 |
 | Inspection | 3 | 3 | 0 |
 | Linear models | 11 | 11 | 0 |
 | Metrics | 20 | 20 | 0 |
 | Mixture | 2 | 2 | 0 |
-| Model selection | 16 | 16 | 0 |
+| Model selection | 20 | 20 | 0 |
+| Multioutput | 4 | 4 | 0 |
 | Neighbors / Bayes | 7 | 7 | 0 |
 | Neural nets | 2 | 2 | 0 |
 | Preprocessing | 17 | 17 | 0 |
 | SVM / Kernel | 5 | 5 | 0 |
 | Semi-supervised | 2 | 2 | 0 |
 | Tree / Ensemble | 12 | 12 | 0 |
-| Total | 159 | 159 | 0 |
+| Total | 173 | 173 | 0 |
 
 Tracked parity status (latest check):
-- API surface parity: `159 / 159` required exports (`100%`).
+- API surface parity: `173 / 173` required exports (`100%`).
 - API/class/interface contract parity: `0` failures (`100%` pass).
-- sklearn snapshot parity gate metrics: `23 / 23` pass (`100%`).
-- Full sklearn public-symbol coverage (non-strict inventory gate): `155 / 454` (`34.14%`).
+- sklearn snapshot parity gate metrics: `34 / 34` pass (`100%`).
+- Full sklearn public-symbol coverage (non-strict inventory gate): `167 / 454` (`36.78%`).
 
 Artifacts:
 - `bench/results/parity/parity-report-latest.md`

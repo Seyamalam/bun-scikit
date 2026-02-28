@@ -7,8 +7,7 @@ import {
   type ScoringFn,
 } from "./crossValScore";
 import { resolveBuiltInScorer } from "./shared";
-
-export type ParamDistributions = Record<string, readonly unknown[]>;
+import { drawParameterSamples, type ParamDistributions } from "./ParameterSampler";
 
 export interface RandomizedSearchCVOptions {
   cv?: number | CrossValSplitter;
@@ -54,56 +53,6 @@ function isLossMetric(scoring: BuiltInScoring | ScoringFn | undefined): boolean 
   return scoring === "mean_squared_error";
 }
 
-class Mulberry32 {
-  private state: number;
-
-  constructor(seed: number) {
-    this.state = seed >>> 0;
-  }
-
-  next(): number {
-    this.state = (this.state + 0x6d2b79f5) >>> 0;
-    let t = this.state ^ (this.state >>> 15);
-    t = Math.imul(t, this.state | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  }
-
-  nextInt(maxExclusive: number): number {
-    return Math.floor(this.next() * maxExclusive);
-  }
-}
-
-function sampleParams(
-  distributions: ParamDistributions,
-  nIter: number,
-  randomState: number,
-): Record<string, unknown>[] {
-  const keys = Object.keys(distributions);
-  if (keys.length === 0) {
-    throw new Error("paramDistributions must include at least one parameter.");
-  }
-  for (let i = 0; i < keys.length; i += 1) {
-    const values = distributions[keys[i]];
-    if (!Array.isArray(values) || values.length === 0) {
-      throw new Error(`paramDistributions '${keys[i]}' must be a non-empty array.`);
-    }
-  }
-
-  const rng = new Mulberry32(randomState);
-  const out: Record<string, unknown>[] = [];
-  for (let i = 0; i < nIter; i += 1) {
-    const params: Record<string, unknown> = {};
-    for (let k = 0; k < keys.length; k += 1) {
-      const key = keys[k];
-      const values = distributions[key];
-      params[key] = values[rng.nextInt(values.length)];
-    }
-    out.push(params);
-  }
-  return out;
-}
-
 export class RandomizedSearchCV<TEstimator extends CrossValEstimator> {
   bestEstimator_: TEstimator | null = null;
   bestParams_: Record<string, unknown> | null = null;
@@ -142,7 +91,7 @@ export class RandomizedSearchCV<TEstimator extends CrossValEstimator> {
   }
 
   fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
-    const candidates = sampleParams(this.paramDistributions, this.nIter, this.randomState);
+    const candidates = drawParameterSamples(this.paramDistributions, this.nIter, this.randomState);
     const minimize = isLossMetric(this.scoring);
     const rows: RandomizedSearchResultRow[] = [];
     const objectiveScores: number[] = [];

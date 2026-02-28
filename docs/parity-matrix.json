@@ -9,6 +9,7 @@
     "AdaBoostClassifier",
     "AdaBoostRegressor",
     "adjustedRandScore",
+    "AffinityPropagation",
     "AgglomerativeClustering",
     "BaggingClassifier",
     "BaggingRegressor",
@@ -16,12 +17,13 @@
     "BayesianGaussianMixture",
     "Binarizer",
     "Birch",
-    "CCA",
     "brierScoreLoss",
     "CalibratedClassifierCV",
     "calinskiHarabaszScore",
+    "CCA",
     "chi2",
     "classificationReport",
+    "ClassifierChain",
     "ColumnTransformer",
     "confusionMatrix",
     "crossValidate",
@@ -32,17 +34,20 @@
     "DecisionTreeClassifier",
     "DecisionTreeRegressor",
     "DictionaryLearning",
+    "drawParameterSamples",
     "DummyClassifier",
     "DummyRegressor",
     "ElasticNet",
     "ElasticNetCV",
     "EmpiricalCovariance",
+    "expandParamGrid",
     "explainedVarianceScore",
     "ExtraTreesClassifier",
     "ExtraTreesRegressor",
     "f_classif",
     "f_regression",
     "f1Score",
+    "FactorAnalysis",
     "FastICA",
     "FeatureUnion",
     "GaussianMixture",
@@ -55,6 +60,7 @@
     "GroupShuffleSplit",
     "HistGradientBoostingClassifier",
     "HistGradientBoostingRegressor",
+    "IncrementalPCA",
     "IsolationForest",
     "Isomap",
     "IterativeImputer",
@@ -86,14 +92,19 @@
     "MDS",
     "meanAbsoluteError",
     "meanAbsolutePercentageError",
+    "MeanShift",
     "meanSquaredError",
     "MinCovDet",
     "MiniBatchDictionaryLearning",
+    "MiniBatchKMeans",
+    "MiniBatchNMF",
     "MiniBatchSparsePCA",
     "MinMaxScaler",
     "MissingIndicator",
     "MLPClassifier",
     "MLPRegressor",
+    "MultiOutputClassifier",
+    "MultiOutputRegressor",
     "mutualInfoClassif",
     "mutualInfoRegression",
     "NearestNeighbors",
@@ -108,6 +119,8 @@
     "OneVsRestClassifier",
     "OPTICS",
     "OrdinalEncoder",
+    "ParameterGrid",
+    "ParameterSampler",
     "partialDependence",
     "PCA",
     "permutationImportance",
@@ -128,6 +141,7 @@
     "RandomForestRegressor",
     "RandomizedSearchCV",
     "recallScore",
+    "RegressorChain",
     "RepeatedKFold",
     "RepeatedStratifiedKFold",
     "RFE",
@@ -169,6 +183,13 @@
     "classes": [
       {
         "name": "AdaBoostClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "AffinityPropagation",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -217,6 +238,14 @@
         ]
       },
       {
+        "name": "CalibratedClassifierCV",
+        "requiredMethods": [
+          "getParams",
+          "setFitRequest",
+          "setParams"
+        ]
+      },
+      {
         "name": "CCA",
         "requiredMethods": [
           "getParams",
@@ -224,7 +253,7 @@
         ]
       },
       {
-        "name": "CalibratedClassifierCV",
+        "name": "ClassifierChain",
         "requiredMethods": [
           "getParams",
           "setFitRequest",
@@ -300,6 +329,13 @@
       },
       {
         "name": "EmpiricalCovariance",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "FactorAnalysis",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -387,6 +423,13 @@
       },
       {
         "name": "HistGradientBoostingRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "IncrementalPCA",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -568,6 +611,13 @@
         ]
       },
       {
+        "name": "MeanShift",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "MinCovDet",
         "requiredMethods": [
           "getParams",
@@ -576,6 +626,20 @@
       },
       {
         "name": "MiniBatchDictionaryLearning",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MiniBatchKMeans",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MiniBatchNMF",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -613,6 +677,22 @@
         "name": "MLPRegressor",
         "requiredMethods": [
           "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MultiOutputClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setFitRequest",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MultiOutputRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setFitRequest",
           "setParams"
         ]
       },
@@ -789,6 +869,14 @@
         "name": "RandomizedSearchCV",
         "requiredMethods": [
           "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "RegressorChain",
+        "requiredMethods": [
+          "getParams",
+          "setFitRequest",
           "setParams"
         ]
       },

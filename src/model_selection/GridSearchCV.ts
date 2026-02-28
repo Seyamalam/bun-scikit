@@ -7,8 +7,7 @@ import {
   type ScoringFn,
 } from "./crossValScore";
 import { resolveBuiltInScorer } from "./shared";
-
-export type ParamGrid = Record<string, readonly unknown[]>;
+import { expandParamGrid, type ParamGrid, type ParamGridInput } from "./ParameterGrid";
 
 export interface GridSearchCVOptions {
   cv?: number | CrossValSplitter;
@@ -52,40 +51,6 @@ function isLossMetric(scoring: BuiltInScoring | ScoringFn | undefined): boolean 
   return scoring === "mean_squared_error";
 }
 
-function cartesianProduct(grid: ParamGrid): Record<string, unknown>[] {
-  const keys = Object.keys(grid);
-  if (keys.length === 0) {
-    throw new Error("paramGrid must include at least one parameter.");
-  }
-
-  for (let i = 0; i < keys.length; i += 1) {
-    const values = grid[keys[i]];
-    if (!Array.isArray(values) || values.length === 0) {
-      throw new Error(`paramGrid '${keys[i]}' must be a non-empty array.`);
-    }
-  }
-
-  const out: Record<string, unknown>[] = [];
-  const current: Record<string, unknown> = {};
-
-  function recurse(depth: number): void {
-    if (depth === keys.length) {
-      out.push({ ...current });
-      return;
-    }
-
-    const key = keys[depth];
-    const values = grid[key];
-    for (let i = 0; i < values.length; i += 1) {
-      current[key] = values[i];
-      recurse(depth + 1);
-    }
-  }
-
-  recurse(0);
-  return out;
-}
-
 export class GridSearchCV<TEstimator extends CrossValEstimator> {
   bestEstimator_: TEstimator | null = null;
   bestParams_: Record<string, unknown> | null = null;
@@ -93,7 +58,7 @@ export class GridSearchCV<TEstimator extends CrossValEstimator> {
   cvResults_: GridSearchResultRow[] = [];
 
   private readonly estimatorFactory: (params: Record<string, unknown>) => TEstimator;
-  private readonly paramGrid: ParamGrid;
+  private readonly paramGrid: ParamGridInput;
   private readonly cv?: number | CrossValSplitter;
   private readonly scoring?: BuiltInScoring | ScoringFn;
   private readonly refit: boolean;
@@ -102,7 +67,7 @@ export class GridSearchCV<TEstimator extends CrossValEstimator> {
 
   constructor(
     estimatorFactory: (params: Record<string, unknown>) => TEstimator,
-    paramGrid: ParamGrid,
+    paramGrid: ParamGridInput,
     options: GridSearchCVOptions = {},
   ) {
     if (typeof estimatorFactory !== "function") {
@@ -117,7 +82,7 @@ export class GridSearchCV<TEstimator extends CrossValEstimator> {
   }
 
   fit(X: Matrix, y: Vector, sampleWeight?: Vector): this {
-    const candidates = cartesianProduct(this.paramGrid);
+    const candidates = expandParamGrid(this.paramGrid);
     const minimize = isLossMetric(this.scoring);
     const rows: GridSearchResultRow[] = [];
     const objectiveScores: number[] = [];

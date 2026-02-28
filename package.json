@@ -1,6 +1,6 @@
 {
   "name": "bun-scikit",
-  "version": "0.1.22",
+  "version": "0.1.23",
   "description": "A scikit-learn-inspired machine learning library for Bun/TypeScript.",
   "license": "MIT",
   "module": "index.ts",

@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import * as api from "../src";
 
@@ -24,6 +24,17 @@ interface ModuleCoverage {
   totalUniqueShortNames: number;
   coveredUniqueShortNames: number;
   coveragePercent: number;
+}
+
+interface ModuleGatesConfig {
+  moduleMinCoveragePercent: Record<string, number>;
+}
+
+interface ModuleGateEvaluation {
+  module: string;
+  minCoveragePercent: number;
+  observedCoveragePercent: number;
+  passed: boolean;
 }
 
 function snakeToCamel(value: string): string {
@@ -73,6 +84,8 @@ const inventoryPath = resolve(process.env.PARITY_FULL_INVENTORY_PATH ?? "docs/sk
 const strict = envFlag("PARITY_FULL_STRICT", false);
 const missingPreviewLimit = envInt("PARITY_FULL_MISSING_PREVIEW", 80);
 const moduleCoverageTopN = envInt("PARITY_FULL_MODULE_TOP_N", 30);
+const moduleGatesPathRaw = process.env.PARITY_FULL_MODULE_GATES_PATH ?? "docs/parity-module-gates.json";
+const moduleGatesPath = resolve(moduleGatesPathRaw);
 
 const inventory = JSON.parse(readFileSync(inventoryPath, "utf-8")) as SklearnPublicApiInventory;
 const runtimeExports = Object.keys(api).sort();
@@ -117,10 +130,30 @@ const moduleCoverage: ModuleCoverage[] = Array.from(moduleSymbolSet.entries())
     return a.module.localeCompare(b.module);
   });
 
+const moduleCoverageByName = new Map(moduleCoverage.map((entry) => [entry.module, entry]));
+let moduleGateEvaluations: ModuleGateEvaluation[] = [];
+if (existsSync(moduleGatesPath)) {
+  const moduleGates = JSON.parse(readFileSync(moduleGatesPath, "utf-8")) as ModuleGatesConfig;
+  moduleGateEvaluations = Object.entries(moduleGates.moduleMinCoveragePercent ?? {})
+    .map(([module, minCoveragePercent]) => {
+      if (!Number.isFinite(minCoveragePercent) || minCoveragePercent < 0 || minCoveragePercent > 100) {
+        throw new Error(`Invalid module coverage threshold for ${module}: ${minCoveragePercent}`);
+      }
+      const observed = moduleCoverageByName.get(module)?.coveragePercent ?? 0;
+      return {
+        module,
+        minCoveragePercent,
+        observedCoveragePercent: observed,
+        passed: observed + 1e-12 >= minCoveragePercent,
+      };
+    })
+    .sort((a, b) => a.module.localeCompare(b.module));
+}
+
 const covered = coveredSymbols.length;
 const total = inventoryUnique.length;
 const coverage = coveragePercent(covered, total);
-const failed = strict && missingSymbols.length > 0;
+const failed = (strict && missingSymbols.length > 0) || moduleGateEvaluations.some((gate) => !gate.passed);
 
 const report = {
   generatedAt: new Date().toISOString(),
@@ -137,6 +170,8 @@ const report = {
   failed,
   missingSymbolsPreview: missingSymbols.slice(0, missingPreviewLimit),
   moduleCoverageTop: moduleCoverage.slice(0, moduleCoverageTopN),
+  moduleGatesPath: existsSync(moduleGatesPath) ? moduleGatesPath : null,
+  moduleGateEvaluations,
 };
 
 const reportPath = process.env.PARITY_FULL_REPORT_PATH;
@@ -159,8 +194,18 @@ if (missingSymbols.length > 0) {
   }
 }
 
+if (moduleGateEvaluations.length > 0) {
+  console.log("Module coverage gates:");
+  for (const gate of moduleGateEvaluations) {
+    const status = gate.passed ? "PASS" : "FAIL";
+    console.log(
+      `- ${status} ${gate.module}: ${gate.observedCoveragePercent.toFixed(2)}% (min ${gate.minCoveragePercent.toFixed(2)}%)`,
+    );
+  }
+}
+
 if (failed) {
-  console.error("Full sklearn parity check failed (PARITY_FULL_STRICT=1 with missing symbols).");
+  console.error("Full sklearn parity check failed (strict missing-symbol gate or module coverage gate).");
   process.exit(1);
 }
 

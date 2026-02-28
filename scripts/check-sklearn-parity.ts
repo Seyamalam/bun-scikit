@@ -1,22 +1,33 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import {
+  AffinityPropagation,
   CalibratedClassifierCV,
+  ClassifierChain,
   ColumnTransformer,
   DecisionTreeClassifier,
+  FactorAnalysis,
   GaussianNB,
   HistGradientBoostingClassifier,
   HistGradientBoostingRegressor,
+  IncrementalPCA,
   KernelPCA,
   KFold,
   KNeighborsClassifier,
+  LinearRegression,
   LogisticRegression,
+  MeanShift,
   MinMaxScaler,
+  MiniBatchKMeans,
+  MiniBatchNMF,
+  MultiOutputClassifier,
+  MultiOutputRegressor,
   NMF,
   OneHotEncoder,
   Pipeline,
   GroupShuffleSplit,
   RandomForestClassifier,
+  RegressorChain,
   StandardScaler,
   StratifiedGroupKFold,
   VotingClassifier,
@@ -61,6 +72,33 @@ function meanSquaredErrorMatrix(a: Matrix, b: Matrix): number {
   return total / Math.max(1, count);
 }
 
+function meanSquaredErrorMatrixWithShapePenalty(a: Matrix, b: Matrix): number {
+  const rows = Math.min(a.length, b.length);
+  if (rows === 0) {
+    const diff = a.length - b.length;
+    return diff * diff;
+  }
+  const cols = Math.min(a[0].length, b[0].length);
+  if (cols === 0) {
+    const diff = a[0].length - b[0].length;
+    return diff * diff;
+  }
+  let total = 0;
+  let count = 0;
+  for (let i = 0; i < rows; i += 1) {
+    for (let j = 0; j < cols; j += 1) {
+      const d = a[i][j] - b[i][j];
+      total += d * d;
+      count += 1;
+    }
+  }
+  const rowDiff = a.length - b.length;
+  const colDiff = a[0].length - b[0].length;
+  total += rowDiff * rowDiff + colDiff * colDiff;
+  count += 1;
+  return total / Math.max(1, count);
+}
+
 function mismatchRate(a: Vector, b: Vector): number {
   let mismatches = 0;
   for (let i = 0; i < a.length; i += 1) {
@@ -69,6 +107,34 @@ function mismatchRate(a: Vector, b: Vector): number {
     }
   }
   return mismatches / Math.max(1, a.length);
+}
+
+function mismatchRateMatrix(a: Matrix, b: Matrix): number {
+  let mismatches = 0;
+  let count = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    for (let j = 0; j < a[i].length; j += 1) {
+      if (a[i][j] !== b[i][j]) {
+        mismatches += 1;
+      }
+      count += 1;
+    }
+  }
+  return mismatches / Math.max(1, count);
+}
+
+function sortRowsLexicographic(X: Matrix): Matrix {
+  return X
+    .map((row) => row.slice())
+    .sort((a, b) => {
+      const len = Math.min(a.length, b.length);
+      for (let i = 0; i < len; i += 1) {
+        if (a[i] !== b[i]) {
+          return a[i] - b[i];
+        }
+      }
+      return a.length - b.length;
+    });
 }
 
 function argsortDesc(values: number[]): number[] {
@@ -411,6 +477,118 @@ const metrics: Record<string, number> = {};
   }
 }
 
+{
+  const section = fixture.additional_estimators.cluster;
+  const mbk = new MiniBatchKMeans({
+    nClusters: 2,
+    batchSize: 3,
+    maxIter: 120,
+    randomState: 42,
+  }).fit(section.X);
+  const mbkCenters = sortRowsLexicographic(mbk.clusterCenters_ as Matrix);
+  const expectedMbkCenters = sortRowsLexicographic(section.minibatch_kmeans_centers);
+  metrics.minibatch_kmeans_center_mse = meanSquaredErrorMatrixWithShapePenalty(
+    mbkCenters,
+    expectedMbkCenters,
+  );
+  const inertiaDiff = (mbk.inertia_ as number) - section.minibatch_kmeans_inertia;
+  metrics.minibatch_kmeans_inertia_mse = inertiaDiff * inertiaDiff;
+
+  const meanShift = new MeanShift({
+    bandwidth: 1.2,
+    maxIter: 50,
+    clusterAll: true,
+  }).fit(section.X);
+  const meanShiftCenters = sortRowsLexicographic(meanShift.clusterCenters_ as Matrix);
+  const expectedMeanShiftCenters = sortRowsLexicographic(section.meanshift_centers);
+  metrics.meanshift_center_mse = meanSquaredErrorMatrixWithShapePenalty(
+    meanShiftCenters,
+    expectedMeanShiftCenters,
+  );
+
+  const affinity = new AffinityPropagation({
+    damping: 0.7,
+    maxIter: 300,
+    convergenceIter: 30,
+    randomState: 42,
+  }).fit(section.X);
+  const affinityCenters = sortRowsLexicographic(affinity.clusterCenters_ as Matrix);
+  const expectedAffinityCenters = sortRowsLexicographic(section.affinity_centers);
+  metrics.affinity_center_mse = meanSquaredErrorMatrixWithShapePenalty(
+    affinityCenters,
+    expectedAffinityCenters,
+  );
+}
+
+{
+  const section = fixture.additional_estimators.decomposition;
+  const ipca = new IncrementalPCA({ nComponents: 2, batchSize: 2 });
+  ipca.partialFit(section.incremental_pca_X.slice(0, 2));
+  ipca.partialFit(section.incremental_pca_X.slice(2));
+  const ipcaOut = ipca.transform(section.incremental_pca_X);
+  metrics.incremental_pca_transform_distance_mse = meanSquaredErrorMatrix(
+    pairwiseDistanceMatrix(ipcaOut),
+    pairwiseDistanceMatrix(section.incremental_pca_transform),
+  );
+
+  const fa = new FactorAnalysis({ nComponents: 2 }).fit(section.factor_analysis_X);
+  const faOut = fa.transform(section.factor_analysis_X);
+  metrics.factor_analysis_latent_distance_mse = meanSquaredErrorMatrix(
+    pairwiseDistanceMatrix(faOut),
+    pairwiseDistanceMatrix(section.factor_analysis_latent),
+  );
+
+  const mbnmf = new MiniBatchNMF({
+    nComponents: 2,
+    batchSize: 2,
+    maxIter: 120,
+    randomState: 42,
+  });
+  const W = mbnmf.fitTransform(section.minibatch_nmf_X);
+  const recon = mbnmf.inverseTransform(W);
+  metrics.minibatch_nmf_reconstruction_mse = meanSquaredErrorMatrix(
+    recon,
+    section.minibatch_nmf_reconstruction,
+  );
+}
+
+{
+  const section = fixture.additional_estimators.multioutput;
+  const moc = new MultiOutputClassifier(
+    () => new DecisionTreeClassifier({ maxDepth: 3, randomState: 42 }),
+  ).fit(section.X, section.Y_classifier);
+  metrics.multioutput_classifier_mismatch = mismatchRateMatrix(
+    moc.predict(section.X),
+    section.multioutput_classifier_pred,
+  );
+
+  const cc = new ClassifierChain(
+    () => new DecisionTreeClassifier({ maxDepth: 3, randomState: 42 }),
+    { order: [1, 0] },
+  ).fit(section.X, section.Y_classifier);
+  metrics.classifier_chain_mismatch = mismatchRateMatrix(
+    cc.predict(section.X),
+    section.classifier_chain_pred,
+  );
+
+  const mor = new MultiOutputRegressor(
+    () => new LinearRegression({ solver: "normal" }),
+  ).fit(section.X, section.Y_regressor);
+  metrics.multioutput_regressor_mse = meanSquaredErrorMatrix(
+    mor.predict(section.X),
+    section.multioutput_regressor_pred,
+  );
+
+  const rc = new RegressorChain(
+    () => new LinearRegression({ solver: "normal" }),
+    { order: [1, 0] },
+  ).fit(section.X, section.Y_regressor);
+  metrics.regressor_chain_mse = meanSquaredErrorMatrix(
+    rc.predict(section.X),
+    section.regressor_chain_pred,
+  );
+}
+
 const limits: Record<string, number> = {
   gnb_proba_mad: threshold("PARITY_MAX_GNB_PROBA_MAD", fixtureThresholds.gnb_proba_mad ?? 0.15),
   voting_soft_proba_mad: threshold(
@@ -500,6 +678,50 @@ const limits: Record<string, number> = {
   inspection_permutation_rank_mismatch: threshold(
     "PARITY_MAX_INSPECTION_PERMUTATION_RANK_MISMATCH",
     fixtureThresholds.inspection_permutation_rank_mismatch ?? 0.5,
+  ),
+  minibatch_kmeans_center_mse: threshold(
+    "PARITY_MAX_MINIBATCH_KMEANS_CENTER_MSE",
+    fixtureThresholds.minibatch_kmeans_center_mse ?? 0.5,
+  ),
+  minibatch_kmeans_inertia_mse: threshold(
+    "PARITY_MAX_MINIBATCH_KMEANS_INERTIA_MSE",
+    fixtureThresholds.minibatch_kmeans_inertia_mse ?? 5,
+  ),
+  meanshift_center_mse: threshold(
+    "PARITY_MAX_MEANSHIFT_CENTER_MSE",
+    fixtureThresholds.meanshift_center_mse ?? 0.6,
+  ),
+  affinity_center_mse: threshold(
+    "PARITY_MAX_AFFINITY_CENTER_MSE",
+    fixtureThresholds.affinity_center_mse ?? 1.2,
+  ),
+  incremental_pca_transform_distance_mse: threshold(
+    "PARITY_MAX_INCREMENTAL_PCA_TRANSFORM_DISTANCE_MSE",
+    fixtureThresholds.incremental_pca_transform_distance_mse ?? 1e-8,
+  ),
+  factor_analysis_latent_distance_mse: threshold(
+    "PARITY_MAX_FACTOR_ANALYSIS_LATENT_DISTANCE_MSE",
+    fixtureThresholds.factor_analysis_latent_distance_mse ?? 0.7,
+  ),
+  minibatch_nmf_reconstruction_mse: threshold(
+    "PARITY_MAX_MINIBATCH_NMF_RECONSTRUCTION_MSE",
+    fixtureThresholds.minibatch_nmf_reconstruction_mse ?? 0.2,
+  ),
+  multioutput_classifier_mismatch: threshold(
+    "PARITY_MAX_MULTIOUTPUT_CLASSIFIER_MISMATCH",
+    fixtureThresholds.multioutput_classifier_mismatch ?? 0.35,
+  ),
+  classifier_chain_mismatch: threshold(
+    "PARITY_MAX_CLASSIFIER_CHAIN_MISMATCH",
+    fixtureThresholds.classifier_chain_mismatch ?? 0.4,
+  ),
+  multioutput_regressor_mse: threshold(
+    "PARITY_MAX_MULTIOUTPUT_REGRESSOR_MSE",
+    fixtureThresholds.multioutput_regressor_mse ?? 0.2,
+  ),
+  regressor_chain_mse: threshold(
+    "PARITY_MAX_REGRESSOR_CHAIN_MSE",
+    fixtureThresholds.regressor_chain_mse ?? 0.25,
   ),
 };
 
