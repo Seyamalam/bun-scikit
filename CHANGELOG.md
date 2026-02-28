@@ -59,6 +59,8 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+### Added
+
 ## [0.1.6] - 2026-02-25
 
 ### Added
