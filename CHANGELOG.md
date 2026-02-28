@@ -9,7 +9,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 <!-- PARITY_AUTO_START -->
-- (auto) No new parity commits detected since project start.
+- feat(parity): add regularized linear, discriminant, mixture, and preprocessing/imputation APIs
 <!-- PARITY_AUTO_END -->
 - Reusable `Release Prep` workflow (`.github/workflows/release-prep.yml`) that gates release pipelines with tests, typecheck, Zig guard checks, benchmark checks, README benchmark sync checks, and npm-pack smoke validation.
 - Zig backend smoke example for users: `examples/zig-backend-smoke.ts`.
