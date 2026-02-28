@@ -1,7 +1,7 @@
 {
   "metadata": {
     "targetSklearnVersion": "1.5.x",
-    "updatedAt": "2026-02-27",
+    "updatedAt": "2026-02-28",
     "policy": "runtime-exports-must-match-required-exports"
   },
   "requiredExports": [
@@ -29,8 +29,10 @@
     "DBSCAN",
     "DecisionTreeClassifier",
     "DecisionTreeRegressor",
+    "DictionaryLearning",
     "DummyClassifier",
     "DummyRegressor",
+    "EmpiricalCovariance",
     "explainedVarianceScore",
     "ExtraTreesClassifier",
     "ExtraTreesRegressor",
@@ -50,6 +52,7 @@
     "HistGradientBoostingRegressor",
     "IsolationForest",
     "Isomap",
+    "KernelDensity",
     "KernelPCA",
     "KFold",
     "KMeans",
@@ -57,7 +60,10 @@
     "KNeighborsRegressor",
     "KNNImputer",
     "LabelEncoder",
+    "LabelPropagation",
+    "LabelSpreading",
     "learningCurve",
+    "LedoitWolf",
     "LinearRegression",
     "LinearSVC",
     "LinearSVR",
@@ -71,13 +77,20 @@
     "meanAbsoluteError",
     "meanAbsolutePercentageError",
     "meanSquaredError",
+    "MinCovDet",
+    "MiniBatchDictionaryLearning",
+    "MiniBatchSparsePCA",
     "MinMaxScaler",
+    "MLPClassifier",
+    "MLPRegressor",
     "mutualInfoClassif",
     "mutualInfoRegression",
+    "NearestNeighbors",
     "NMF",
     "Normalizer",
     "NuSVC",
     "NuSVR",
+    "OAS",
     "OneClassSVM",
     "OneHotEncoder",
     "OneVsOneClassifier",
@@ -92,6 +105,8 @@
     "PolynomialFeatures",
     "precisionScore",
     "r2Score",
+    "RadiusNeighborsClassifier",
+    "RadiusNeighborsRegressor",
     "RandomForestClassifier",
     "RandomForestRegressor",
     "RandomizedSearchCV",
@@ -113,6 +128,7 @@
     "SGDRegressor",
     "silhouetteScore",
     "SimpleImputer",
+    "SparsePCA",
     "SpectralClustering",
     "StackingClassifier",
     "StackingRegressor",
@@ -215,6 +231,13 @@
         ]
       },
       {
+        "name": "DictionaryLearning",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "DummyClassifier",
         "requiredMethods": [
           "getParams",
@@ -223,6 +246,13 @@
       },
       {
         "name": "DummyRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "EmpiricalCovariance",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -323,6 +353,13 @@
         ]
       },
       {
+        "name": "KernelDensity",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "KernelPCA",
         "requiredMethods": [
           "getParams",
@@ -366,6 +403,27 @@
       },
       {
         "name": "LabelEncoder",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "LabelPropagation",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "LabelSpreading",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "LedoitWolf",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -421,7 +479,49 @@
         ]
       },
       {
+        "name": "MinCovDet",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MiniBatchDictionaryLearning",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MiniBatchSparsePCA",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "MinMaxScaler",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MLPClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MLPRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "NearestNeighbors",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -436,6 +536,13 @@
       },
       {
         "name": "Normalizer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "OAS",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -507,6 +614,20 @@
       },
       {
         "name": "PolynomialFeatures",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "RadiusNeighborsClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "RadiusNeighborsRegressor",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -633,6 +754,13 @@
       },
       {
         "name": "SimpleImputer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "SparsePCA",
         "requiredMethods": [
           "getParams",
           "setParams"

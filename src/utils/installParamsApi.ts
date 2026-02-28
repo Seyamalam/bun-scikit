@@ -8,9 +8,13 @@ import { KMeans } from "../cluster/KMeans";
 import { OPTICS } from "../cluster/OPTICS";
 import { SpectralClustering } from "../cluster/SpectralClustering";
 import { FastICA } from "../decomposition/FastICA";
+import { DictionaryLearning } from "../decomposition/DictionaryLearning";
 import { KernelPCA } from "../decomposition/KernelPCA";
+import { MiniBatchDictionaryLearning } from "../decomposition/MiniBatchDictionaryLearning";
+import { MiniBatchSparsePCA } from "../decomposition/MiniBatchSparsePCA";
 import { NMF } from "../decomposition/NMF";
 import { PCA } from "../decomposition/PCA";
+import { SparsePCA } from "../decomposition/SparsePCA";
 import { TruncatedSVD } from "../decomposition/TruncatedSVD";
 import { DummyClassifier } from "../dummy/DummyClassifier";
 import { DummyRegressor } from "../dummy/DummyRegressor";
@@ -48,6 +52,8 @@ import { Isomap } from "../manifold/Isomap";
 import { LocallyLinearEmbedding } from "../manifold/LocallyLinearEmbedding";
 import { MDS } from "../manifold/MDS";
 import { TSNE } from "../manifold/TSNE";
+import { MLPClassifier } from "../neural_network/MLPClassifier";
+import { MLPRegressor } from "../neural_network/MLPRegressor";
 import { GridSearchCV } from "../model_selection/GridSearchCV";
 import { GroupKFold } from "../model_selection/GroupKFold";
 import { GroupShuffleSplit } from "../model_selection/GroupShuffleSplit";
@@ -60,7 +66,11 @@ import { StratifiedKFold } from "../model_selection/StratifiedKFold";
 import { StratifiedShuffleSplit } from "../model_selection/StratifiedShuffleSplit";
 import { GaussianNB } from "../naive_bayes/GaussianNB";
 import { KNeighborsClassifier } from "../neighbors/KNeighborsClassifier";
+import { KernelDensity } from "../neighbors/KernelDensity";
 import { KNeighborsRegressor } from "../neighbors/KNeighborsRegressor";
+import { NearestNeighbors } from "../neighbors/NearestNeighbors";
+import { RadiusNeighborsClassifier } from "../neighbors/RadiusNeighborsClassifier";
+import { RadiusNeighborsRegressor } from "../neighbors/RadiusNeighborsRegressor";
 import { Binarizer } from "../preprocessing/Binarizer";
 import { KNNImputer } from "../preprocessing/KNNImputer";
 import { LabelEncoder } from "../preprocessing/LabelEncoder";
@@ -75,10 +85,16 @@ import { SimpleImputer } from "../preprocessing/SimpleImputer";
 import { StandardScaler } from "../preprocessing/StandardScaler";
 import { LinearSVC } from "../svm/LinearSVC";
 import { OneClassSVM } from "../svm/OneClassSVM";
+import { LabelPropagation } from "../semi_supervised/LabelPropagation";
+import { LabelSpreading } from "../semi_supervised/LabelSpreading";
 import { DecisionTreeClassifier } from "../tree/DecisionTreeClassifier";
 import { DecisionTreeRegressor } from "../tree/DecisionTreeRegressor";
 import { OneVsOneClassifier } from "../multiclass/OneVsOneClassifier";
 import { OneVsRestClassifier } from "../multiclass/OneVsRestClassifier";
+import { EmpiricalCovariance } from "../covariance/EmpiricalCovariance";
+import { LedoitWolf } from "../covariance/LedoitWolf";
+import { MinCovDet } from "../covariance/MinCovDet";
+import { OAS } from "../covariance/OAS";
 
 type Constructor = { prototype: object };
 
@@ -157,6 +173,10 @@ installParamsApi(LinearSVC, {
 installParamsApi(OneClassSVM, { params: ["nu", "kernel", "gamma"] });
 installParamsApi(KNeighborsClassifier, { params: ["nNeighbors"] });
 installParamsApi(KNeighborsRegressor, { params: ["nNeighbors", "weights"] });
+installParamsApi(NearestNeighbors, { params: ["nNeighbors", "radius"] });
+installParamsApi(RadiusNeighborsClassifier, { params: ["radius", "weights", "outlierLabel"] });
+installParamsApi(RadiusNeighborsRegressor, { params: ["radius", "weights"] });
+installParamsApi(KernelDensity, { params: ["bandwidth", "kernel"] });
 installParamsApi(GaussianNB, { params: ["varSmoothing"] });
 installParamsApi(DecisionTreeClassifier, {
   params: ["maxDepth", "minSamplesSplit", "minSamplesLeaf", "maxFeatures", "randomState"],
@@ -275,12 +295,72 @@ installParamsApi(NMF, { params: ["nComponents", "maxIter", "tolerance", "randomS
 installParamsApi(KernelPCA, {
   params: ["nComponents", "kernel", "gamma", "degree", "coef0", "tolerance", "maxIter"],
 });
+installParamsApi(SparsePCA, { params: ["nComponents", "alpha", "maxIter", "tolerance", "randomState"] });
+installParamsApi(MiniBatchSparsePCA, {
+  params: ["nComponents", "alpha", "maxIter", "tolerance", "randomState", "batchSize"],
+});
+installParamsApi(DictionaryLearning, {
+  params: ["nComponents", "alpha", "maxIter", "tolerance", "randomState", "transformAlpha"],
+});
+installParamsApi(MiniBatchDictionaryLearning, {
+  params: [
+    "nComponents",
+    "alpha",
+    "maxIter",
+    "tolerance",
+    "randomState",
+    "transformAlpha",
+    "batchSize",
+  ],
+});
 installParamsApi(TSNE, {
   params: ["nComponents", "perplexity", "learningRate", "maxIter", "randomState"],
 });
 installParamsApi(Isomap, { params: ["nNeighbors", "nComponents"] });
 installParamsApi(LocallyLinearEmbedding, { params: ["nNeighbors", "nComponents", "reg"] });
 installParamsApi(MDS, { params: ["nComponents", "dissimilarity", "randomState", "maxIter"] });
+installParamsApi(EmpiricalCovariance, { params: ["assumeCentered"] });
+installParamsApi(LedoitWolf, { params: [] });
+installParamsApi(OAS, { params: [] });
+installParamsApi(MinCovDet, { params: ["supportFraction", "maxIter"] });
+installParamsApi(LabelPropagation, {
+  params: ["kernel", "gamma", "nNeighbors", "maxIter", "tolerance"],
+});
+installParamsApi(LabelSpreading, {
+  params: ["kernel", "gamma", "nNeighbors", "alpha", "maxIter", "tolerance"],
+});
+installParamsApi(MLPClassifier, {
+  params: [
+    "hiddenLayerSizes",
+    "activation",
+    "solver",
+    "alpha",
+    "batchSize",
+    "learningRateInit",
+    "maxIter",
+    "tolerance",
+    "randomState",
+    "beta1",
+    "beta2",
+    "epsilon",
+  ],
+});
+installParamsApi(MLPRegressor, {
+  params: [
+    "hiddenLayerSizes",
+    "activation",
+    "solver",
+    "alpha",
+    "batchSize",
+    "learningRateInit",
+    "maxIter",
+    "tolerance",
+    "randomState",
+    "beta1",
+    "beta2",
+    "epsilon",
+  ],
+});
 
 installParamsApi(VarianceThreshold, { params: ["threshold"] });
 installParamsApi(SelectKBest, { params: ["scoreFunc", "k"] });

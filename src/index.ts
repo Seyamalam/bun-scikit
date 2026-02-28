@@ -29,6 +29,10 @@ export * from "./linear_model/SGDRegressor";
 // Other estimators
 export * from "./neighbors/KNeighborsClassifier";
 export * from "./neighbors/KNeighborsRegressor";
+export * from "./neighbors/NearestNeighbors";
+export * from "./neighbors/RadiusNeighborsClassifier";
+export * from "./neighbors/RadiusNeighborsRegressor";
+export * from "./neighbors/KernelDensity";
 export * from "./naive_bayes/GaussianNB";
 export * from "./svm/LinearSVC";
 export * from "./svm/SVC";
@@ -68,11 +72,23 @@ export * from "./decomposition/TruncatedSVD";
 export * from "./decomposition/FastICA";
 export * from "./decomposition/NMF";
 export * from "./decomposition/KernelPCA";
+export * from "./decomposition/SparsePCA";
+export * from "./decomposition/MiniBatchSparsePCA";
+export * from "./decomposition/DictionaryLearning";
+export * from "./decomposition/MiniBatchDictionaryLearning";
 export * from "./manifold/TSNE";
 export * from "./manifold/Isomap";
 export * from "./manifold/LocallyLinearEmbedding";
 export * from "./manifold/MDS";
 export * from "./calibration/CalibratedClassifierCV";
+export * from "./covariance/EmpiricalCovariance";
+export * from "./covariance/LedoitWolf";
+export * from "./covariance/OAS";
+export * from "./covariance/MinCovDet";
+export * from "./semi_supervised/LabelPropagation";
+export * from "./semi_supervised/LabelSpreading";
+export * from "./neural_network/MLPClassifier";
+export * from "./neural_network/MLPRegressor";
 
 // Model selection
 export * from "./model_selection/trainTestSplit";
