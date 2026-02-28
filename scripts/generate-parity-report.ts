@@ -22,6 +22,20 @@ interface SklearnReport {
   limits: Record<string, number>;
 }
 
+interface FullParityReport {
+  generatedAt: string;
+  inventoryPath: string;
+  sklearnVersion: string;
+  totalUniqueSymbols: number;
+  runtimeExportCount: number;
+  coveredUniqueSymbols: number;
+  missingUniqueSymbols: number;
+  coveragePercent: number;
+  strictMode: boolean;
+  failed: boolean;
+  missingSymbolsPreview: string[];
+}
+
 interface ParityHistoryEntry {
   timestamp: string;
   version: string;
@@ -58,6 +72,9 @@ const matrixPath = resolve(
 const sklearnPath = resolve(
   process.env.PARITY_SKLEARN_REPORT_PATH ?? `${outputDir}/parity-sklearn-report.json`,
 );
+const fullParityPath = resolve(
+  process.env.PARITY_FULL_REPORT_PATH ?? `${outputDir}/parity-full-report.json`,
+);
 const historyPath = resolve(process.env.PARITY_HISTORY_PATH ?? "bench/results/history/parity-history.jsonl");
 
 mkdirSync(outputDir, { recursive: true });
@@ -65,6 +82,7 @@ mkdirSync(resolve("bench/results/history"), { recursive: true });
 
 const matrix = loadJson<MatrixReport>(matrixPath);
 const sklearn = loadJson<SklearnReport>(sklearnPath);
+const fullParity = existsSync(fullParityPath) ? loadJson<FullParityReport>(fullParityPath) : null;
 const pkg = JSON.parse(readFileSync(resolve("package.json"), "utf-8")) as { version: string };
 const version = pkg.version;
 const sha = shortSha();
@@ -118,6 +136,7 @@ const parityReport = {
   sha,
   matrix,
   sklearn,
+  fullParity,
   driftHistory,
 };
 
@@ -148,6 +167,7 @@ const markdown = [
   `- Commit: ${sha}`,
   `- Matrix gate: ${matrix.failed ? "FAIL" : "PASS"}`,
   `- sklearn gate: ${sklearn.failed ? "FAIL" : "PASS"}`,
+  `- Full scope gate: ${fullParity ? (fullParity.failed ? "FAIL" : "PASS") : "N/A"}`,
   "",
   "## Matrix Coverage",
   "",
@@ -158,6 +178,24 @@ const markdown = [
   `- Missing in matrix: ${matrix.missingInMatrix.length}`,
   `- Class contract failures: ${matrix.classContractFailures.length}`,
   `- Interface contract failures: ${matrix.interfaceContractFailures.length}`,
+  "",
+  "## Full sklearn Symbol Coverage",
+  "",
+  ...(fullParity
+    ? [
+        `- Inventory sklearn version: ${fullParity.sklearnVersion}`,
+        `- Covered symbols: ${fullParity.coveredUniqueSymbols} / ${fullParity.totalUniqueSymbols} (${fullParity.coveragePercent}%)`,
+        `- Missing symbols: ${fullParity.missingUniqueSymbols}`,
+        `- Strict mode: ${fullParity.strictMode ? "on" : "off"}`,
+        ...(fullParity.missingSymbolsPreview.length > 0
+          ? [
+              "",
+              "Missing preview:",
+              ...fullParity.missingSymbolsPreview.slice(0, 20).map((name) => `- ${name}`),
+            ]
+          : []),
+      ]
+    : ["- Full inventory report not available in this run."]),
   "",
   "## sklearn Metrics",
   "",

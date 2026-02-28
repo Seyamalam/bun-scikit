@@ -16,6 +16,10 @@ import { NMF } from "../decomposition/NMF";
 import { PCA } from "../decomposition/PCA";
 import { SparsePCA } from "../decomposition/SparsePCA";
 import { TruncatedSVD } from "../decomposition/TruncatedSVD";
+import { CCA } from "../cross_decomposition/CCA";
+import { PLSCanonical } from "../cross_decomposition/PLSCanonical";
+import { PLSRegression } from "../cross_decomposition/PLSRegression";
+import { PLSSVD } from "../cross_decomposition/PLSSVD";
 import { DummyClassifier } from "../dummy/DummyClassifier";
 import { DummyRegressor } from "../dummy/DummyRegressor";
 import { AdaBoostClassifier } from "../ensemble/AdaBoostClassifier";
@@ -346,6 +350,18 @@ installParamsApi(MiniBatchDictionaryLearning, {
     "transformAlpha",
     "batchSize",
   ],
+});
+installParamsApi(PLSSVD, {
+  params: ["nComponents", "scale", "maxIter", "tolerance"],
+});
+installParamsApi(PLSRegression, {
+  params: ["nComponents", "scale", "maxIter", "tolerance"],
+});
+installParamsApi(PLSCanonical, {
+  params: ["nComponents", "scale", "maxIter", "tolerance"],
+});
+installParamsApi(CCA, {
+  params: ["nComponents", "scale", "maxIter", "tolerance", "copy"],
 });
 installParamsApi(TSNE, {
   params: ["nComponents", "perplexity", "learningRate", "maxIter", "randomState"],

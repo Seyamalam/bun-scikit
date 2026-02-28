@@ -1,0 +1,3275 @@
+{
+  "metadata": {
+    "generatedAt": "2026-02-28T07:09:07.466906+00:00",
+    "sklearnVersion": "1.5.2",
+    "includePrivate": false,
+    "moduleCount": 37,
+    "skippedModuleCount": 0,
+    "symbolCountQualified": 454,
+    "symbolCountUniqueShortName": 454,
+    "duplicateShortNameCount": 0
+  },
+  "moduleNames": [
+    "calibration",
+    "cluster",
+    "compose",
+    "covariance",
+    "cross_decomposition",
+    "datasets",
+    "decomposition",
+    "discriminant_analysis",
+    "dummy",
+    "ensemble",
+    "exceptions",
+    "experimental",
+    "externals",
+    "feature_extraction",
+    "feature_selection",
+    "gaussian_process",
+    "impute",
+    "inspection",
+    "isotonic",
+    "kernel_approximation",
+    "kernel_ridge",
+    "linear_model",
+    "manifold",
+    "metrics",
+    "mixture",
+    "model_selection",
+    "multiclass",
+    "multioutput",
+    "naive_bayes",
+    "neighbors",
+    "neural_network",
+    "pipeline",
+    "preprocessing",
+    "random_projection",
+    "semi_supervised",
+    "svm",
+    "tree"
+  ],
+  "skippedModules": {},
+  "moduleCounts": {
+    "sklearn": 5,
+    "sklearn.cluster": 27,
+    "sklearn.compose": 4,
+    "sklearn.covariance": 16,
+    "sklearn.cross_decomposition": 4,
+    "sklearn.datasets": 45,
+    "sklearn.decomposition": 20,
+    "sklearn.discriminant_analysis": 2,
+    "sklearn.ensemble": 19,
+    "sklearn.exceptions": 10,
+    "sklearn.feature_extraction": 6,
+    "sklearn.feature_selection": 19,
+    "sklearn.gaussian_process": 3,
+    "sklearn.impute": 3,
+    "sklearn.inspection": 4,
+    "sklearn.isotonic": 3,
+    "sklearn.linear_model": 49,
+    "sklearn.manifold": 9,
+    "sklearn.metrics": 83,
+    "sklearn.mixture": 2,
+    "sklearn.model_selection": 33,
+    "sklearn.multiclass": 3,
+    "sklearn.multioutput": 4,
+    "sklearn.naive_bayes": 5,
+    "sklearn.neighbors": 18,
+    "sklearn.neural_network": 3,
+    "sklearn.pipeline": 4,
+    "sklearn.preprocessing": 29,
+    "sklearn.random_projection": 3,
+    "sklearn.semi_supervised": 3,
+    "sklearn.svm": 8,
+    "sklearn.tree": 8
+  },
+  "kindCounts": {
+    "class": 242,
+    "function": 206,
+    "module": 4,
+    "other": 2
+  },
+  "uniqueShortNames": [
+    "ARDRegression",
+    "AdaBoostClassifier",
+    "AdaBoostRegressor",
+    "AffinityPropagation",
+    "AgglomerativeClustering",
+    "BaggingClassifier",
+    "BaggingRegressor",
+    "BallTree",
+    "BaseCrossValidator",
+    "BaseDecisionTree",
+    "BaseEnsemble",
+    "BaseShuffleSplit",
+    "BayesianGaussianMixture",
+    "BayesianRidge",
+    "BernoulliNB",
+    "BernoulliRBM",
+    "Binarizer",
+    "Birch",
+    "BisectingKMeans",
+    "CCA",
+    "CategoricalNB",
+    "ClassifierChain",
+    "ColumnTransformer",
+    "ComplementNB",
+    "ConfusionMatrixDisplay",
+    "ConvergenceWarning",
+    "DBSCAN",
+    "DataConversionWarning",
+    "DataDimensionalityWarning",
+    "DecisionBoundaryDisplay",
+    "DecisionTreeClassifier",
+    "DecisionTreeRegressor",
+    "DetCurveDisplay",
+    "DictVectorizer",
+    "DictionaryLearning",
+    "DistanceMetric",
+    "EfficiencyWarning",
+    "ElasticNet",
+    "ElasticNetCV",
+    "EllipticEnvelope",
+    "EmpiricalCovariance",
+    "ExtraTreeClassifier",
+    "ExtraTreeRegressor",
+    "ExtraTreesClassifier",
+    "ExtraTreesRegressor",
+    "FactorAnalysis",
+    "FastICA",
+    "FeatureAgglomeration",
+    "FeatureHasher",
+    "FeatureUnion",
+    "FitFailedWarning",
+    "FixedThresholdClassifier",
+    "FunctionTransformer",
+    "GammaRegressor",
+    "GaussianMixture",
+    "GaussianNB",
+    "GaussianProcessClassifier",
+    "GaussianProcessRegressor",
+    "GaussianRandomProjection",
+    "GenericUnivariateSelect",
+    "GradientBoostingClassifier",
+    "GradientBoostingRegressor",
+    "GraphicalLasso",
+    "GraphicalLassoCV",
+    "GridSearchCV",
+    "GroupKFold",
+    "GroupShuffleSplit",
+    "HDBSCAN",
+    "Hinge",
+    "HistGradientBoostingClassifier",
+    "HistGradientBoostingRegressor",
+    "Huber",
+    "HuberRegressor",
+    "IncrementalPCA",
+    "IsolationForest",
+    "Isomap",
+    "IsotonicRegression",
+    "KBinsDiscretizer",
+    "KDTree",
+    "KFold",
+    "KMeans",
+    "KNNImputer",
+    "KNeighborsClassifier",
+    "KNeighborsRegressor",
+    "KNeighborsTransformer",
+    "KernelCenterer",
+    "KernelDensity",
+    "KernelPCA",
+    "LabelBinarizer",
+    "LabelEncoder",
+    "LabelPropagation",
+    "LabelSpreading",
+    "Lars",
+    "LarsCV",
+    "Lasso",
+    "LassoCV",
+    "LassoLars",
+    "LassoLarsCV",
+    "LassoLarsIC",
+    "LatentDirichletAllocation",
+    "LearningCurveDisplay",
+    "LeaveOneGroupOut",
+    "LeaveOneOut",
+    "LeavePGroupsOut",
+    "LeavePOut",
+    "LedoitWolf",
+    "LinearDiscriminantAnalysis",
+    "LinearRegression",
+    "LinearSVC",
+    "LinearSVR",
+    "LocalOutlierFactor",
+    "LocallyLinearEmbedding",
+    "Log",
+    "LogisticRegression",
+    "LogisticRegressionCV",
+    "MDS",
+    "MLPClassifier",
+    "MLPRegressor",
+    "MaxAbsScaler",
+    "MeanShift",
+    "MinCovDet",
+    "MinMaxScaler",
+    "MiniBatchDictionaryLearning",
+    "MiniBatchKMeans",
+    "MiniBatchNMF",
+    "MiniBatchSparsePCA",
+    "MissingIndicator",
+    "ModifiedHuber",
+    "MultiLabelBinarizer",
+    "MultiOutputClassifier",
+    "MultiOutputRegressor",
+    "MultiTaskElasticNet",
+    "MultiTaskElasticNetCV",
+    "MultiTaskLasso",
+    "MultiTaskLassoCV",
+    "MultinomialNB",
+    "NMF",
+    "NearestCentroid",
+    "NearestNeighbors",
+    "NeighborhoodComponentsAnalysis",
+    "Normalizer",
+    "NotFittedError",
+    "NuSVC",
+    "NuSVR",
+    "OAS",
+    "OPTICS",
+    "OneClassSVM",
+    "OneHotEncoder",
+    "OneVsOneClassifier",
+    "OneVsRestClassifier",
+    "OrdinalEncoder",
+    "OrthogonalMatchingPursuit",
+    "OrthogonalMatchingPursuitCV",
+    "OutputCodeClassifier",
+    "PCA",
+    "PLSCanonical",
+    "PLSRegression",
+    "PLSSVD",
+    "ParameterGrid",
+    "ParameterSampler",
+    "PartialDependenceDisplay",
+    "PassiveAggressiveClassifier",
+    "PassiveAggressiveRegressor",
+    "Perceptron",
+    "Pipeline",
+    "PoissonRegressor",
+    "PolynomialFeatures",
+    "PositiveSpectrumWarning",
+    "PowerTransformer",
+    "PrecisionRecallDisplay",
+    "PredefinedSplit",
+    "PredictionErrorDisplay",
+    "QuadraticDiscriminantAnalysis",
+    "QuantileRegressor",
+    "QuantileTransformer",
+    "RANSACRegressor",
+    "RFE",
+    "RFECV",
+    "RadiusNeighborsClassifier",
+    "RadiusNeighborsRegressor",
+    "RadiusNeighborsTransformer",
+    "RandomForestClassifier",
+    "RandomForestRegressor",
+    "RandomTreesEmbedding",
+    "RandomizedSearchCV",
+    "RegressorChain",
+    "RepeatedKFold",
+    "RepeatedStratifiedKFold",
+    "Ridge",
+    "RidgeCV",
+    "RidgeClassifier",
+    "RidgeClassifierCV",
+    "RobustScaler",
+    "RocCurveDisplay",
+    "SGDClassifier",
+    "SGDOneClassSVM",
+    "SGDRegressor",
+    "SVC",
+    "SVR",
+    "SelectFdr",
+    "SelectFpr",
+    "SelectFromModel",
+    "SelectFwe",
+    "SelectKBest",
+    "SelectPercentile",
+    "SelectorMixin",
+    "SelfTrainingClassifier",
+    "SequentialFeatureSelector",
+    "ShrunkCovariance",
+    "ShuffleSplit",
+    "SimpleImputer",
+    "SkipTestWarning",
+    "SparseCoder",
+    "SparsePCA",
+    "SparseRandomProjection",
+    "SpectralBiclustering",
+    "SpectralClustering",
+    "SpectralCoclustering",
+    "SpectralEmbedding",
+    "SplineTransformer",
+    "SquaredLoss",
+    "StackingClassifier",
+    "StackingRegressor",
+    "StandardScaler",
+    "StratifiedGroupKFold",
+    "StratifiedKFold",
+    "StratifiedShuffleSplit",
+    "TSNE",
+    "TargetEncoder",
+    "TheilSenRegressor",
+    "TimeSeriesSplit",
+    "TransformedTargetRegressor",
+    "TruncatedSVD",
+    "TunedThresholdClassifierCV",
+    "TweedieRegressor",
+    "UndefinedMetricWarning",
+    "UnsetMetadataPassedError",
+    "VALID_METRICS",
+    "VALID_METRICS_SPARSE",
+    "ValidationCurveDisplay",
+    "VarianceThreshold",
+    "VotingClassifier",
+    "VotingRegressor",
+    "accuracy_score",
+    "add_dummy_feature",
+    "adjusted_mutual_info_score",
+    "adjusted_rand_score",
+    "affinity_propagation",
+    "auc",
+    "average_precision_score",
+    "balanced_accuracy_score",
+    "binarize",
+    "brier_score_loss",
+    "calinski_harabasz_score",
+    "check_cv",
+    "check_increasing",
+    "check_scoring",
+    "chi2",
+    "class_likelihood_ratios",
+    "classification_report",
+    "clear_data_home",
+    "clone",
+    "cluster",
+    "cluster_optics_dbscan",
+    "cluster_optics_xi",
+    "cohen_kappa_score",
+    "completeness_score",
+    "compute_optics_graph",
+    "config_context",
+    "confusion_matrix",
+    "consensus_score",
+    "coverage_error",
+    "cross_val_predict",
+    "cross_val_score",
+    "cross_validate",
+    "d2_absolute_error_score",
+    "d2_log_loss_score",
+    "d2_pinball_score",
+    "d2_tweedie_score",
+    "davies_bouldin_score",
+    "dbscan",
+    "dcg_score",
+    "det_curve",
+    "dict_learning",
+    "dict_learning_online",
+    "dump_svmlight_file",
+    "empirical_covariance",
+    "enet_path",
+    "estimate_bandwidth",
+    "euclidean_distances",
+    "explained_variance_score",
+    "export_graphviz",
+    "export_text",
+    "f1_score",
+    "f_classif",
+    "f_oneway",
+    "f_regression",
+    "fast_mcd",
+    "fastica",
+    "fbeta_score",
+    "fetch_20newsgroups",
+    "fetch_20newsgroups_vectorized",
+    "fetch_california_housing",
+    "fetch_covtype",
+    "fetch_kddcup99",
+    "fetch_lfw_pairs",
+    "fetch_lfw_people",
+    "fetch_olivetti_faces",
+    "fetch_openml",
+    "fetch_rcv1",
+    "fetch_species_distributions",
+    "fowlkes_mallows_score",
+    "get_bin_seeds",
+    "get_config",
+    "get_data_home",
+    "get_scorer",
+    "get_scorer_names",
+    "graphical_lasso",
+    "grid_to_graph",
+    "hamming_loss",
+    "hinge_loss",
+    "homogeneity_completeness_v_measure",
+    "homogeneity_score",
+    "image",
+    "img_to_graph",
+    "isotonic_regression",
+    "jaccard_score",
+    "johnson_lindenstrauss_min_dim",
+    "k_means",
+    "kernels",
+    "kmeans_plusplus",
+    "kneighbors_graph",
+    "l1_min_c",
+    "label_binarize",
+    "label_ranking_average_precision_score",
+    "label_ranking_loss",
+    "lars_path",
+    "lars_path_gram",
+    "lasso_path",
+    "learning_curve",
+    "ledoit_wolf",
+    "ledoit_wolf_shrinkage",
+    "linkage_tree",
+    "load_breast_cancer",
+    "load_diabetes",
+    "load_digits",
+    "load_files",
+    "load_iris",
+    "load_linnerud",
+    "load_sample_image",
+    "load_sample_images",
+    "load_svmlight_file",
+    "load_svmlight_files",
+    "load_wine",
+    "locally_linear_embedding",
+    "log_likelihood",
+    "log_loss",
+    "make_biclusters",
+    "make_blobs",
+    "make_checkerboard",
+    "make_circles",
+    "make_classification",
+    "make_column_selector",
+    "make_column_transformer",
+    "make_friedman1",
+    "make_friedman2",
+    "make_friedman3",
+    "make_gaussian_quantiles",
+    "make_hastie_10_2",
+    "make_low_rank_matrix",
+    "make_moons",
+    "make_multilabel_classification",
+    "make_pipeline",
+    "make_regression",
+    "make_s_curve",
+    "make_scorer",
+    "make_sparse_coded_signal",
+    "make_sparse_spd_matrix",
+    "make_sparse_uncorrelated",
+    "make_spd_matrix",
+    "make_swiss_roll",
+    "make_union",
+    "matthews_corrcoef",
+    "max_error",
+    "maxabs_scale",
+    "mean_absolute_error",
+    "mean_absolute_percentage_error",
+    "mean_gamma_deviance",
+    "mean_pinball_loss",
+    "mean_poisson_deviance",
+    "mean_shift",
+    "mean_squared_error",
+    "mean_squared_log_error",
+    "mean_tweedie_deviance",
+    "median_absolute_error",
+    "minmax_scale",
+    "multilabel_confusion_matrix",
+    "mutual_info_classif",
+    "mutual_info_regression",
+    "mutual_info_score",
+    "nan_euclidean_distances",
+    "ndcg_score",
+    "non_negative_factorization",
+    "normalize",
+    "normalized_mutual_info_score",
+    "oas",
+    "orthogonal_mp",
+    "orthogonal_mp_gram",
+    "pair_confusion_matrix",
+    "pairwise_distances",
+    "pairwise_distances_argmin",
+    "pairwise_distances_argmin_min",
+    "pairwise_distances_chunked",
+    "pairwise_kernels",
+    "partial_dependence",
+    "permutation_importance",
+    "permutation_test_score",
+    "plot_tree",
+    "power_transform",
+    "precision_recall_curve",
+    "precision_recall_fscore_support",
+    "precision_score",
+    "quantile_transform",
+    "r2_score",
+    "r_regression",
+    "radius_neighbors_graph",
+    "rand_score",
+    "randomized_svd",
+    "recall_score",
+    "ridge_regression",
+    "robust_scale",
+    "roc_auc_score",
+    "roc_curve",
+    "root_mean_squared_error",
+    "root_mean_squared_log_error",
+    "scale",
+    "set_config",
+    "show_versions",
+    "shrunk_covariance",
+    "silhouette_samples",
+    "silhouette_score",
+    "smacof",
+    "sort_graph_by_row_values",
+    "sparse_encode",
+    "spectral_clustering",
+    "spectral_embedding",
+    "text",
+    "top_k_accuracy_score",
+    "train_test_split",
+    "trustworthiness",
+    "v_measure_score",
+    "validation_curve",
+    "ward_tree",
+    "zero_one_loss"
+  ],
+  "duplicateShortNames": {},
+  "symbols": [
+    {
+      "name": "clone",
+      "qualifiedName": "sklearn.clone",
+      "module": "sklearn",
+      "kind": "function"
+    },
+    {
+      "name": "config_context",
+      "qualifiedName": "sklearn.config_context",
+      "module": "sklearn",
+      "kind": "function"
+    },
+    {
+      "name": "get_config",
+      "qualifiedName": "sklearn.get_config",
+      "module": "sklearn",
+      "kind": "function"
+    },
+    {
+      "name": "set_config",
+      "qualifiedName": "sklearn.set_config",
+      "module": "sklearn",
+      "kind": "function"
+    },
+    {
+      "name": "show_versions",
+      "qualifiedName": "sklearn.show_versions",
+      "module": "sklearn",
+      "kind": "function"
+    },
+    {
+      "name": "AffinityPropagation",
+      "qualifiedName": "sklearn.cluster.AffinityPropagation",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "AgglomerativeClustering",
+      "qualifiedName": "sklearn.cluster.AgglomerativeClustering",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "Birch",
+      "qualifiedName": "sklearn.cluster.Birch",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "BisectingKMeans",
+      "qualifiedName": "sklearn.cluster.BisectingKMeans",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "DBSCAN",
+      "qualifiedName": "sklearn.cluster.DBSCAN",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "FeatureAgglomeration",
+      "qualifiedName": "sklearn.cluster.FeatureAgglomeration",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "HDBSCAN",
+      "qualifiedName": "sklearn.cluster.HDBSCAN",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "KMeans",
+      "qualifiedName": "sklearn.cluster.KMeans",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "MeanShift",
+      "qualifiedName": "sklearn.cluster.MeanShift",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "MiniBatchKMeans",
+      "qualifiedName": "sklearn.cluster.MiniBatchKMeans",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "OPTICS",
+      "qualifiedName": "sklearn.cluster.OPTICS",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "SpectralBiclustering",
+      "qualifiedName": "sklearn.cluster.SpectralBiclustering",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "SpectralClustering",
+      "qualifiedName": "sklearn.cluster.SpectralClustering",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "SpectralCoclustering",
+      "qualifiedName": "sklearn.cluster.SpectralCoclustering",
+      "module": "sklearn.cluster",
+      "kind": "class"
+    },
+    {
+      "name": "affinity_propagation",
+      "qualifiedName": "sklearn.cluster.affinity_propagation",
+      "module": "sklearn.cluster",
+      "kind": "function"
+    },
+    {
+      "name": "cluster_optics_dbscan",
+      "qualifiedName": "sklearn.cluster.cluster_optics_dbscan",
+      "module": "sklearn.cluster",
+      "kind": "function"
+    },
+    {
+      "name": "cluster_optics_xi",
+      "qualifiedName": "sklearn.cluster.cluster_optics_xi",
+      "module": "sklearn.cluster",
+      "kind": "function"
+    },
+    {
+      "name": "compute_optics_graph",
+      "qualifiedName": "sklearn.cluster.compute_optics_graph",
+      "module": "sklearn.cluster",
+      "kind": "function"
+    },
+    {
+      "name": "dbscan",
+      "qualifiedName": "sklearn.cluster.dbscan",
+      "module": "sklearn.cluster",
+      "kind": "function"
+    },
+    {
+      "name": "estimate_bandwidth",
+      "qualifiedName": "sklearn.cluster.estimate_bandwidth",
+      "module": "sklearn.cluster",
+      "kind": "function"
+    },
+    {
+      "name": "get_bin_seeds",
+      "qualifiedName": "sklearn.cluster.get_bin_seeds",
+      "module": "sklearn.cluster",
+      "kind": "function"
+    },
+    {
+      "name": "k_means",
+      "qualifiedName": "sklearn.cluster.k_means",
+      "module": "sklearn.cluster",
+      "kind": "function"
+    },
+    {
+      "name": "kmeans_plusplus",
+      "qualifiedName": "sklearn.cluster.kmeans_plusplus",
+      "module": "sklearn.cluster",
+      "kind": "function"
+    },
+    {
+      "name": "linkage_tree",
+      "qualifiedName": "sklearn.cluster.linkage_tree",
+      "module": "sklearn.cluster",
+      "kind": "function"
+    },
+    {
+      "name": "mean_shift",
+      "qualifiedName": "sklearn.cluster.mean_shift",
+      "module": "sklearn.cluster",
+      "kind": "function"
+    },
+    {
+      "name": "spectral_clustering",
+      "qualifiedName": "sklearn.cluster.spectral_clustering",
+      "module": "sklearn.cluster",
+      "kind": "function"
+    },
+    {
+      "name": "ward_tree",
+      "qualifiedName": "sklearn.cluster.ward_tree",
+      "module": "sklearn.cluster",
+      "kind": "function"
+    },
+    {
+      "name": "ColumnTransformer",
+      "qualifiedName": "sklearn.compose.ColumnTransformer",
+      "module": "sklearn.compose",
+      "kind": "class"
+    },
+    {
+      "name": "TransformedTargetRegressor",
+      "qualifiedName": "sklearn.compose.TransformedTargetRegressor",
+      "module": "sklearn.compose",
+      "kind": "class"
+    },
+    {
+      "name": "make_column_selector",
+      "qualifiedName": "sklearn.compose.make_column_selector",
+      "module": "sklearn.compose",
+      "kind": "class"
+    },
+    {
+      "name": "make_column_transformer",
+      "qualifiedName": "sklearn.compose.make_column_transformer",
+      "module": "sklearn.compose",
+      "kind": "function"
+    },
+    {
+      "name": "EllipticEnvelope",
+      "qualifiedName": "sklearn.covariance.EllipticEnvelope",
+      "module": "sklearn.covariance",
+      "kind": "class"
+    },
+    {
+      "name": "EmpiricalCovariance",
+      "qualifiedName": "sklearn.covariance.EmpiricalCovariance",
+      "module": "sklearn.covariance",
+      "kind": "class"
+    },
+    {
+      "name": "GraphicalLasso",
+      "qualifiedName": "sklearn.covariance.GraphicalLasso",
+      "module": "sklearn.covariance",
+      "kind": "class"
+    },
+    {
+      "name": "GraphicalLassoCV",
+      "qualifiedName": "sklearn.covariance.GraphicalLassoCV",
+      "module": "sklearn.covariance",
+      "kind": "class"
+    },
+    {
+      "name": "LedoitWolf",
+      "qualifiedName": "sklearn.covariance.LedoitWolf",
+      "module": "sklearn.covariance",
+      "kind": "class"
+    },
+    {
+      "name": "MinCovDet",
+      "qualifiedName": "sklearn.covariance.MinCovDet",
+      "module": "sklearn.covariance",
+      "kind": "class"
+    },
+    {
+      "name": "OAS",
+      "qualifiedName": "sklearn.covariance.OAS",
+      "module": "sklearn.covariance",
+      "kind": "class"
+    },
+    {
+      "name": "ShrunkCovariance",
+      "qualifiedName": "sklearn.covariance.ShrunkCovariance",
+      "module": "sklearn.covariance",
+      "kind": "class"
+    },
+    {
+      "name": "empirical_covariance",
+      "qualifiedName": "sklearn.covariance.empirical_covariance",
+      "module": "sklearn.covariance",
+      "kind": "function"
+    },
+    {
+      "name": "fast_mcd",
+      "qualifiedName": "sklearn.covariance.fast_mcd",
+      "module": "sklearn.covariance",
+      "kind": "function"
+    },
+    {
+      "name": "graphical_lasso",
+      "qualifiedName": "sklearn.covariance.graphical_lasso",
+      "module": "sklearn.covariance",
+      "kind": "function"
+    },
+    {
+      "name": "ledoit_wolf",
+      "qualifiedName": "sklearn.covariance.ledoit_wolf",
+      "module": "sklearn.covariance",
+      "kind": "function"
+    },
+    {
+      "name": "ledoit_wolf_shrinkage",
+      "qualifiedName": "sklearn.covariance.ledoit_wolf_shrinkage",
+      "module": "sklearn.covariance",
+      "kind": "function"
+    },
+    {
+      "name": "log_likelihood",
+      "qualifiedName": "sklearn.covariance.log_likelihood",
+      "module": "sklearn.covariance",
+      "kind": "function"
+    },
+    {
+      "name": "oas",
+      "qualifiedName": "sklearn.covariance.oas",
+      "module": "sklearn.covariance",
+      "kind": "function"
+    },
+    {
+      "name": "shrunk_covariance",
+      "qualifiedName": "sklearn.covariance.shrunk_covariance",
+      "module": "sklearn.covariance",
+      "kind": "function"
+    },
+    {
+      "name": "CCA",
+      "qualifiedName": "sklearn.cross_decomposition.CCA",
+      "module": "sklearn.cross_decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "PLSCanonical",
+      "qualifiedName": "sklearn.cross_decomposition.PLSCanonical",
+      "module": "sklearn.cross_decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "PLSRegression",
+      "qualifiedName": "sklearn.cross_decomposition.PLSRegression",
+      "module": "sklearn.cross_decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "PLSSVD",
+      "qualifiedName": "sklearn.cross_decomposition.PLSSVD",
+      "module": "sklearn.cross_decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "clear_data_home",
+      "qualifiedName": "sklearn.datasets.clear_data_home",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "dump_svmlight_file",
+      "qualifiedName": "sklearn.datasets.dump_svmlight_file",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "fetch_20newsgroups",
+      "qualifiedName": "sklearn.datasets.fetch_20newsgroups",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "fetch_20newsgroups_vectorized",
+      "qualifiedName": "sklearn.datasets.fetch_20newsgroups_vectorized",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "fetch_california_housing",
+      "qualifiedName": "sklearn.datasets.fetch_california_housing",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "fetch_covtype",
+      "qualifiedName": "sklearn.datasets.fetch_covtype",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "fetch_kddcup99",
+      "qualifiedName": "sklearn.datasets.fetch_kddcup99",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "fetch_lfw_pairs",
+      "qualifiedName": "sklearn.datasets.fetch_lfw_pairs",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "fetch_lfw_people",
+      "qualifiedName": "sklearn.datasets.fetch_lfw_people",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "fetch_olivetti_faces",
+      "qualifiedName": "sklearn.datasets.fetch_olivetti_faces",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "fetch_openml",
+      "qualifiedName": "sklearn.datasets.fetch_openml",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "fetch_rcv1",
+      "qualifiedName": "sklearn.datasets.fetch_rcv1",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "fetch_species_distributions",
+      "qualifiedName": "sklearn.datasets.fetch_species_distributions",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "get_data_home",
+      "qualifiedName": "sklearn.datasets.get_data_home",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "load_breast_cancer",
+      "qualifiedName": "sklearn.datasets.load_breast_cancer",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "load_diabetes",
+      "qualifiedName": "sklearn.datasets.load_diabetes",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "load_digits",
+      "qualifiedName": "sklearn.datasets.load_digits",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "load_files",
+      "qualifiedName": "sklearn.datasets.load_files",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "load_iris",
+      "qualifiedName": "sklearn.datasets.load_iris",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "load_linnerud",
+      "qualifiedName": "sklearn.datasets.load_linnerud",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "load_sample_image",
+      "qualifiedName": "sklearn.datasets.load_sample_image",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "load_sample_images",
+      "qualifiedName": "sklearn.datasets.load_sample_images",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "load_svmlight_file",
+      "qualifiedName": "sklearn.datasets.load_svmlight_file",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "load_svmlight_files",
+      "qualifiedName": "sklearn.datasets.load_svmlight_files",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "load_wine",
+      "qualifiedName": "sklearn.datasets.load_wine",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_biclusters",
+      "qualifiedName": "sklearn.datasets.make_biclusters",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_blobs",
+      "qualifiedName": "sklearn.datasets.make_blobs",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_checkerboard",
+      "qualifiedName": "sklearn.datasets.make_checkerboard",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_circles",
+      "qualifiedName": "sklearn.datasets.make_circles",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_classification",
+      "qualifiedName": "sklearn.datasets.make_classification",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_friedman1",
+      "qualifiedName": "sklearn.datasets.make_friedman1",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_friedman2",
+      "qualifiedName": "sklearn.datasets.make_friedman2",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_friedman3",
+      "qualifiedName": "sklearn.datasets.make_friedman3",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_gaussian_quantiles",
+      "qualifiedName": "sklearn.datasets.make_gaussian_quantiles",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_hastie_10_2",
+      "qualifiedName": "sklearn.datasets.make_hastie_10_2",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_low_rank_matrix",
+      "qualifiedName": "sklearn.datasets.make_low_rank_matrix",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_moons",
+      "qualifiedName": "sklearn.datasets.make_moons",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_multilabel_classification",
+      "qualifiedName": "sklearn.datasets.make_multilabel_classification",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_regression",
+      "qualifiedName": "sklearn.datasets.make_regression",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_s_curve",
+      "qualifiedName": "sklearn.datasets.make_s_curve",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_sparse_coded_signal",
+      "qualifiedName": "sklearn.datasets.make_sparse_coded_signal",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_sparse_spd_matrix",
+      "qualifiedName": "sklearn.datasets.make_sparse_spd_matrix",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_sparse_uncorrelated",
+      "qualifiedName": "sklearn.datasets.make_sparse_uncorrelated",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_spd_matrix",
+      "qualifiedName": "sklearn.datasets.make_spd_matrix",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "make_swiss_roll",
+      "qualifiedName": "sklearn.datasets.make_swiss_roll",
+      "module": "sklearn.datasets",
+      "kind": "function"
+    },
+    {
+      "name": "DictionaryLearning",
+      "qualifiedName": "sklearn.decomposition.DictionaryLearning",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "FactorAnalysis",
+      "qualifiedName": "sklearn.decomposition.FactorAnalysis",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "FastICA",
+      "qualifiedName": "sklearn.decomposition.FastICA",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "IncrementalPCA",
+      "qualifiedName": "sklearn.decomposition.IncrementalPCA",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "KernelPCA",
+      "qualifiedName": "sklearn.decomposition.KernelPCA",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "LatentDirichletAllocation",
+      "qualifiedName": "sklearn.decomposition.LatentDirichletAllocation",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "MiniBatchDictionaryLearning",
+      "qualifiedName": "sklearn.decomposition.MiniBatchDictionaryLearning",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "MiniBatchNMF",
+      "qualifiedName": "sklearn.decomposition.MiniBatchNMF",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "MiniBatchSparsePCA",
+      "qualifiedName": "sklearn.decomposition.MiniBatchSparsePCA",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "NMF",
+      "qualifiedName": "sklearn.decomposition.NMF",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "PCA",
+      "qualifiedName": "sklearn.decomposition.PCA",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "SparseCoder",
+      "qualifiedName": "sklearn.decomposition.SparseCoder",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "SparsePCA",
+      "qualifiedName": "sklearn.decomposition.SparsePCA",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "TruncatedSVD",
+      "qualifiedName": "sklearn.decomposition.TruncatedSVD",
+      "module": "sklearn.decomposition",
+      "kind": "class"
+    },
+    {
+      "name": "dict_learning",
+      "qualifiedName": "sklearn.decomposition.dict_learning",
+      "module": "sklearn.decomposition",
+      "kind": "function"
+    },
+    {
+      "name": "dict_learning_online",
+      "qualifiedName": "sklearn.decomposition.dict_learning_online",
+      "module": "sklearn.decomposition",
+      "kind": "function"
+    },
+    {
+      "name": "fastica",
+      "qualifiedName": "sklearn.decomposition.fastica",
+      "module": "sklearn.decomposition",
+      "kind": "function"
+    },
+    {
+      "name": "non_negative_factorization",
+      "qualifiedName": "sklearn.decomposition.non_negative_factorization",
+      "module": "sklearn.decomposition",
+      "kind": "function"
+    },
+    {
+      "name": "randomized_svd",
+      "qualifiedName": "sklearn.decomposition.randomized_svd",
+      "module": "sklearn.decomposition",
+      "kind": "function"
+    },
+    {
+      "name": "sparse_encode",
+      "qualifiedName": "sklearn.decomposition.sparse_encode",
+      "module": "sklearn.decomposition",
+      "kind": "function"
+    },
+    {
+      "name": "LinearDiscriminantAnalysis",
+      "qualifiedName": "sklearn.discriminant_analysis.LinearDiscriminantAnalysis",
+      "module": "sklearn.discriminant_analysis",
+      "kind": "class"
+    },
+    {
+      "name": "QuadraticDiscriminantAnalysis",
+      "qualifiedName": "sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis",
+      "module": "sklearn.discriminant_analysis",
+      "kind": "class"
+    },
+    {
+      "name": "AdaBoostClassifier",
+      "qualifiedName": "sklearn.ensemble.AdaBoostClassifier",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "AdaBoostRegressor",
+      "qualifiedName": "sklearn.ensemble.AdaBoostRegressor",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "BaggingClassifier",
+      "qualifiedName": "sklearn.ensemble.BaggingClassifier",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "BaggingRegressor",
+      "qualifiedName": "sklearn.ensemble.BaggingRegressor",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "BaseEnsemble",
+      "qualifiedName": "sklearn.ensemble.BaseEnsemble",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "ExtraTreesClassifier",
+      "qualifiedName": "sklearn.ensemble.ExtraTreesClassifier",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "ExtraTreesRegressor",
+      "qualifiedName": "sklearn.ensemble.ExtraTreesRegressor",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "GradientBoostingClassifier",
+      "qualifiedName": "sklearn.ensemble.GradientBoostingClassifier",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "GradientBoostingRegressor",
+      "qualifiedName": "sklearn.ensemble.GradientBoostingRegressor",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "HistGradientBoostingClassifier",
+      "qualifiedName": "sklearn.ensemble.HistGradientBoostingClassifier",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "HistGradientBoostingRegressor",
+      "qualifiedName": "sklearn.ensemble.HistGradientBoostingRegressor",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "IsolationForest",
+      "qualifiedName": "sklearn.ensemble.IsolationForest",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "RandomForestClassifier",
+      "qualifiedName": "sklearn.ensemble.RandomForestClassifier",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "RandomForestRegressor",
+      "qualifiedName": "sklearn.ensemble.RandomForestRegressor",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "RandomTreesEmbedding",
+      "qualifiedName": "sklearn.ensemble.RandomTreesEmbedding",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "StackingClassifier",
+      "qualifiedName": "sklearn.ensemble.StackingClassifier",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "StackingRegressor",
+      "qualifiedName": "sklearn.ensemble.StackingRegressor",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "VotingClassifier",
+      "qualifiedName": "sklearn.ensemble.VotingClassifier",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "VotingRegressor",
+      "qualifiedName": "sklearn.ensemble.VotingRegressor",
+      "module": "sklearn.ensemble",
+      "kind": "class"
+    },
+    {
+      "name": "ConvergenceWarning",
+      "qualifiedName": "sklearn.exceptions.ConvergenceWarning",
+      "module": "sklearn.exceptions",
+      "kind": "class"
+    },
+    {
+      "name": "DataConversionWarning",
+      "qualifiedName": "sklearn.exceptions.DataConversionWarning",
+      "module": "sklearn.exceptions",
+      "kind": "class"
+    },
+    {
+      "name": "DataDimensionalityWarning",
+      "qualifiedName": "sklearn.exceptions.DataDimensionalityWarning",
+      "module": "sklearn.exceptions",
+      "kind": "class"
+    },
+    {
+      "name": "EfficiencyWarning",
+      "qualifiedName": "sklearn.exceptions.EfficiencyWarning",
+      "module": "sklearn.exceptions",
+      "kind": "class"
+    },
+    {
+      "name": "FitFailedWarning",
+      "qualifiedName": "sklearn.exceptions.FitFailedWarning",
+      "module": "sklearn.exceptions",
+      "kind": "class"
+    },
+    {
+      "name": "NotFittedError",
+      "qualifiedName": "sklearn.exceptions.NotFittedError",
+      "module": "sklearn.exceptions",
+      "kind": "class"
+    },
+    {
+      "name": "PositiveSpectrumWarning",
+      "qualifiedName": "sklearn.exceptions.PositiveSpectrumWarning",
+      "module": "sklearn.exceptions",
+      "kind": "class"
+    },
+    {
+      "name": "SkipTestWarning",
+      "qualifiedName": "sklearn.exceptions.SkipTestWarning",
+      "module": "sklearn.exceptions",
+      "kind": "class"
+    },
+    {
+      "name": "UndefinedMetricWarning",
+      "qualifiedName": "sklearn.exceptions.UndefinedMetricWarning",
+      "module": "sklearn.exceptions",
+      "kind": "class"
+    },
+    {
+      "name": "UnsetMetadataPassedError",
+      "qualifiedName": "sklearn.exceptions.UnsetMetadataPassedError",
+      "module": "sklearn.exceptions",
+      "kind": "class"
+    },
+    {
+      "name": "DictVectorizer",
+      "qualifiedName": "sklearn.feature_extraction.DictVectorizer",
+      "module": "sklearn.feature_extraction",
+      "kind": "class"
+    },
+    {
+      "name": "FeatureHasher",
+      "qualifiedName": "sklearn.feature_extraction.FeatureHasher",
+      "module": "sklearn.feature_extraction",
+      "kind": "class"
+    },
+    {
+      "name": "grid_to_graph",
+      "qualifiedName": "sklearn.feature_extraction.grid_to_graph",
+      "module": "sklearn.feature_extraction",
+      "kind": "function"
+    },
+    {
+      "name": "image",
+      "qualifiedName": "sklearn.feature_extraction.image",
+      "module": "sklearn.feature_extraction",
+      "kind": "module"
+    },
+    {
+      "name": "img_to_graph",
+      "qualifiedName": "sklearn.feature_extraction.img_to_graph",
+      "module": "sklearn.feature_extraction",
+      "kind": "function"
+    },
+    {
+      "name": "text",
+      "qualifiedName": "sklearn.feature_extraction.text",
+      "module": "sklearn.feature_extraction",
+      "kind": "module"
+    },
+    {
+      "name": "GenericUnivariateSelect",
+      "qualifiedName": "sklearn.feature_selection.GenericUnivariateSelect",
+      "module": "sklearn.feature_selection",
+      "kind": "class"
+    },
+    {
+      "name": "RFE",
+      "qualifiedName": "sklearn.feature_selection.RFE",
+      "module": "sklearn.feature_selection",
+      "kind": "class"
+    },
+    {
+      "name": "RFECV",
+      "qualifiedName": "sklearn.feature_selection.RFECV",
+      "module": "sklearn.feature_selection",
+      "kind": "class"
+    },
+    {
+      "name": "SelectFdr",
+      "qualifiedName": "sklearn.feature_selection.SelectFdr",
+      "module": "sklearn.feature_selection",
+      "kind": "class"
+    },
+    {
+      "name": "SelectFpr",
+      "qualifiedName": "sklearn.feature_selection.SelectFpr",
+      "module": "sklearn.feature_selection",
+      "kind": "class"
+    },
+    {
+      "name": "SelectFromModel",
+      "qualifiedName": "sklearn.feature_selection.SelectFromModel",
+      "module": "sklearn.feature_selection",
+      "kind": "class"
+    },
+    {
+      "name": "SelectFwe",
+      "qualifiedName": "sklearn.feature_selection.SelectFwe",
+      "module": "sklearn.feature_selection",
+      "kind": "class"
+    },
+    {
+      "name": "SelectKBest",
+      "qualifiedName": "sklearn.feature_selection.SelectKBest",
+      "module": "sklearn.feature_selection",
+      "kind": "class"
+    },
+    {
+      "name": "SelectPercentile",
+      "qualifiedName": "sklearn.feature_selection.SelectPercentile",
+      "module": "sklearn.feature_selection",
+      "kind": "class"
+    },
+    {
+      "name": "SelectorMixin",
+      "qualifiedName": "sklearn.feature_selection.SelectorMixin",
+      "module": "sklearn.feature_selection",
+      "kind": "class"
+    },
+    {
+      "name": "SequentialFeatureSelector",
+      "qualifiedName": "sklearn.feature_selection.SequentialFeatureSelector",
+      "module": "sklearn.feature_selection",
+      "kind": "class"
+    },
+    {
+      "name": "VarianceThreshold",
+      "qualifiedName": "sklearn.feature_selection.VarianceThreshold",
+      "module": "sklearn.feature_selection",
+      "kind": "class"
+    },
+    {
+      "name": "chi2",
+      "qualifiedName": "sklearn.feature_selection.chi2",
+      "module": "sklearn.feature_selection",
+      "kind": "function"
+    },
+    {
+      "name": "f_classif",
+      "qualifiedName": "sklearn.feature_selection.f_classif",
+      "module": "sklearn.feature_selection",
+      "kind": "function"
+    },
+    {
+      "name": "f_oneway",
+      "qualifiedName": "sklearn.feature_selection.f_oneway",
+      "module": "sklearn.feature_selection",
+      "kind": "function"
+    },
+    {
+      "name": "f_regression",
+      "qualifiedName": "sklearn.feature_selection.f_regression",
+      "module": "sklearn.feature_selection",
+      "kind": "function"
+    },
+    {
+      "name": "mutual_info_classif",
+      "qualifiedName": "sklearn.feature_selection.mutual_info_classif",
+      "module": "sklearn.feature_selection",
+      "kind": "function"
+    },
+    {
+      "name": "mutual_info_regression",
+      "qualifiedName": "sklearn.feature_selection.mutual_info_regression",
+      "module": "sklearn.feature_selection",
+      "kind": "function"
+    },
+    {
+      "name": "r_regression",
+      "qualifiedName": "sklearn.feature_selection.r_regression",
+      "module": "sklearn.feature_selection",
+      "kind": "function"
+    },
+    {
+      "name": "GaussianProcessClassifier",
+      "qualifiedName": "sklearn.gaussian_process.GaussianProcessClassifier",
+      "module": "sklearn.gaussian_process",
+      "kind": "class"
+    },
+    {
+      "name": "GaussianProcessRegressor",
+      "qualifiedName": "sklearn.gaussian_process.GaussianProcessRegressor",
+      "module": "sklearn.gaussian_process",
+      "kind": "class"
+    },
+    {
+      "name": "kernels",
+      "qualifiedName": "sklearn.gaussian_process.kernels",
+      "module": "sklearn.gaussian_process",
+      "kind": "module"
+    },
+    {
+      "name": "KNNImputer",
+      "qualifiedName": "sklearn.impute.KNNImputer",
+      "module": "sklearn.impute",
+      "kind": "class"
+    },
+    {
+      "name": "MissingIndicator",
+      "qualifiedName": "sklearn.impute.MissingIndicator",
+      "module": "sklearn.impute",
+      "kind": "class"
+    },
+    {
+      "name": "SimpleImputer",
+      "qualifiedName": "sklearn.impute.SimpleImputer",
+      "module": "sklearn.impute",
+      "kind": "class"
+    },
+    {
+      "name": "DecisionBoundaryDisplay",
+      "qualifiedName": "sklearn.inspection.DecisionBoundaryDisplay",
+      "module": "sklearn.inspection",
+      "kind": "class"
+    },
+    {
+      "name": "PartialDependenceDisplay",
+      "qualifiedName": "sklearn.inspection.PartialDependenceDisplay",
+      "module": "sklearn.inspection",
+      "kind": "class"
+    },
+    {
+      "name": "partial_dependence",
+      "qualifiedName": "sklearn.inspection.partial_dependence",
+      "module": "sklearn.inspection",
+      "kind": "function"
+    },
+    {
+      "name": "permutation_importance",
+      "qualifiedName": "sklearn.inspection.permutation_importance",
+      "module": "sklearn.inspection",
+      "kind": "function"
+    },
+    {
+      "name": "IsotonicRegression",
+      "qualifiedName": "sklearn.isotonic.IsotonicRegression",
+      "module": "sklearn.isotonic",
+      "kind": "class"
+    },
+    {
+      "name": "check_increasing",
+      "qualifiedName": "sklearn.isotonic.check_increasing",
+      "module": "sklearn.isotonic",
+      "kind": "function"
+    },
+    {
+      "name": "isotonic_regression",
+      "qualifiedName": "sklearn.isotonic.isotonic_regression",
+      "module": "sklearn.isotonic",
+      "kind": "function"
+    },
+    {
+      "name": "ARDRegression",
+      "qualifiedName": "sklearn.linear_model.ARDRegression",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "BayesianRidge",
+      "qualifiedName": "sklearn.linear_model.BayesianRidge",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "ElasticNet",
+      "qualifiedName": "sklearn.linear_model.ElasticNet",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "ElasticNetCV",
+      "qualifiedName": "sklearn.linear_model.ElasticNetCV",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "GammaRegressor",
+      "qualifiedName": "sklearn.linear_model.GammaRegressor",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "Hinge",
+      "qualifiedName": "sklearn.linear_model.Hinge",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "Huber",
+      "qualifiedName": "sklearn.linear_model.Huber",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "HuberRegressor",
+      "qualifiedName": "sklearn.linear_model.HuberRegressor",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "Lars",
+      "qualifiedName": "sklearn.linear_model.Lars",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "LarsCV",
+      "qualifiedName": "sklearn.linear_model.LarsCV",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "Lasso",
+      "qualifiedName": "sklearn.linear_model.Lasso",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "LassoCV",
+      "qualifiedName": "sklearn.linear_model.LassoCV",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "LassoLars",
+      "qualifiedName": "sklearn.linear_model.LassoLars",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "LassoLarsCV",
+      "qualifiedName": "sklearn.linear_model.LassoLarsCV",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "LassoLarsIC",
+      "qualifiedName": "sklearn.linear_model.LassoLarsIC",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "LinearRegression",
+      "qualifiedName": "sklearn.linear_model.LinearRegression",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "Log",
+      "qualifiedName": "sklearn.linear_model.Log",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "LogisticRegression",
+      "qualifiedName": "sklearn.linear_model.LogisticRegression",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "LogisticRegressionCV",
+      "qualifiedName": "sklearn.linear_model.LogisticRegressionCV",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "ModifiedHuber",
+      "qualifiedName": "sklearn.linear_model.ModifiedHuber",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "MultiTaskElasticNet",
+      "qualifiedName": "sklearn.linear_model.MultiTaskElasticNet",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "MultiTaskElasticNetCV",
+      "qualifiedName": "sklearn.linear_model.MultiTaskElasticNetCV",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "MultiTaskLasso",
+      "qualifiedName": "sklearn.linear_model.MultiTaskLasso",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "MultiTaskLassoCV",
+      "qualifiedName": "sklearn.linear_model.MultiTaskLassoCV",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "OrthogonalMatchingPursuit",
+      "qualifiedName": "sklearn.linear_model.OrthogonalMatchingPursuit",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "OrthogonalMatchingPursuitCV",
+      "qualifiedName": "sklearn.linear_model.OrthogonalMatchingPursuitCV",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "PassiveAggressiveClassifier",
+      "qualifiedName": "sklearn.linear_model.PassiveAggressiveClassifier",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "PassiveAggressiveRegressor",
+      "qualifiedName": "sklearn.linear_model.PassiveAggressiveRegressor",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "Perceptron",
+      "qualifiedName": "sklearn.linear_model.Perceptron",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "PoissonRegressor",
+      "qualifiedName": "sklearn.linear_model.PoissonRegressor",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "QuantileRegressor",
+      "qualifiedName": "sklearn.linear_model.QuantileRegressor",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "RANSACRegressor",
+      "qualifiedName": "sklearn.linear_model.RANSACRegressor",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "Ridge",
+      "qualifiedName": "sklearn.linear_model.Ridge",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "RidgeCV",
+      "qualifiedName": "sklearn.linear_model.RidgeCV",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "RidgeClassifier",
+      "qualifiedName": "sklearn.linear_model.RidgeClassifier",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "RidgeClassifierCV",
+      "qualifiedName": "sklearn.linear_model.RidgeClassifierCV",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "SGDClassifier",
+      "qualifiedName": "sklearn.linear_model.SGDClassifier",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "SGDOneClassSVM",
+      "qualifiedName": "sklearn.linear_model.SGDOneClassSVM",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "SGDRegressor",
+      "qualifiedName": "sklearn.linear_model.SGDRegressor",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "SquaredLoss",
+      "qualifiedName": "sklearn.linear_model.SquaredLoss",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "TheilSenRegressor",
+      "qualifiedName": "sklearn.linear_model.TheilSenRegressor",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "TweedieRegressor",
+      "qualifiedName": "sklearn.linear_model.TweedieRegressor",
+      "module": "sklearn.linear_model",
+      "kind": "class"
+    },
+    {
+      "name": "enet_path",
+      "qualifiedName": "sklearn.linear_model.enet_path",
+      "module": "sklearn.linear_model",
+      "kind": "function"
+    },
+    {
+      "name": "lars_path",
+      "qualifiedName": "sklearn.linear_model.lars_path",
+      "module": "sklearn.linear_model",
+      "kind": "function"
+    },
+    {
+      "name": "lars_path_gram",
+      "qualifiedName": "sklearn.linear_model.lars_path_gram",
+      "module": "sklearn.linear_model",
+      "kind": "function"
+    },
+    {
+      "name": "lasso_path",
+      "qualifiedName": "sklearn.linear_model.lasso_path",
+      "module": "sklearn.linear_model",
+      "kind": "function"
+    },
+    {
+      "name": "orthogonal_mp",
+      "qualifiedName": "sklearn.linear_model.orthogonal_mp",
+      "module": "sklearn.linear_model",
+      "kind": "function"
+    },
+    {
+      "name": "orthogonal_mp_gram",
+      "qualifiedName": "sklearn.linear_model.orthogonal_mp_gram",
+      "module": "sklearn.linear_model",
+      "kind": "function"
+    },
+    {
+      "name": "ridge_regression",
+      "qualifiedName": "sklearn.linear_model.ridge_regression",
+      "module": "sklearn.linear_model",
+      "kind": "function"
+    },
+    {
+      "name": "Isomap",
+      "qualifiedName": "sklearn.manifold.Isomap",
+      "module": "sklearn.manifold",
+      "kind": "class"
+    },
+    {
+      "name": "LocallyLinearEmbedding",
+      "qualifiedName": "sklearn.manifold.LocallyLinearEmbedding",
+      "module": "sklearn.manifold",
+      "kind": "class"
+    },
+    {
+      "name": "MDS",
+      "qualifiedName": "sklearn.manifold.MDS",
+      "module": "sklearn.manifold",
+      "kind": "class"
+    },
+    {
+      "name": "SpectralEmbedding",
+      "qualifiedName": "sklearn.manifold.SpectralEmbedding",
+      "module": "sklearn.manifold",
+      "kind": "class"
+    },
+    {
+      "name": "TSNE",
+      "qualifiedName": "sklearn.manifold.TSNE",
+      "module": "sklearn.manifold",
+      "kind": "class"
+    },
+    {
+      "name": "locally_linear_embedding",
+      "qualifiedName": "sklearn.manifold.locally_linear_embedding",
+      "module": "sklearn.manifold",
+      "kind": "function"
+    },
+    {
+      "name": "smacof",
+      "qualifiedName": "sklearn.manifold.smacof",
+      "module": "sklearn.manifold",
+      "kind": "function"
+    },
+    {
+      "name": "spectral_embedding",
+      "qualifiedName": "sklearn.manifold.spectral_embedding",
+      "module": "sklearn.manifold",
+      "kind": "function"
+    },
+    {
+      "name": "trustworthiness",
+      "qualifiedName": "sklearn.manifold.trustworthiness",
+      "module": "sklearn.manifold",
+      "kind": "function"
+    },
+    {
+      "name": "ConfusionMatrixDisplay",
+      "qualifiedName": "sklearn.metrics.ConfusionMatrixDisplay",
+      "module": "sklearn.metrics",
+      "kind": "class"
+    },
+    {
+      "name": "DetCurveDisplay",
+      "qualifiedName": "sklearn.metrics.DetCurveDisplay",
+      "module": "sklearn.metrics",
+      "kind": "class"
+    },
+    {
+      "name": "DistanceMetric",
+      "qualifiedName": "sklearn.metrics.DistanceMetric",
+      "module": "sklearn.metrics",
+      "kind": "class"
+    },
+    {
+      "name": "PrecisionRecallDisplay",
+      "qualifiedName": "sklearn.metrics.PrecisionRecallDisplay",
+      "module": "sklearn.metrics",
+      "kind": "class"
+    },
+    {
+      "name": "PredictionErrorDisplay",
+      "qualifiedName": "sklearn.metrics.PredictionErrorDisplay",
+      "module": "sklearn.metrics",
+      "kind": "class"
+    },
+    {
+      "name": "RocCurveDisplay",
+      "qualifiedName": "sklearn.metrics.RocCurveDisplay",
+      "module": "sklearn.metrics",
+      "kind": "class"
+    },
+    {
+      "name": "accuracy_score",
+      "qualifiedName": "sklearn.metrics.accuracy_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "adjusted_mutual_info_score",
+      "qualifiedName": "sklearn.metrics.adjusted_mutual_info_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "adjusted_rand_score",
+      "qualifiedName": "sklearn.metrics.adjusted_rand_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "auc",
+      "qualifiedName": "sklearn.metrics.auc",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "average_precision_score",
+      "qualifiedName": "sklearn.metrics.average_precision_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "balanced_accuracy_score",
+      "qualifiedName": "sklearn.metrics.balanced_accuracy_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "brier_score_loss",
+      "qualifiedName": "sklearn.metrics.brier_score_loss",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "calinski_harabasz_score",
+      "qualifiedName": "sklearn.metrics.calinski_harabasz_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "check_scoring",
+      "qualifiedName": "sklearn.metrics.check_scoring",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "class_likelihood_ratios",
+      "qualifiedName": "sklearn.metrics.class_likelihood_ratios",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "classification_report",
+      "qualifiedName": "sklearn.metrics.classification_report",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "cluster",
+      "qualifiedName": "sklearn.metrics.cluster",
+      "module": "sklearn.metrics",
+      "kind": "module"
+    },
+    {
+      "name": "cohen_kappa_score",
+      "qualifiedName": "sklearn.metrics.cohen_kappa_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "completeness_score",
+      "qualifiedName": "sklearn.metrics.completeness_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "confusion_matrix",
+      "qualifiedName": "sklearn.metrics.confusion_matrix",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "consensus_score",
+      "qualifiedName": "sklearn.metrics.consensus_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "coverage_error",
+      "qualifiedName": "sklearn.metrics.coverage_error",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "d2_absolute_error_score",
+      "qualifiedName": "sklearn.metrics.d2_absolute_error_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "d2_log_loss_score",
+      "qualifiedName": "sklearn.metrics.d2_log_loss_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "d2_pinball_score",
+      "qualifiedName": "sklearn.metrics.d2_pinball_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "d2_tweedie_score",
+      "qualifiedName": "sklearn.metrics.d2_tweedie_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "davies_bouldin_score",
+      "qualifiedName": "sklearn.metrics.davies_bouldin_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "dcg_score",
+      "qualifiedName": "sklearn.metrics.dcg_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "det_curve",
+      "qualifiedName": "sklearn.metrics.det_curve",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "euclidean_distances",
+      "qualifiedName": "sklearn.metrics.euclidean_distances",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "explained_variance_score",
+      "qualifiedName": "sklearn.metrics.explained_variance_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "f1_score",
+      "qualifiedName": "sklearn.metrics.f1_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "fbeta_score",
+      "qualifiedName": "sklearn.metrics.fbeta_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "fowlkes_mallows_score",
+      "qualifiedName": "sklearn.metrics.fowlkes_mallows_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "get_scorer",
+      "qualifiedName": "sklearn.metrics.get_scorer",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "get_scorer_names",
+      "qualifiedName": "sklearn.metrics.get_scorer_names",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "hamming_loss",
+      "qualifiedName": "sklearn.metrics.hamming_loss",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "hinge_loss",
+      "qualifiedName": "sklearn.metrics.hinge_loss",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "homogeneity_completeness_v_measure",
+      "qualifiedName": "sklearn.metrics.homogeneity_completeness_v_measure",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "homogeneity_score",
+      "qualifiedName": "sklearn.metrics.homogeneity_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "jaccard_score",
+      "qualifiedName": "sklearn.metrics.jaccard_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "label_ranking_average_precision_score",
+      "qualifiedName": "sklearn.metrics.label_ranking_average_precision_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "label_ranking_loss",
+      "qualifiedName": "sklearn.metrics.label_ranking_loss",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "log_loss",
+      "qualifiedName": "sklearn.metrics.log_loss",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "make_scorer",
+      "qualifiedName": "sklearn.metrics.make_scorer",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "matthews_corrcoef",
+      "qualifiedName": "sklearn.metrics.matthews_corrcoef",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "max_error",
+      "qualifiedName": "sklearn.metrics.max_error",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "mean_absolute_error",
+      "qualifiedName": "sklearn.metrics.mean_absolute_error",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "mean_absolute_percentage_error",
+      "qualifiedName": "sklearn.metrics.mean_absolute_percentage_error",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "mean_gamma_deviance",
+      "qualifiedName": "sklearn.metrics.mean_gamma_deviance",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "mean_pinball_loss",
+      "qualifiedName": "sklearn.metrics.mean_pinball_loss",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "mean_poisson_deviance",
+      "qualifiedName": "sklearn.metrics.mean_poisson_deviance",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "mean_squared_error",
+      "qualifiedName": "sklearn.metrics.mean_squared_error",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "mean_squared_log_error",
+      "qualifiedName": "sklearn.metrics.mean_squared_log_error",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "mean_tweedie_deviance",
+      "qualifiedName": "sklearn.metrics.mean_tweedie_deviance",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "median_absolute_error",
+      "qualifiedName": "sklearn.metrics.median_absolute_error",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "multilabel_confusion_matrix",
+      "qualifiedName": "sklearn.metrics.multilabel_confusion_matrix",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "mutual_info_score",
+      "qualifiedName": "sklearn.metrics.mutual_info_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "nan_euclidean_distances",
+      "qualifiedName": "sklearn.metrics.nan_euclidean_distances",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "ndcg_score",
+      "qualifiedName": "sklearn.metrics.ndcg_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "normalized_mutual_info_score",
+      "qualifiedName": "sklearn.metrics.normalized_mutual_info_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "pair_confusion_matrix",
+      "qualifiedName": "sklearn.metrics.pair_confusion_matrix",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "pairwise_distances",
+      "qualifiedName": "sklearn.metrics.pairwise_distances",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "pairwise_distances_argmin",
+      "qualifiedName": "sklearn.metrics.pairwise_distances_argmin",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "pairwise_distances_argmin_min",
+      "qualifiedName": "sklearn.metrics.pairwise_distances_argmin_min",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "pairwise_distances_chunked",
+      "qualifiedName": "sklearn.metrics.pairwise_distances_chunked",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "pairwise_kernels",
+      "qualifiedName": "sklearn.metrics.pairwise_kernels",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "precision_recall_curve",
+      "qualifiedName": "sklearn.metrics.precision_recall_curve",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "precision_recall_fscore_support",
+      "qualifiedName": "sklearn.metrics.precision_recall_fscore_support",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "precision_score",
+      "qualifiedName": "sklearn.metrics.precision_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "r2_score",
+      "qualifiedName": "sklearn.metrics.r2_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "rand_score",
+      "qualifiedName": "sklearn.metrics.rand_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "recall_score",
+      "qualifiedName": "sklearn.metrics.recall_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "roc_auc_score",
+      "qualifiedName": "sklearn.metrics.roc_auc_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "roc_curve",
+      "qualifiedName": "sklearn.metrics.roc_curve",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "root_mean_squared_error",
+      "qualifiedName": "sklearn.metrics.root_mean_squared_error",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "root_mean_squared_log_error",
+      "qualifiedName": "sklearn.metrics.root_mean_squared_log_error",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "silhouette_samples",
+      "qualifiedName": "sklearn.metrics.silhouette_samples",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "silhouette_score",
+      "qualifiedName": "sklearn.metrics.silhouette_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "top_k_accuracy_score",
+      "qualifiedName": "sklearn.metrics.top_k_accuracy_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "v_measure_score",
+      "qualifiedName": "sklearn.metrics.v_measure_score",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "zero_one_loss",
+      "qualifiedName": "sklearn.metrics.zero_one_loss",
+      "module": "sklearn.metrics",
+      "kind": "function"
+    },
+    {
+      "name": "BayesianGaussianMixture",
+      "qualifiedName": "sklearn.mixture.BayesianGaussianMixture",
+      "module": "sklearn.mixture",
+      "kind": "class"
+    },
+    {
+      "name": "GaussianMixture",
+      "qualifiedName": "sklearn.mixture.GaussianMixture",
+      "module": "sklearn.mixture",
+      "kind": "class"
+    },
+    {
+      "name": "BaseCrossValidator",
+      "qualifiedName": "sklearn.model_selection.BaseCrossValidator",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "BaseShuffleSplit",
+      "qualifiedName": "sklearn.model_selection.BaseShuffleSplit",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "FixedThresholdClassifier",
+      "qualifiedName": "sklearn.model_selection.FixedThresholdClassifier",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "GridSearchCV",
+      "qualifiedName": "sklearn.model_selection.GridSearchCV",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "GroupKFold",
+      "qualifiedName": "sklearn.model_selection.GroupKFold",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "GroupShuffleSplit",
+      "qualifiedName": "sklearn.model_selection.GroupShuffleSplit",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "KFold",
+      "qualifiedName": "sklearn.model_selection.KFold",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "LearningCurveDisplay",
+      "qualifiedName": "sklearn.model_selection.LearningCurveDisplay",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "LeaveOneGroupOut",
+      "qualifiedName": "sklearn.model_selection.LeaveOneGroupOut",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "LeaveOneOut",
+      "qualifiedName": "sklearn.model_selection.LeaveOneOut",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "LeavePGroupsOut",
+      "qualifiedName": "sklearn.model_selection.LeavePGroupsOut",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "LeavePOut",
+      "qualifiedName": "sklearn.model_selection.LeavePOut",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "ParameterGrid",
+      "qualifiedName": "sklearn.model_selection.ParameterGrid",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "ParameterSampler",
+      "qualifiedName": "sklearn.model_selection.ParameterSampler",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "PredefinedSplit",
+      "qualifiedName": "sklearn.model_selection.PredefinedSplit",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "RandomizedSearchCV",
+      "qualifiedName": "sklearn.model_selection.RandomizedSearchCV",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "RepeatedKFold",
+      "qualifiedName": "sklearn.model_selection.RepeatedKFold",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "RepeatedStratifiedKFold",
+      "qualifiedName": "sklearn.model_selection.RepeatedStratifiedKFold",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "ShuffleSplit",
+      "qualifiedName": "sklearn.model_selection.ShuffleSplit",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "StratifiedGroupKFold",
+      "qualifiedName": "sklearn.model_selection.StratifiedGroupKFold",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "StratifiedKFold",
+      "qualifiedName": "sklearn.model_selection.StratifiedKFold",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "StratifiedShuffleSplit",
+      "qualifiedName": "sklearn.model_selection.StratifiedShuffleSplit",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "TimeSeriesSplit",
+      "qualifiedName": "sklearn.model_selection.TimeSeriesSplit",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "TunedThresholdClassifierCV",
+      "qualifiedName": "sklearn.model_selection.TunedThresholdClassifierCV",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "ValidationCurveDisplay",
+      "qualifiedName": "sklearn.model_selection.ValidationCurveDisplay",
+      "module": "sklearn.model_selection",
+      "kind": "class"
+    },
+    {
+      "name": "check_cv",
+      "qualifiedName": "sklearn.model_selection.check_cv",
+      "module": "sklearn.model_selection",
+      "kind": "function"
+    },
+    {
+      "name": "cross_val_predict",
+      "qualifiedName": "sklearn.model_selection.cross_val_predict",
+      "module": "sklearn.model_selection",
+      "kind": "function"
+    },
+    {
+      "name": "cross_val_score",
+      "qualifiedName": "sklearn.model_selection.cross_val_score",
+      "module": "sklearn.model_selection",
+      "kind": "function"
+    },
+    {
+      "name": "cross_validate",
+      "qualifiedName": "sklearn.model_selection.cross_validate",
+      "module": "sklearn.model_selection",
+      "kind": "function"
+    },
+    {
+      "name": "learning_curve",
+      "qualifiedName": "sklearn.model_selection.learning_curve",
+      "module": "sklearn.model_selection",
+      "kind": "function"
+    },
+    {
+      "name": "permutation_test_score",
+      "qualifiedName": "sklearn.model_selection.permutation_test_score",
+      "module": "sklearn.model_selection",
+      "kind": "function"
+    },
+    {
+      "name": "train_test_split",
+      "qualifiedName": "sklearn.model_selection.train_test_split",
+      "module": "sklearn.model_selection",
+      "kind": "function"
+    },
+    {
+      "name": "validation_curve",
+      "qualifiedName": "sklearn.model_selection.validation_curve",
+      "module": "sklearn.model_selection",
+      "kind": "function"
+    },
+    {
+      "name": "OneVsOneClassifier",
+      "qualifiedName": "sklearn.multiclass.OneVsOneClassifier",
+      "module": "sklearn.multiclass",
+      "kind": "class"
+    },
+    {
+      "name": "OneVsRestClassifier",
+      "qualifiedName": "sklearn.multiclass.OneVsRestClassifier",
+      "module": "sklearn.multiclass",
+      "kind": "class"
+    },
+    {
+      "name": "OutputCodeClassifier",
+      "qualifiedName": "sklearn.multiclass.OutputCodeClassifier",
+      "module": "sklearn.multiclass",
+      "kind": "class"
+    },
+    {
+      "name": "ClassifierChain",
+      "qualifiedName": "sklearn.multioutput.ClassifierChain",
+      "module": "sklearn.multioutput",
+      "kind": "class"
+    },
+    {
+      "name": "MultiOutputClassifier",
+      "qualifiedName": "sklearn.multioutput.MultiOutputClassifier",
+      "module": "sklearn.multioutput",
+      "kind": "class"
+    },
+    {
+      "name": "MultiOutputRegressor",
+      "qualifiedName": "sklearn.multioutput.MultiOutputRegressor",
+      "module": "sklearn.multioutput",
+      "kind": "class"
+    },
+    {
+      "name": "RegressorChain",
+      "qualifiedName": "sklearn.multioutput.RegressorChain",
+      "module": "sklearn.multioutput",
+      "kind": "class"
+    },
+    {
+      "name": "BernoulliNB",
+      "qualifiedName": "sklearn.naive_bayes.BernoulliNB",
+      "module": "sklearn.naive_bayes",
+      "kind": "class"
+    },
+    {
+      "name": "CategoricalNB",
+      "qualifiedName": "sklearn.naive_bayes.CategoricalNB",
+      "module": "sklearn.naive_bayes",
+      "kind": "class"
+    },
+    {
+      "name": "ComplementNB",
+      "qualifiedName": "sklearn.naive_bayes.ComplementNB",
+      "module": "sklearn.naive_bayes",
+      "kind": "class"
+    },
+    {
+      "name": "GaussianNB",
+      "qualifiedName": "sklearn.naive_bayes.GaussianNB",
+      "module": "sklearn.naive_bayes",
+      "kind": "class"
+    },
+    {
+      "name": "MultinomialNB",
+      "qualifiedName": "sklearn.naive_bayes.MultinomialNB",
+      "module": "sklearn.naive_bayes",
+      "kind": "class"
+    },
+    {
+      "name": "BallTree",
+      "qualifiedName": "sklearn.neighbors.BallTree",
+      "module": "sklearn.neighbors",
+      "kind": "class"
+    },
+    {
+      "name": "KDTree",
+      "qualifiedName": "sklearn.neighbors.KDTree",
+      "module": "sklearn.neighbors",
+      "kind": "class"
+    },
+    {
+      "name": "KNeighborsClassifier",
+      "qualifiedName": "sklearn.neighbors.KNeighborsClassifier",
+      "module": "sklearn.neighbors",
+      "kind": "class"
+    },
+    {
+      "name": "KNeighborsRegressor",
+      "qualifiedName": "sklearn.neighbors.KNeighborsRegressor",
+      "module": "sklearn.neighbors",
+      "kind": "class"
+    },
+    {
+      "name": "KNeighborsTransformer",
+      "qualifiedName": "sklearn.neighbors.KNeighborsTransformer",
+      "module": "sklearn.neighbors",
+      "kind": "class"
+    },
+    {
+      "name": "KernelDensity",
+      "qualifiedName": "sklearn.neighbors.KernelDensity",
+      "module": "sklearn.neighbors",
+      "kind": "class"
+    },
+    {
+      "name": "LocalOutlierFactor",
+      "qualifiedName": "sklearn.neighbors.LocalOutlierFactor",
+      "module": "sklearn.neighbors",
+      "kind": "class"
+    },
+    {
+      "name": "NearestCentroid",
+      "qualifiedName": "sklearn.neighbors.NearestCentroid",
+      "module": "sklearn.neighbors",
+      "kind": "class"
+    },
+    {
+      "name": "NearestNeighbors",
+      "qualifiedName": "sklearn.neighbors.NearestNeighbors",
+      "module": "sklearn.neighbors",
+      "kind": "class"
+    },
+    {
+      "name": "NeighborhoodComponentsAnalysis",
+      "qualifiedName": "sklearn.neighbors.NeighborhoodComponentsAnalysis",
+      "module": "sklearn.neighbors",
+      "kind": "class"
+    },
+    {
+      "name": "RadiusNeighborsClassifier",
+      "qualifiedName": "sklearn.neighbors.RadiusNeighborsClassifier",
+      "module": "sklearn.neighbors",
+      "kind": "class"
+    },
+    {
+      "name": "RadiusNeighborsRegressor",
+      "qualifiedName": "sklearn.neighbors.RadiusNeighborsRegressor",
+      "module": "sklearn.neighbors",
+      "kind": "class"
+    },
+    {
+      "name": "RadiusNeighborsTransformer",
+      "qualifiedName": "sklearn.neighbors.RadiusNeighborsTransformer",
+      "module": "sklearn.neighbors",
+      "kind": "class"
+    },
+    {
+      "name": "VALID_METRICS",
+      "qualifiedName": "sklearn.neighbors.VALID_METRICS",
+      "module": "sklearn.neighbors",
+      "kind": "other"
+    },
+    {
+      "name": "VALID_METRICS_SPARSE",
+      "qualifiedName": "sklearn.neighbors.VALID_METRICS_SPARSE",
+      "module": "sklearn.neighbors",
+      "kind": "other"
+    },
+    {
+      "name": "kneighbors_graph",
+      "qualifiedName": "sklearn.neighbors.kneighbors_graph",
+      "module": "sklearn.neighbors",
+      "kind": "function"
+    },
+    {
+      "name": "radius_neighbors_graph",
+      "qualifiedName": "sklearn.neighbors.radius_neighbors_graph",
+      "module": "sklearn.neighbors",
+      "kind": "function"
+    },
+    {
+      "name": "sort_graph_by_row_values",
+      "qualifiedName": "sklearn.neighbors.sort_graph_by_row_values",
+      "module": "sklearn.neighbors",
+      "kind": "function"
+    },
+    {
+      "name": "BernoulliRBM",
+      "qualifiedName": "sklearn.neural_network.BernoulliRBM",
+      "module": "sklearn.neural_network",
+      "kind": "class"
+    },
+    {
+      "name": "MLPClassifier",
+      "qualifiedName": "sklearn.neural_network.MLPClassifier",
+      "module": "sklearn.neural_network",
+      "kind": "class"
+    },
+    {
+      "name": "MLPRegressor",
+      "qualifiedName": "sklearn.neural_network.MLPRegressor",
+      "module": "sklearn.neural_network",
+      "kind": "class"
+    },
+    {
+      "name": "FeatureUnion",
+      "qualifiedName": "sklearn.pipeline.FeatureUnion",
+      "module": "sklearn.pipeline",
+      "kind": "class"
+    },
+    {
+      "name": "Pipeline",
+      "qualifiedName": "sklearn.pipeline.Pipeline",
+      "module": "sklearn.pipeline",
+      "kind": "class"
+    },
+    {
+      "name": "make_pipeline",
+      "qualifiedName": "sklearn.pipeline.make_pipeline",
+      "module": "sklearn.pipeline",
+      "kind": "function"
+    },
+    {
+      "name": "make_union",
+      "qualifiedName": "sklearn.pipeline.make_union",
+      "module": "sklearn.pipeline",
+      "kind": "function"
+    },
+    {
+      "name": "Binarizer",
+      "qualifiedName": "sklearn.preprocessing.Binarizer",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "FunctionTransformer",
+      "qualifiedName": "sklearn.preprocessing.FunctionTransformer",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "KBinsDiscretizer",
+      "qualifiedName": "sklearn.preprocessing.KBinsDiscretizer",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "KernelCenterer",
+      "qualifiedName": "sklearn.preprocessing.KernelCenterer",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "LabelBinarizer",
+      "qualifiedName": "sklearn.preprocessing.LabelBinarizer",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "LabelEncoder",
+      "qualifiedName": "sklearn.preprocessing.LabelEncoder",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "MaxAbsScaler",
+      "qualifiedName": "sklearn.preprocessing.MaxAbsScaler",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "MinMaxScaler",
+      "qualifiedName": "sklearn.preprocessing.MinMaxScaler",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "MultiLabelBinarizer",
+      "qualifiedName": "sklearn.preprocessing.MultiLabelBinarizer",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "Normalizer",
+      "qualifiedName": "sklearn.preprocessing.Normalizer",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "OneHotEncoder",
+      "qualifiedName": "sklearn.preprocessing.OneHotEncoder",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "OrdinalEncoder",
+      "qualifiedName": "sklearn.preprocessing.OrdinalEncoder",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "PolynomialFeatures",
+      "qualifiedName": "sklearn.preprocessing.PolynomialFeatures",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "PowerTransformer",
+      "qualifiedName": "sklearn.preprocessing.PowerTransformer",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "QuantileTransformer",
+      "qualifiedName": "sklearn.preprocessing.QuantileTransformer",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "RobustScaler",
+      "qualifiedName": "sklearn.preprocessing.RobustScaler",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "SplineTransformer",
+      "qualifiedName": "sklearn.preprocessing.SplineTransformer",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "StandardScaler",
+      "qualifiedName": "sklearn.preprocessing.StandardScaler",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "TargetEncoder",
+      "qualifiedName": "sklearn.preprocessing.TargetEncoder",
+      "module": "sklearn.preprocessing",
+      "kind": "class"
+    },
+    {
+      "name": "add_dummy_feature",
+      "qualifiedName": "sklearn.preprocessing.add_dummy_feature",
+      "module": "sklearn.preprocessing",
+      "kind": "function"
+    },
+    {
+      "name": "binarize",
+      "qualifiedName": "sklearn.preprocessing.binarize",
+      "module": "sklearn.preprocessing",
+      "kind": "function"
+    },
+    {
+      "name": "label_binarize",
+      "qualifiedName": "sklearn.preprocessing.label_binarize",
+      "module": "sklearn.preprocessing",
+      "kind": "function"
+    },
+    {
+      "name": "maxabs_scale",
+      "qualifiedName": "sklearn.preprocessing.maxabs_scale",
+      "module": "sklearn.preprocessing",
+      "kind": "function"
+    },
+    {
+      "name": "minmax_scale",
+      "qualifiedName": "sklearn.preprocessing.minmax_scale",
+      "module": "sklearn.preprocessing",
+      "kind": "function"
+    },
+    {
+      "name": "normalize",
+      "qualifiedName": "sklearn.preprocessing.normalize",
+      "module": "sklearn.preprocessing",
+      "kind": "function"
+    },
+    {
+      "name": "power_transform",
+      "qualifiedName": "sklearn.preprocessing.power_transform",
+      "module": "sklearn.preprocessing",
+      "kind": "function"
+    },
+    {
+      "name": "quantile_transform",
+      "qualifiedName": "sklearn.preprocessing.quantile_transform",
+      "module": "sklearn.preprocessing",
+      "kind": "function"
+    },
+    {
+      "name": "robust_scale",
+      "qualifiedName": "sklearn.preprocessing.robust_scale",
+      "module": "sklearn.preprocessing",
+      "kind": "function"
+    },
+    {
+      "name": "scale",
+      "qualifiedName": "sklearn.preprocessing.scale",
+      "module": "sklearn.preprocessing",
+      "kind": "function"
+    },
+    {
+      "name": "GaussianRandomProjection",
+      "qualifiedName": "sklearn.random_projection.GaussianRandomProjection",
+      "module": "sklearn.random_projection",
+      "kind": "class"
+    },
+    {
+      "name": "SparseRandomProjection",
+      "qualifiedName": "sklearn.random_projection.SparseRandomProjection",
+      "module": "sklearn.random_projection",
+      "kind": "class"
+    },
+    {
+      "name": "johnson_lindenstrauss_min_dim",
+      "qualifiedName": "sklearn.random_projection.johnson_lindenstrauss_min_dim",
+      "module": "sklearn.random_projection",
+      "kind": "function"
+    },
+    {
+      "name": "LabelPropagation",
+      "qualifiedName": "sklearn.semi_supervised.LabelPropagation",
+      "module": "sklearn.semi_supervised",
+      "kind": "class"
+    },
+    {
+      "name": "LabelSpreading",
+      "qualifiedName": "sklearn.semi_supervised.LabelSpreading",
+      "module": "sklearn.semi_supervised",
+      "kind": "class"
+    },
+    {
+      "name": "SelfTrainingClassifier",
+      "qualifiedName": "sklearn.semi_supervised.SelfTrainingClassifier",
+      "module": "sklearn.semi_supervised",
+      "kind": "class"
+    },
+    {
+      "name": "LinearSVC",
+      "qualifiedName": "sklearn.svm.LinearSVC",
+      "module": "sklearn.svm",
+      "kind": "class"
+    },
+    {
+      "name": "LinearSVR",
+      "qualifiedName": "sklearn.svm.LinearSVR",
+      "module": "sklearn.svm",
+      "kind": "class"
+    },
+    {
+      "name": "NuSVC",
+      "qualifiedName": "sklearn.svm.NuSVC",
+      "module": "sklearn.svm",
+      "kind": "class"
+    },
+    {
+      "name": "NuSVR",
+      "qualifiedName": "sklearn.svm.NuSVR",
+      "module": "sklearn.svm",
+      "kind": "class"
+    },
+    {
+      "name": "OneClassSVM",
+      "qualifiedName": "sklearn.svm.OneClassSVM",
+      "module": "sklearn.svm",
+      "kind": "class"
+    },
+    {
+      "name": "SVC",
+      "qualifiedName": "sklearn.svm.SVC",
+      "module": "sklearn.svm",
+      "kind": "class"
+    },
+    {
+      "name": "SVR",
+      "qualifiedName": "sklearn.svm.SVR",
+      "module": "sklearn.svm",
+      "kind": "class"
+    },
+    {
+      "name": "l1_min_c",
+      "qualifiedName": "sklearn.svm.l1_min_c",
+      "module": "sklearn.svm",
+      "kind": "function"
+    },
+    {
+      "name": "BaseDecisionTree",
+      "qualifiedName": "sklearn.tree.BaseDecisionTree",
+      "module": "sklearn.tree",
+      "kind": "class"
+    },
+    {
+      "name": "DecisionTreeClassifier",
+      "qualifiedName": "sklearn.tree.DecisionTreeClassifier",
+      "module": "sklearn.tree",
+      "kind": "class"
+    },
+    {
+      "name": "DecisionTreeRegressor",
+      "qualifiedName": "sklearn.tree.DecisionTreeRegressor",
+      "module": "sklearn.tree",
+      "kind": "class"
+    },
+    {
+      "name": "ExtraTreeClassifier",
+      "qualifiedName": "sklearn.tree.ExtraTreeClassifier",
+      "module": "sklearn.tree",
+      "kind": "class"
+    },
+    {
+      "name": "ExtraTreeRegressor",
+      "qualifiedName": "sklearn.tree.ExtraTreeRegressor",
+      "module": "sklearn.tree",
+      "kind": "class"
+    },
+    {
+      "name": "export_graphviz",
+      "qualifiedName": "sklearn.tree.export_graphviz",
+      "module": "sklearn.tree",
+      "kind": "function"
+    },
+    {
+      "name": "export_text",
+      "qualifiedName": "sklearn.tree.export_text",
+      "module": "sklearn.tree",
+      "kind": "function"
+    },
+    {
+      "name": "plot_tree",
+      "qualifiedName": "sklearn.tree.plot_tree",
+      "module": "sklearn.tree",
+      "kind": "function"
+    }
+  ]
+}

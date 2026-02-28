@@ -88,7 +88,7 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 ## Included APIs
 
 - Models: `LinearRegression`, `LogisticRegression`, `KNeighborsClassifier`, `DecisionTreeClassifier`, `RandomForestClassifier`, plus additional parity models (`LinearSVC`, `GaussianNB`, `SGDClassifier`, `SGDRegressor`, regressors for tree/forest, `OneClassSVM`).
-- Clustering / decomposition / manifold: `KMeans`, `DBSCAN`, `AgglomerativeClustering`, `SpectralClustering`, `Birch`, `OPTICS`, `PCA`, `TruncatedSVD`, `FastICA`, `NMF`, `KernelPCA`, `TSNE`, `Isomap`, `LocallyLinearEmbedding`, `MDS`.
+- Clustering / decomposition / manifold: `KMeans`, `DBSCAN`, `AgglomerativeClustering`, `SpectralClustering`, `Birch`, `OPTICS`, `PCA`, `TruncatedSVD`, `FastICA`, `NMF`, `KernelPCA`, `PLSSVD`, `PLSRegression`, `PLSCanonical`, `CCA`, `TSNE`, `Isomap`, `LocallyLinearEmbedding`, `MDS`.
 - Anomaly detection: `IsolationForest`, `LocalOutlierFactor`, `OneClassSVM`.
 - Calibration / meta-estimators: `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier`.
 - Boosting: `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor`.
@@ -108,7 +108,7 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 | Tree/ensemble | `DecisionTreeClassifier`, `DecisionTreeRegressor`, `RandomForestClassifier`, `RandomForestRegressor`, `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor` |
 | Neighbors / Bayes | `KNeighborsClassifier`, `KNeighborsRegressor`, `GaussianNB` |
 | Clustering | `KMeans`, `DBSCAN`, `AgglomerativeClustering`, `SpectralClustering`, `Birch`, `OPTICS` |
-| Decomposition / Manifold | `PCA`, `TruncatedSVD`, `FastICA`, `NMF`, `KernelPCA`, `TSNE`, `Isomap`, `LocallyLinearEmbedding`, `MDS` |
+| Decomposition / Manifold | `PCA`, `TruncatedSVD`, `FastICA`, `NMF`, `KernelPCA`, `PLSSVD`, `PLSRegression`, `PLSCanonical`, `CCA`, `TSNE`, `Isomap`, `LocallyLinearEmbedding`, `MDS` |
 | Anomaly detection | `IsolationForest`, `LocalOutlierFactor`, `OneClassSVM` |
 | Calibration / Meta | `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier`, `BaggingRegressor`, `OneVsRestClassifier`, `OneVsOneClassifier` |
 | Baselines | `DummyClassifier`, `DummyRegressor` |
@@ -120,7 +120,62 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 | Metrics (clustering) | `silhouetteScore`, `calinskiHarabaszScore`, `daviesBouldinScore`, `adjustedRandScore` |
 | Inspection | `permutationImportance`, `partialDependence`, `permutationTestScore` |
 
-Near-term parity gaps vs scikit-learn include richer decomposition and covariance APIs, feature extraction/image modules, expanded anomaly/density estimators, and broader model-inspection display/reporting utilities.
+### Parity Coverage vs README
+
+Parity status is now aligned across runtime, parity matrix, and README surface.
+
+Source of required surface: `docs/parity-matrix.json` (`159` total exports).
+
+| Area | Required | Documented in README | Missing in README |
+| --- | ---: | ---: | ---: |
+| Anomaly | 3 | 3 | 0 |
+| Baselines | 2 | 2 | 0 |
+| Calibration / Meta | 9 | 9 | 0 |
+| Clustering | 6 | 6 | 0 |
+| Composition | 3 | 3 | 0 |
+| Covariance | 4 | 4 | 0 |
+| Decomposition / Manifold | 17 | 17 | 0 |
+| Discriminant | 2 | 2 | 0 |
+| Feature selection | 16 | 16 | 0 |
+| Inspection | 3 | 3 | 0 |
+| Linear models | 11 | 11 | 0 |
+| Metrics | 20 | 20 | 0 |
+| Mixture | 2 | 2 | 0 |
+| Model selection | 16 | 16 | 0 |
+| Neighbors / Bayes | 7 | 7 | 0 |
+| Neural nets | 2 | 2 | 0 |
+| Preprocessing | 17 | 17 | 0 |
+| SVM / Kernel | 5 | 5 | 0 |
+| Semi-supervised | 2 | 2 | 0 |
+| Tree / Ensemble | 12 | 12 | 0 |
+| Total | 159 | 159 | 0 |
+
+Tracked parity status (latest check):
+- API surface parity: `159 / 159` required exports (`100%`).
+- API/class/interface contract parity: `0` failures (`100%` pass).
+- sklearn snapshot parity gate metrics: `23 / 23` pass (`100%`).
+- Full sklearn public-symbol coverage (non-strict inventory gate): `155 / 454` (`34.14%`).
+
+Artifacts:
+- `bench/results/parity/parity-report-latest.md`
+- `bench/results/parity/parity-matrix-report.json`
+- `bench/results/parity/parity-sklearn-report.json`
+- `bench/results/parity/parity-full-report.json`
+- `docs/sklearn-public-api.json`
+
+Commands:
+- Regenerate sklearn inventory: `bun run parity:inventory:generate`
+- Check full symbol coverage (report only): `bun run parity:full:check`
+- Enforce strict full-symbol gate: `PARITY_FULL_STRICT=1 bun run parity:full:check`
+
+If you want a raw required-vs-readme diff, it is generated from `docs/parity-matrix.json` and enforced in CI.
+
+Beyond the tracked matrix, remaining gaps to full scikit-learn-wide one-to-one behavior are mainly untracked modules and APIs, including:
+- Feature extraction families (for example text/image vectorizers and hashing/vectorization utilities).
+- Additional decomposition/manifold variants and solvers not currently exposed.
+- Additional covariance and gaussian-process families.
+- Additional inspection/display/reporting utilities and plotting-oriented helpers.
+- Dataset utilities and other sklearn ecosystem helpers outside this runtime-focused library surface.
 
 Multiclass support is available for `GaussianNB`, `KNeighborsClassifier`, `LogisticRegression`, `SGDClassifier`, `LinearSVC`, `DecisionTreeClassifier`, `RandomForestClassifier`, `VotingClassifier`, `StackingClassifier`, `BaggingClassifier`, and `CalibratedClassifierCV`.
 
@@ -231,7 +286,7 @@ Snapshot generated at: 2026-02-25T19:47:51.136Z
 - Zig acceleration: `docs/zig-acceleration.md`
 - Native ABI: `docs/native-abi.md`
 - Release checklist: `docs/release-checklist.md`
-- Release notes draft automation: `bun run release:notes` (updates `docs/release-notes/v0.1.18-draft.md` + parity block in `CHANGELOG.md`)
+- Release notes draft automation: `bun run release:notes` (updates `docs/release-notes/v*.md` + parity block in `CHANGELOG.md`)
 
 ## Contributing / Project Files
 

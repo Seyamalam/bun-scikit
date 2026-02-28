@@ -99,11 +99,18 @@ jobs:
           PARITY_SKLEARN_REPORT_PATH: "bench/results/parity/parity-sklearn-report.json"
         run: bun run parity:check
 
+      - name: Run full sklearn symbol parity coverage
+        env:
+          PARITY_FULL_REPORT_PATH: "bench/results/parity/parity-full-report.json"
+          PARITY_FULL_STRICT: "0"
+        run: bun run parity:full:check
+
       - name: Build parity report bundle
         env:
           PARITY_REPORT_DIR: "bench/results/parity"
           PARITY_MATRIX_REPORT_PATH: "bench/results/parity/parity-matrix-report.json"
           PARITY_SKLEARN_REPORT_PATH: "bench/results/parity/parity-sklearn-report.json"
+          PARITY_FULL_REPORT_PATH: "bench/results/parity/parity-full-report.json"
           PARITY_HISTORY_PATH: "bench/results/history/parity-history.jsonl"
         run: bun run parity:report
 

@@ -724,6 +724,14 @@ Methods:
 - `silhouetteScore`
 - `TSNE`
 - `TSNEOptions`
+- `PLSSVD`
+- `PLSSVDOptions`
+- `PLSRegression`
+- `PLSRegressionOptions`
+- `PLSCanonical`
+- `PLSCanonicalOptions`
+- `CCA`
+- `CCAOptions`
 - `SparsePCA`
 - `SparsePCAOptions`
 - `MiniBatchSparsePCA`

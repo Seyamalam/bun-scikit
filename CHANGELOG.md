@@ -11,6 +11,8 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 <!-- PARITY_AUTO_START -->
 - (auto) No new parity commits detected since project start.
 <!-- PARITY_AUTO_END -->
+- Full sklearn public API inventory + coverage tooling (`scripts/generate-sklearn-api-inventory.py`, `scripts/check-sklearn-full-parity.ts`) with CI/release-prep integration and parity bundle reporting.
+- Cross-decomposition estimator family: `PLSSVD`, `PLSRegression`, `PLSCanonical`, and `CCA`, including export wiring, params API parity, and dedicated tests.
 - Reusable `Release Prep` workflow (`.github/workflows/release-prep.yml`) that gates release pipelines with tests, typecheck, Zig guard checks, benchmark checks, README benchmark sync checks, and npm-pack smoke validation.
 - Zig backend smoke example for users: `examples/zig-backend-smoke.ts`.
 - Per-kernel tree hot-path regression guard (`bench:hotpaths:check`) using `bench/results/tree-hotpaths-baseline.json`.

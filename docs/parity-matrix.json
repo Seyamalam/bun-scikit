@@ -16,6 +16,7 @@
     "BayesianGaussianMixture",
     "Binarizer",
     "Birch",
+    "CCA",
     "brierScoreLoss",
     "CalibratedClassifierCV",
     "calinskiHarabaszScore",
@@ -112,6 +113,9 @@
     "permutationImportance",
     "permutationTestScore",
     "Pipeline",
+    "PLSCanonical",
+    "PLSRegression",
+    "PLSSVD",
     "PolynomialFeatures",
     "PowerTransformer",
     "precisionScore",
@@ -207,6 +211,13 @@
       },
       {
         "name": "Birch",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "CCA",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -695,6 +706,27 @@
           "setFitRequest",
           "setParams",
           "transform"
+        ]
+      },
+      {
+        "name": "PLSCanonical",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "PLSRegression",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "PLSSVD",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
         ]
       },
       {
