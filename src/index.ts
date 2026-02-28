@@ -19,12 +19,23 @@ export * from "./preprocessing/SimpleImputer";
 export * from "./preprocessing/OneHotEncoder";
 export * from "./preprocessing/KNNImputer";
 export * from "./preprocessing/OrdinalEncoder";
+export * from "./preprocessing/QuantileTransformer";
+export * from "./preprocessing/PowerTransformer";
+export * from "./preprocessing/KBinsDiscretizer";
+export * from "./impute/IterativeImputer";
+export * from "./impute/MissingIndicator";
 
 // Linear models
 export * from "./linear_model/LinearRegression";
 export * from "./linear_model/LogisticRegression";
 export * from "./linear_model/SGDClassifier";
 export * from "./linear_model/SGDRegressor";
+export * from "./linear_model/Ridge";
+export * from "./linear_model/Lasso";
+export * from "./linear_model/ElasticNet";
+export * from "./linear_model/RidgeCV";
+export * from "./linear_model/LassoCV";
+export * from "./linear_model/ElasticNetCV";
 
 // Other estimators
 export * from "./neighbors/KNeighborsClassifier";
@@ -85,6 +96,10 @@ export * from "./covariance/EmpiricalCovariance";
 export * from "./covariance/LedoitWolf";
 export * from "./covariance/OAS";
 export * from "./covariance/MinCovDet";
+export * from "./discriminant_analysis/LinearDiscriminantAnalysis";
+export * from "./discriminant_analysis/QuadraticDiscriminantAnalysis";
+export * from "./mixture/GaussianMixture";
+export * from "./mixture/BayesianGaussianMixture";
 export * from "./semi_supervised/LabelPropagation";
 export * from "./semi_supervised/LabelSpreading";
 export * from "./neural_network/MLPClassifier";

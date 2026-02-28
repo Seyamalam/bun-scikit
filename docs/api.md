@@ -758,6 +758,42 @@ Methods:
 - `MLPClassifierOptions`
 - `MLPRegressor`
 - `MLPRegressorOptions`
+- `Ridge`
+- `RidgeOptions`
+- `Lasso`
+- `LassoOptions`
+- `ElasticNet`
+- `ElasticNetOptions`
+- `RidgeCV`
+- `RidgeCVOptions`
+- `LassoCV`
+- `LassoCVOptions`
+- `ElasticNetCV`
+- `ElasticNetCVOptions`
+- `LinearDiscriminantAnalysis`
+- `LinearDiscriminantAnalysisOptions`
+- `QuadraticDiscriminantAnalysis`
+- `QuadraticDiscriminantAnalysisOptions`
+- `GaussianMixture`
+- `GaussianMixtureOptions`
+- `BayesianGaussianMixture`
+- `BayesianGaussianMixtureOptions`
+- `QuantileTransformer`
+- `QuantileTransformerOptions`
+- `QuantileOutputDistribution`
+- `PowerTransformer`
+- `PowerTransformerOptions`
+- `PowerTransformerMethod`
+- `KBinsDiscretizer`
+- `KBinsDiscretizerOptions`
+- `KBinsEncode`
+- `KBinsStrategy`
+- `IterativeImputer`
+- `IterativeImputerOptions`
+- `IterativeImputerInitialStrategy`
+- `MissingIndicator`
+- `MissingIndicatorOptions`
+- `MissingIndicatorFeatures`
 ## API Symbol Index
 
 `AdaBoostClassifier`, `AdaBoostClassifierOptions`, `AgglomerativeClustering`, `AgglomerativeClusteringOptions`, `AgglomerativeLinkage`, `AgglomerativeMetric`, `BaggingClassifier`, `BaggingClassifierOptions`, `balancedAccuracyScore`, `Binarizer`, `BinarizerOptions`, `brierScoreLoss`, `BuiltInScoring`, `CalibratedClassifierCV`, `CalibratedClassifierCVOptions`, `CalibrationMethod`, `chi2`, `classificationReport`, `ClassificationReportLabelMetrics`, `ClassificationReportResult`, `ColumnSelector`, `ColumnTransformer`, `ColumnTransformerOptions`, `ColumnTransformerSpec`, `ColumnTransformerStep`, `confusionMatrix`, `ConfusionMatrixResult`, `CrossValEstimator`, `crossValPredict`, `CrossValPredictMethod`, `CrossValPredictOptions`, `crossValScore`, `CrossValScoreOptions`, `CrossValSplitter`, `DBSCAN`, `DBSCANOptions`, `DecisionTreeRegressor`, `DecisionTreeRegressorOptions`, `DummyClassifier`, `DummyClassifierOptions`, `DummyClassifierStrategy`, `DummyRegressor`, `DummyRegressorOptions`, `DummyRegressorStrategy`, `explainedVarianceScore`, `f_classif`, `f_regression`, `FastICA`, `FastICAOptions`, `FeatureUnion`, `FeatureUnionOptions`, `FeatureUnionSpec`, `FeatureUnionTransformer`, `FoldIndices`, `FRegressionOptions`, `GaussianNB`, `GaussianNBOptions`, `GradientBoostingClassifier`, `GradientBoostingClassifierOptions`, `GradientBoostingRegressor`, `GradientBoostingRegressorOptions`, `GridSearchCV`, `GridSearchCVOptions`, `GridSearchResultRow`, `GroupShuffleSplit`, `GroupShuffleSplitOptions`, `ImputerStrategy`, `KFold`, `KFoldOptions`, `KMeans`, `KMeansOptions`, `LabelEncoder`, `learningCurve`, `LearningCurveOptions`, `LearningCurveResult`, `LinearSVC`, `LinearSVCOptions`, `logLoss`, `matthewsCorrcoef`, `MaxAbsScaler`, `meanAbsolutePercentageError`, `MinMaxScaler`, `MinMaxScalerOptions`, `MultioutputMode`, `NMF`, `NMFOptions`, `Normalizer`, `NormalizerOptions`, `OneHotEncoder`, `OneHotEncoderOptions`, `ParamDistributions`, `ParamGrid`, `PCA`, `PCAOptions`, `permutationImportance`, `PermutationImportanceEstimator`, `PermutationImportanceOptions`, `PermutationImportanceResult`, `Pipeline`, `PipelineStep`, `PolynomialFeatures`, `PolynomialFeaturesOptions`, `RandomForestRegressor`, `RandomForestRegressorOptions`, `RandomizedSearchCV`, `RandomizedSearchCVOptions`, `RandomizedSearchResultRow`, `RegressionMetricOptions`, `RepeatedKFold`, `RepeatedKFoldOptions`, `RepeatedStratifiedKFold`, `RepeatedStratifiedKFoldOptions`, `RobustScaler`, `RobustScalerOptions`, `rocAucScore`, `ScoringFn`, `SelectKBest`, `SelectKBestOptions`, `SelectPercentile`, `SelectPercentileOptions`, `SGDClassifier`, `SGDClassifierLoss`, `SGDClassifierOptions`, `SGDRegressor`, `SGDRegressorOptions`, `SimpleImputer`, `SimpleImputerOptions`, `StackingClassifier`, `StackingClassifierOptions`, `StackingEstimatorSpec`, `StackingMethod`, `StackingRegressor`, `StackingRegressorEstimatorSpec`, `StackingRegressorOptions`, `StratifiedGroupKFold`, `StratifiedGroupKFoldOptions`, `StratifiedKFold`, `StratifiedKFoldOptions`, `StratifiedShuffleSplit`, `StratifiedShuffleSplitOptions`, `Transformer`, `TruncatedSVD`, `TruncatedSVDOptions`, `UnivariateScoreFunc`, `UnivariateScoreResult`, `validationCurve`, `ValidationCurveOptions`, `ValidationCurveResult`, `VarianceThreshold`, `VarianceThresholdOptions`, `VotingClassifier`, `VotingClassifierOptions`, `VotingEstimatorSpec`, `VotingRegressor`, `VotingRegressorEstimatorSpec`, `VotingRegressorOptions`, `VotingStrategy`.

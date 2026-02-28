@@ -45,6 +45,12 @@ import {
   SequentialFeatureSelector,
 } from "../feature_selection/statisticalSelection";
 import { LinearRegression } from "../linear_model/LinearRegression";
+import { Ridge } from "../linear_model/Ridge";
+import { Lasso } from "../linear_model/Lasso";
+import { ElasticNet } from "../linear_model/ElasticNet";
+import { RidgeCV } from "../linear_model/RidgeCV";
+import { LassoCV } from "../linear_model/LassoCV";
+import { ElasticNetCV } from "../linear_model/ElasticNetCV";
 import { LogisticRegression } from "../linear_model/LogisticRegression";
 import { SGDClassifier } from "../linear_model/SGDClassifier";
 import { SGDRegressor } from "../linear_model/SGDRegressor";
@@ -72,6 +78,7 @@ import { NearestNeighbors } from "../neighbors/NearestNeighbors";
 import { RadiusNeighborsClassifier } from "../neighbors/RadiusNeighborsClassifier";
 import { RadiusNeighborsRegressor } from "../neighbors/RadiusNeighborsRegressor";
 import { Binarizer } from "../preprocessing/Binarizer";
+import { KBinsDiscretizer } from "../preprocessing/KBinsDiscretizer";
 import { KNNImputer } from "../preprocessing/KNNImputer";
 import { LabelEncoder } from "../preprocessing/LabelEncoder";
 import { MaxAbsScaler } from "../preprocessing/MaxAbsScaler";
@@ -79,7 +86,9 @@ import { MinMaxScaler } from "../preprocessing/MinMaxScaler";
 import { Normalizer } from "../preprocessing/Normalizer";
 import { OneHotEncoder } from "../preprocessing/OneHotEncoder";
 import { OrdinalEncoder } from "../preprocessing/OrdinalEncoder";
+import { PowerTransformer } from "../preprocessing/PowerTransformer";
 import { PolynomialFeatures } from "../preprocessing/PolynomialFeatures";
+import { QuantileTransformer } from "../preprocessing/QuantileTransformer";
 import { RobustScaler } from "../preprocessing/RobustScaler";
 import { SimpleImputer } from "../preprocessing/SimpleImputer";
 import { StandardScaler } from "../preprocessing/StandardScaler";
@@ -95,6 +104,12 @@ import { EmpiricalCovariance } from "../covariance/EmpiricalCovariance";
 import { LedoitWolf } from "../covariance/LedoitWolf";
 import { MinCovDet } from "../covariance/MinCovDet";
 import { OAS } from "../covariance/OAS";
+import { LinearDiscriminantAnalysis } from "../discriminant_analysis/LinearDiscriminantAnalysis";
+import { QuadraticDiscriminantAnalysis } from "../discriminant_analysis/QuadraticDiscriminantAnalysis";
+import { BayesianGaussianMixture } from "../mixture/BayesianGaussianMixture";
+import { GaussianMixture } from "../mixture/GaussianMixture";
+import { IterativeImputer } from "../impute/IterativeImputer";
+import { MissingIndicator } from "../impute/MissingIndicator";
 
 type Constructor = { prototype: object };
 
@@ -156,8 +171,27 @@ installParamsApi(SimpleImputer, { params: ["strategy", "fillValue"] });
 installParamsApi(OneHotEncoder, { params: ["handleUnknown"] });
 installParamsApi(KNNImputer, { params: ["nNeighbors", "weights"] });
 installParamsApi(OrdinalEncoder, { params: ["handleUnknown", "unknownValue"] });
+installParamsApi(QuantileTransformer, { params: ["nQuantiles", "outputDistribution"] });
+installParamsApi(PowerTransformer, { params: ["method", "standardize"] });
+installParamsApi(KBinsDiscretizer, { params: ["nBins", "encode", "strategy"] });
+installParamsApi(IterativeImputer, {
+  params: ["maxIter", "tolerance", "initialStrategy", "fillValue"],
+});
+installParamsApi(MissingIndicator, { params: ["features", "errorOnNew"] });
 
 installParamsApi(LinearRegression, { params: ["fitIntercept", "solver"] });
+installParamsApi(Ridge, { params: ["alpha", "fitIntercept"] });
+installParamsApi(Lasso, { params: ["alpha", "fitIntercept", "maxIter", "tolerance"] });
+installParamsApi(ElasticNet, {
+  params: ["alpha", "l1Ratio", "fitIntercept", "maxIter", "tolerance"],
+});
+installParamsApi(RidgeCV, { params: ["alphas", "cv", "fitIntercept", "randomState"] });
+installParamsApi(LassoCV, {
+  params: ["alphas", "cv", "fitIntercept", "maxIter", "tolerance", "randomState"],
+});
+installParamsApi(ElasticNetCV, {
+  params: ["alphas", "l1Ratio", "cv", "fitIntercept", "maxIter", "tolerance", "randomState"],
+});
 installParamsApi(LogisticRegression, {
   params: ["fitIntercept", "solver", "learningRate", "maxIter", "tolerance", "l2", "lbfgsMemory"],
 });
@@ -323,6 +357,21 @@ installParamsApi(EmpiricalCovariance, { params: ["assumeCentered"] });
 installParamsApi(LedoitWolf, { params: [] });
 installParamsApi(OAS, { params: [] });
 installParamsApi(MinCovDet, { params: ["supportFraction", "maxIter"] });
+installParamsApi(LinearDiscriminantAnalysis, { params: ["priors"] });
+installParamsApi(QuadraticDiscriminantAnalysis, { params: ["priors", "regParam"] });
+installParamsApi(GaussianMixture, {
+  params: ["nComponents", "maxIter", "tolerance", "regCovar", "randomState"],
+});
+installParamsApi(BayesianGaussianMixture, {
+  params: [
+    "nComponents",
+    "maxIter",
+    "tolerance",
+    "regCovar",
+    "randomState",
+    "weightConcentrationPrior",
+  ],
+});
 installParamsApi(LabelPropagation, {
   params: ["kernel", "gamma", "nNeighbors", "maxIter", "tolerance"],
 });
