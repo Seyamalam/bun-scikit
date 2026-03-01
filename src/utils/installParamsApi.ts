@@ -26,6 +26,9 @@ import { CCA } from "../cross_decomposition/CCA";
 import { PLSCanonical } from "../cross_decomposition/PLSCanonical";
 import { PLSRegression } from "../cross_decomposition/PLSRegression";
 import { PLSSVD } from "../cross_decomposition/PLSSVD";
+import { EllipticEnvelope } from "../covariance/EllipticEnvelope";
+import { GraphicalLasso } from "../covariance/GraphicalLasso";
+import { GraphicalLassoCV } from "../covariance/GraphicalLassoCV";
 import { DummyClassifier } from "../dummy/DummyClassifier";
 import { DummyRegressor } from "../dummy/DummyRegressor";
 import { AdaBoostClassifier } from "../ensemble/AdaBoostClassifier";
@@ -54,6 +57,11 @@ import {
   SelectFwe,
   SequentialFeatureSelector,
 } from "../feature_selection/statisticalSelection";
+import { DictVectorizer } from "../feature_extraction/DictVectorizer";
+import { FeatureHasher } from "../feature_extraction/FeatureHasher";
+import { GaussianProcessClassifier } from "../gaussian_process/GaussianProcessClassifier";
+import { GaussianProcessRegressor } from "../gaussian_process/GaussianProcessRegressor";
+import { IsotonicRegression } from "../isotonic/IsotonicRegression";
 import { LinearRegression } from "../linear_model/LinearRegression";
 import { Ridge } from "../linear_model/Ridge";
 import { Lasso } from "../linear_model/Lasso";
@@ -61,6 +69,20 @@ import { ElasticNet } from "../linear_model/ElasticNet";
 import { RidgeCV } from "../linear_model/RidgeCV";
 import { LassoCV } from "../linear_model/LassoCV";
 import { ElasticNetCV } from "../linear_model/ElasticNetCV";
+import { BayesianRidge } from "../linear_model/BayesianRidge";
+import { ARDRegression } from "../linear_model/ARDRegression";
+import { Perceptron } from "../linear_model/Perceptron";
+import { PassiveAggressiveClassifier } from "../linear_model/PassiveAggressiveClassifier";
+import { PassiveAggressiveRegressor } from "../linear_model/PassiveAggressiveRegressor";
+import { HuberRegressor } from "../linear_model/HuberRegressor";
+import { LogisticRegressionCV } from "../linear_model/LogisticRegressionCV";
+import { PoissonRegressor } from "../linear_model/PoissonRegressor";
+import { GammaRegressor } from "../linear_model/GammaRegressor";
+import { QuantileRegressor } from "../linear_model/QuantileRegressor";
+import { MultiTaskLasso } from "../linear_model/MultiTaskLasso";
+import { MultiTaskElasticNet } from "../linear_model/MultiTaskElasticNet";
+import { MultiTaskLassoCV } from "../linear_model/MultiTaskLassoCV";
+import { MultiTaskElasticNetCV } from "../linear_model/MultiTaskElasticNetCV";
 import { LogisticRegression } from "../linear_model/LogisticRegression";
 import { SGDClassifier } from "../linear_model/SGDClassifier";
 import { SGDRegressor } from "../linear_model/SGDRegressor";
@@ -80,19 +102,32 @@ import { RepeatedStratifiedKFold } from "../model_selection/RepeatedStratifiedKF
 import { StratifiedGroupKFold } from "../model_selection/StratifiedGroupKFold";
 import { StratifiedKFold } from "../model_selection/StratifiedKFold";
 import { StratifiedShuffleSplit } from "../model_selection/StratifiedShuffleSplit";
+import { BernoulliNB } from "../naive_bayes/BernoulliNB";
+import { CategoricalNB } from "../naive_bayes/CategoricalNB";
+import { ComplementNB } from "../naive_bayes/ComplementNB";
 import { GaussianNB } from "../naive_bayes/GaussianNB";
+import { MultinomialNB } from "../naive_bayes/MultinomialNB";
+import { BallTree } from "../neighbors/BallTree";
+import { KDTree } from "../neighbors/KDTree";
 import { KNeighborsClassifier } from "../neighbors/KNeighborsClassifier";
 import { KernelDensity } from "../neighbors/KernelDensity";
 import { KNeighborsRegressor } from "../neighbors/KNeighborsRegressor";
+import { KNeighborsTransformer } from "../neighbors/KNeighborsTransformer";
 import { NearestNeighbors } from "../neighbors/NearestNeighbors";
+import { NearestCentroid } from "../neighbors/NearestCentroid";
+import { NeighborhoodComponentsAnalysis } from "../neighbors/NeighborhoodComponentsAnalysis";
 import { RadiusNeighborsClassifier } from "../neighbors/RadiusNeighborsClassifier";
 import { RadiusNeighborsRegressor } from "../neighbors/RadiusNeighborsRegressor";
 import { Binarizer } from "../preprocessing/Binarizer";
+import { FunctionTransformer } from "../preprocessing/FunctionTransformer";
 import { KBinsDiscretizer } from "../preprocessing/KBinsDiscretizer";
 import { KNNImputer } from "../preprocessing/KNNImputer";
+import { KernelCenterer } from "../preprocessing/KernelCenterer";
+import { LabelBinarizer } from "../preprocessing/LabelBinarizer";
 import { LabelEncoder } from "../preprocessing/LabelEncoder";
 import { MaxAbsScaler } from "../preprocessing/MaxAbsScaler";
 import { MinMaxScaler } from "../preprocessing/MinMaxScaler";
+import { MultiLabelBinarizer } from "../preprocessing/MultiLabelBinarizer";
 import { Normalizer } from "../preprocessing/Normalizer";
 import { OneHotEncoder } from "../preprocessing/OneHotEncoder";
 import { OrdinalEncoder } from "../preprocessing/OrdinalEncoder";
@@ -180,14 +215,25 @@ installParamsApi(MaxAbsScaler, { params: [] });
 installParamsApi(Normalizer, { params: ["norm"] });
 installParamsApi(Binarizer, { params: ["threshold"] });
 installParamsApi(LabelEncoder, { params: [] });
+installParamsApi(LabelBinarizer, { params: ["negLabel", "posLabel", "sparseOutput"] });
+installParamsApi(MultiLabelBinarizer, {
+  params: ["classes", "sparseOutput"],
+  aliases: { classes: "classesOption" },
+});
 installParamsApi(PolynomialFeatures, { params: ["degree", "includeBias", "interactionOnly"] });
 installParamsApi(SimpleImputer, { params: ["strategy", "fillValue"] });
 installParamsApi(OneHotEncoder, { params: ["handleUnknown"] });
+installParamsApi(FunctionTransformer, {
+  params: ["func", "inverseFunc", "validate", "acceptSparse", "checkInverse"],
+});
 installParamsApi(KNNImputer, { params: ["nNeighbors", "weights"] });
+installParamsApi(KernelCenterer, { params: [] });
 installParamsApi(OrdinalEncoder, { params: ["handleUnknown", "unknownValue"] });
 installParamsApi(QuantileTransformer, { params: ["nQuantiles", "outputDistribution"] });
 installParamsApi(PowerTransformer, { params: ["method", "standardize"] });
 installParamsApi(KBinsDiscretizer, { params: ["nBins", "encode", "strategy"] });
+installParamsApi(DictVectorizer, { params: ["sort", "separator"] });
+installParamsApi(FeatureHasher, { params: ["nFeatures", "inputType", "alternateSign"] });
 installParamsApi(IterativeImputer, {
   params: ["maxIter", "tolerance", "initialStrategy", "fillValue"],
 });
@@ -206,6 +252,58 @@ installParamsApi(LassoCV, {
 installParamsApi(ElasticNetCV, {
   params: ["alphas", "l1Ratio", "cv", "fitIntercept", "maxIter", "tolerance", "randomState"],
 });
+installParamsApi(BayesianRidge, {
+  params: ["alpha1", "alpha2", "lambda1", "lambda2", "nIter", "tolerance", "fitIntercept", "computeScore"],
+});
+installParamsApi(ARDRegression, {
+  params: [
+    "alpha1",
+    "alpha2",
+    "lambda1",
+    "lambda2",
+    "thresholdLambda",
+    "nIter",
+    "tolerance",
+    "fitIntercept",
+    "computeScore",
+  ],
+});
+installParamsApi(Perceptron, {
+  params: ["alpha", "fitIntercept", "maxIter", "tolerance", "shuffle", "randomState"],
+});
+installParamsApi(PassiveAggressiveClassifier, {
+  params: ["C", "fitIntercept", "maxIter", "tolerance", "loss"],
+});
+installParamsApi(PassiveAggressiveRegressor, {
+  params: ["C", "fitIntercept", "maxIter", "tolerance", "epsilon", "loss"],
+});
+installParamsApi(HuberRegressor, {
+  params: ["epsilon", "alpha", "fitIntercept", "maxIter", "tolerance", "learningRate"],
+});
+installParamsApi(LogisticRegressionCV, {
+  params: ["Cs", "cv", "fitIntercept", "solver", "learningRate", "maxIter", "tolerance", "lbfgsMemory"],
+});
+installParamsApi(PoissonRegressor, {
+  params: ["alpha", "fitIntercept", "maxIter", "tolerance", "learningRate"],
+});
+installParamsApi(GammaRegressor, {
+  params: ["alpha", "fitIntercept", "maxIter", "tolerance", "learningRate"],
+});
+installParamsApi(QuantileRegressor, {
+  params: ["quantile", "alpha", "fitIntercept", "maxIter", "tolerance", "learningRate"],
+});
+installParamsApi(MultiTaskLasso, {
+  params: ["alpha", "fitIntercept", "maxIter", "tolerance"],
+});
+installParamsApi(MultiTaskElasticNet, {
+  params: ["alpha", "l1Ratio", "fitIntercept", "maxIter", "tolerance"],
+});
+installParamsApi(MultiTaskLassoCV, {
+  params: ["alphas", "cv", "fitIntercept", "maxIter", "tolerance", "randomState"],
+});
+installParamsApi(MultiTaskElasticNetCV, {
+  params: ["alphas", "l1Ratio", "cv", "fitIntercept", "maxIter", "tolerance", "randomState"],
+});
 installParamsApi(LogisticRegression, {
   params: ["fitIntercept", "solver", "learningRate", "maxIter", "tolerance", "l2", "lbfgsMemory"],
 });
@@ -222,10 +320,21 @@ installParamsApi(OneClassSVM, { params: ["nu", "kernel", "gamma"] });
 installParamsApi(KNeighborsClassifier, { params: ["nNeighbors"] });
 installParamsApi(KNeighborsRegressor, { params: ["nNeighbors", "weights"] });
 installParamsApi(NearestNeighbors, { params: ["nNeighbors", "radius"] });
+installParamsApi(BallTree, { params: ["leafSize"] });
+installParamsApi(KDTree, { params: ["leafSize"] });
+installParamsApi(KNeighborsTransformer, { params: ["nNeighbors", "mode", "metric", "p"] });
+installParamsApi(NeighborhoodComponentsAnalysis, {
+  params: ["nComponents", "maxIter", "tolerance", "randomState"],
+});
+installParamsApi(NearestCentroid, { params: ["metric", "shrinkThreshold"] });
 installParamsApi(RadiusNeighborsClassifier, { params: ["radius", "weights", "outlierLabel"] });
 installParamsApi(RadiusNeighborsRegressor, { params: ["radius", "weights"] });
 installParamsApi(KernelDensity, { params: ["bandwidth", "kernel"] });
 installParamsApi(GaussianNB, { params: ["varSmoothing"] });
+installParamsApi(BernoulliNB, { params: ["alpha", "binarize", "fitPrior", "classPrior"] });
+installParamsApi(MultinomialNB, { params: ["alpha", "fitPrior", "classPrior"] });
+installParamsApi(ComplementNB, { params: ["alpha", "fitPrior", "classPrior", "norm"] });
+installParamsApi(CategoricalNB, { params: ["alpha", "fitPrior", "classPrior", "minCategories"] });
 installParamsApi(DecisionTreeClassifier, {
   params: ["maxDepth", "minSamplesSplit", "minSamplesLeaf", "maxFeatures", "randomState"],
 });
@@ -411,6 +520,14 @@ installParamsApi(EmpiricalCovariance, { params: ["assumeCentered"] });
 installParamsApi(LedoitWolf, { params: [] });
 installParamsApi(OAS, { params: [] });
 installParamsApi(MinCovDet, { params: ["supportFraction", "maxIter"] });
+installParamsApi(EllipticEnvelope, { params: ["contamination", "supportFraction", "maxIter"] });
+installParamsApi(GraphicalLasso, { params: ["alpha", "maxIter", "tolerance", "assumeCentered"] });
+installParamsApi(GraphicalLassoCV, {
+  params: ["alphas", "cv", "maxIter", "tolerance", "assumeCentered"],
+});
+installParamsApi(GaussianProcessRegressor, { params: ["alpha", "lengthScale", "normalizeY"] });
+installParamsApi(GaussianProcessClassifier, { params: ["alpha", "lengthScale", "maxIter"] });
+installParamsApi(IsotonicRegression, { params: ["yMin", "yMax", "increasing", "outOfBounds"] });
 installParamsApi(LinearDiscriminantAnalysis, { params: ["priors"] });
 installParamsApi(QuadraticDiscriminantAnalysis, { params: ["priors", "regParam"] });
 installParamsApi(GaussianMixture, {

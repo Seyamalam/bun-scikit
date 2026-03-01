@@ -1,7 +1,7 @@
 {
   "metadata": {
     "targetSklearnVersion": "1.5.x",
-    "updatedAt": "2026-02-28",
+    "updatedAt": "2026-03-01",
     "policy": "runtime-exports-must-match-required-exports"
   },
   "requiredExports": [
@@ -11,20 +11,26 @@
     "adjustedRandScore",
     "AffinityPropagation",
     "AgglomerativeClustering",
+    "ARDRegression",
     "BaggingClassifier",
     "BaggingRegressor",
     "balancedAccuracyScore",
+    "BallTree",
     "BayesianGaussianMixture",
+    "BayesianRidge",
+    "BernoulliNB",
     "Binarizer",
     "Birch",
     "brierScoreLoss",
     "CalibratedClassifierCV",
     "calinskiHarabaszScore",
+    "CategoricalNB",
     "CCA",
     "chi2",
     "classificationReport",
     "ClassifierChain",
     "ColumnTransformer",
+    "ComplementNB",
     "confusionMatrix",
     "crossValidate",
     "crossValPredict",
@@ -34,11 +40,14 @@
     "DecisionTreeClassifier",
     "DecisionTreeRegressor",
     "DictionaryLearning",
+    "DictVectorizer",
+    "DistanceMetric",
     "drawParameterSamples",
     "DummyClassifier",
     "DummyRegressor",
     "ElasticNet",
     "ElasticNetCV",
+    "EllipticEnvelope",
     "EmpiricalCovariance",
     "expandParamGrid",
     "explainedVarianceScore",
@@ -49,29 +58,42 @@
     "f1Score",
     "FactorAnalysis",
     "FastICA",
+    "FeatureHasher",
     "FeatureUnion",
+    "FunctionTransformer",
+    "GammaRegressor",
     "GaussianMixture",
     "GaussianNB",
+    "GaussianProcessClassifier",
+    "GaussianProcessRegressor",
     "GenericUnivariateSelect",
     "GradientBoostingClassifier",
     "GradientBoostingRegressor",
+    "GraphicalLasso",
+    "GraphicalLassoCV",
     "GridSearchCV",
     "GroupKFold",
     "GroupShuffleSplit",
     "HistGradientBoostingClassifier",
     "HistGradientBoostingRegressor",
+    "HuberRegressor",
     "IncrementalPCA",
     "IsolationForest",
     "Isomap",
+    "IsotonicRegression",
     "IterativeImputer",
     "KBinsDiscretizer",
+    "KDTree",
+    "KernelCenterer",
     "KernelDensity",
     "KernelPCA",
     "KFold",
     "KMeans",
     "KNeighborsClassifier",
     "KNeighborsRegressor",
+    "KNeighborsTransformer",
     "KNNImputer",
+    "LabelBinarizer",
     "LabelEncoder",
     "LabelPropagation",
     "LabelSpreading",
@@ -86,6 +108,7 @@
     "LocallyLinearEmbedding",
     "LocalOutlierFactor",
     "LogisticRegression",
+    "LogisticRegressionCV",
     "logLoss",
     "matthewsCorrcoef",
     "MaxAbsScaler",
@@ -103,11 +126,19 @@
     "MissingIndicator",
     "MLPClassifier",
     "MLPRegressor",
+    "MultiLabelBinarizer",
+    "MultinomialNB",
     "MultiOutputClassifier",
     "MultiOutputRegressor",
+    "MultiTaskElasticNet",
+    "MultiTaskElasticNetCV",
+    "MultiTaskLasso",
+    "MultiTaskLassoCV",
     "mutualInfoClassif",
     "mutualInfoRegression",
+    "NearestCentroid",
     "NearestNeighbors",
+    "NeighborhoodComponentsAnalysis",
     "NMF",
     "Normalizer",
     "NuSVC",
@@ -122,17 +153,22 @@
     "ParameterGrid",
     "ParameterSampler",
     "partialDependence",
+    "PassiveAggressiveClassifier",
+    "PassiveAggressiveRegressor",
     "PCA",
+    "Perceptron",
     "permutationImportance",
     "permutationTestScore",
     "Pipeline",
     "PLSCanonical",
     "PLSRegression",
     "PLSSVD",
+    "PoissonRegressor",
     "PolynomialFeatures",
     "PowerTransformer",
     "precisionScore",
     "QuadraticDiscriminantAnalysis",
+    "QuantileRegressor",
     "QuantileTransformer",
     "r2Score",
     "RadiusNeighborsClassifier",
@@ -203,6 +239,13 @@
         ]
       },
       {
+        "name": "ARDRegression",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "BaggingClassifier",
         "requiredMethods": [
           "getParams",
@@ -217,7 +260,28 @@
         ]
       },
       {
+        "name": "BallTree",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "BayesianGaussianMixture",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "BayesianRidge",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "BernoulliNB",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -242,6 +306,13 @@
         "requiredMethods": [
           "getParams",
           "setFitRequest",
+          "setParams"
+        ]
+      },
+      {
+        "name": "CategoricalNB",
+        "requiredMethods": [
+          "getParams",
           "setParams"
         ]
       },
@@ -272,6 +343,13 @@
         ]
       },
       {
+        "name": "ComplementNB",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "DBSCAN",
         "requiredMethods": [
           "getParams",
@@ -294,6 +372,20 @@
       },
       {
         "name": "DictionaryLearning",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "DictVectorizer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "DistanceMetric",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -328,6 +420,13 @@
         ]
       },
       {
+        "name": "EllipticEnvelope",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "EmpiricalCovariance",
         "requiredMethods": [
           "getParams",
@@ -349,6 +448,13 @@
         ]
       },
       {
+        "name": "FeatureHasher",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "FeatureUnion",
         "requiredMethods": [
           "fit",
@@ -356,6 +462,20 @@
           "getParams",
           "setParams",
           "transform"
+        ]
+      },
+      {
+        "name": "FunctionTransformer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "GammaRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
         ]
       },
       {
@@ -367,6 +487,20 @@
       },
       {
         "name": "GaussianNB",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "GaussianProcessClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "GaussianProcessRegressor",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -388,6 +522,20 @@
       },
       {
         "name": "GradientBoostingRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "GraphicalLasso",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "GraphicalLassoCV",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -429,6 +577,13 @@
         ]
       },
       {
+        "name": "HuberRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "IncrementalPCA",
         "requiredMethods": [
           "getParams",
@@ -450,6 +605,13 @@
         ]
       },
       {
+        "name": "IsotonicRegression",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "IterativeImputer",
         "requiredMethods": [
           "getParams",
@@ -458,6 +620,20 @@
       },
       {
         "name": "KBinsDiscretizer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "KDTree",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "KernelCenterer",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -506,7 +682,21 @@
         ]
       },
       {
+        "name": "KNeighborsTransformer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "KNNImputer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "LabelBinarizer",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -597,6 +787,13 @@
         ]
       },
       {
+        "name": "LogisticRegressionCV",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "MaxAbsScaler",
         "requiredMethods": [
           "getParams",
@@ -681,6 +878,20 @@
         ]
       },
       {
+        "name": "MultiLabelBinarizer",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MultinomialNB",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "MultiOutputClassifier",
         "requiredMethods": [
           "getParams",
@@ -697,7 +908,49 @@
         ]
       },
       {
+        "name": "MultiTaskElasticNet",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MultiTaskElasticNetCV",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MultiTaskLasso",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "MultiTaskLassoCV",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "NearestCentroid",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "NearestNeighbors",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "NeighborhoodComponentsAnalysis",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -769,7 +1022,28 @@
         ]
       },
       {
+        "name": "PassiveAggressiveClassifier",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "PassiveAggressiveRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "PCA",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "Perceptron",
         "requiredMethods": [
           "getParams",
           "setParams"
@@ -810,6 +1084,13 @@
         ]
       },
       {
+        "name": "PoissonRegressor",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
         "name": "PolynomialFeatures",
         "requiredMethods": [
           "getParams",
@@ -825,6 +1106,13 @@
       },
       {
         "name": "QuadraticDiscriminantAnalysis",
+        "requiredMethods": [
+          "getParams",
+          "setParams"
+        ]
+      },
+      {
+        "name": "QuantileRegressor",
         "requiredMethods": [
           "getParams",
           "setParams"

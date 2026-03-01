@@ -14,16 +14,24 @@ export * from "./preprocessing/MaxAbsScaler";
 export * from "./preprocessing/Normalizer";
 export * from "./preprocessing/Binarizer";
 export * from "./preprocessing/LabelEncoder";
+export * from "./preprocessing/LabelBinarizer";
+export * from "./preprocessing/MultiLabelBinarizer";
 export * from "./preprocessing/PolynomialFeatures";
 export * from "./preprocessing/SimpleImputer";
 export * from "./preprocessing/OneHotEncoder";
+export * from "./preprocessing/FunctionTransformer";
 export * from "./preprocessing/KNNImputer";
+export * from "./preprocessing/KernelCenterer";
 export * from "./preprocessing/OrdinalEncoder";
 export * from "./preprocessing/QuantileTransformer";
 export * from "./preprocessing/PowerTransformer";
 export * from "./preprocessing/KBinsDiscretizer";
 export * from "./impute/IterativeImputer";
 export * from "./impute/MissingIndicator";
+
+// Feature extraction
+export * from "./feature_extraction/DictVectorizer";
+export * from "./feature_extraction/FeatureHasher";
 
 // Linear models
 export * from "./linear_model/LinearRegression";
@@ -36,15 +44,38 @@ export * from "./linear_model/ElasticNet";
 export * from "./linear_model/RidgeCV";
 export * from "./linear_model/LassoCV";
 export * from "./linear_model/ElasticNetCV";
+export * from "./linear_model/BayesianRidge";
+export * from "./linear_model/ARDRegression";
+export * from "./linear_model/Perceptron";
+export * from "./linear_model/PassiveAggressiveClassifier";
+export * from "./linear_model/PassiveAggressiveRegressor";
+export * from "./linear_model/HuberRegressor";
+export * from "./linear_model/LogisticRegressionCV";
+export * from "./linear_model/PoissonRegressor";
+export * from "./linear_model/GammaRegressor";
+export * from "./linear_model/QuantileRegressor";
+export * from "./linear_model/MultiTaskLasso";
+export * from "./linear_model/MultiTaskElasticNet";
+export * from "./linear_model/MultiTaskLassoCV";
+export * from "./linear_model/MultiTaskElasticNetCV";
 
 // Other estimators
 export * from "./neighbors/KNeighborsClassifier";
 export * from "./neighbors/KNeighborsRegressor";
 export * from "./neighbors/NearestNeighbors";
+export * from "./neighbors/BallTree";
+export * from "./neighbors/KDTree";
+export * from "./neighbors/KNeighborsTransformer";
+export * from "./neighbors/NeighborhoodComponentsAnalysis";
+export * from "./neighbors/NearestCentroid";
 export * from "./neighbors/RadiusNeighborsClassifier";
 export * from "./neighbors/RadiusNeighborsRegressor";
 export * from "./neighbors/KernelDensity";
 export * from "./naive_bayes/GaussianNB";
+export * from "./naive_bayes/BernoulliNB";
+export * from "./naive_bayes/MultinomialNB";
+export * from "./naive_bayes/ComplementNB";
+export * from "./naive_bayes/CategoricalNB";
 export * from "./svm/LinearSVC";
 export * from "./svm/SVC";
 export * from "./svm/SVR";
@@ -103,9 +134,15 @@ export * from "./manifold/LocallyLinearEmbedding";
 export * from "./manifold/MDS";
 export * from "./calibration/CalibratedClassifierCV";
 export * from "./covariance/EmpiricalCovariance";
+export * from "./covariance/EllipticEnvelope";
+export * from "./covariance/GraphicalLasso";
+export * from "./covariance/GraphicalLassoCV";
 export * from "./covariance/LedoitWolf";
 export * from "./covariance/OAS";
 export * from "./covariance/MinCovDet";
+export * from "./gaussian_process/GaussianProcessRegressor";
+export * from "./gaussian_process/GaussianProcessClassifier";
+export * from "./isotonic/IsotonicRegression";
 export * from "./discriminant_analysis/LinearDiscriminantAnalysis";
 export * from "./discriminant_analysis/QuadraticDiscriminantAnalysis";
 export * from "./mixture/GaussianMixture";
@@ -150,6 +187,7 @@ export * from "./pipeline/FeatureUnion";
 export * from "./metrics/regression";
 export * from "./metrics/classification";
 export * from "./metrics/clustering";
+export * from "./metrics/DistanceMetric";
 
 // Inspection
 export * from "./inspection/permutationImportance";

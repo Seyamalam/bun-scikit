@@ -87,14 +87,18 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 
 ## Included APIs
 
-- Models: `LinearRegression`, `LogisticRegression`, `KNeighborsClassifier`, `DecisionTreeClassifier`, `RandomForestClassifier`, plus additional parity models (`LinearSVC`, `GaussianNB`, `SGDClassifier`, `SGDRegressor`, regressors for tree/forest, `OneClassSVM`).
+- Models: `LinearRegression`, `LogisticRegression`, `LogisticRegressionCV`, `Ridge`, `Lasso`, `ElasticNet`, `RidgeCV`, `LassoCV`, `ElasticNetCV`, `BayesianRidge`, `ARDRegression`, `Perceptron`, `PassiveAggressiveClassifier`, `PassiveAggressiveRegressor`, `HuberRegressor`, `PoissonRegressor`, `GammaRegressor`, `QuantileRegressor`, `MultiTaskLasso`, `MultiTaskElasticNet`, `MultiTaskLassoCV`, `MultiTaskElasticNetCV`, `KNeighborsClassifier`, `DecisionTreeClassifier`, `RandomForestClassifier`, plus additional parity models (`LinearSVC`, `GaussianNB`, `SGDClassifier`, `SGDRegressor`, regressors for tree/forest, `OneClassSVM`).
 - Clustering / decomposition / manifold: `KMeans`, `MiniBatchKMeans`, `DBSCAN`, `AgglomerativeClustering`, `SpectralClustering`, `Birch`, `OPTICS`, `MeanShift`, `AffinityPropagation`, `PCA`, `IncrementalPCA`, `TruncatedSVD`, `FastICA`, `NMF`, `MiniBatchNMF`, `FactorAnalysis`, `KernelPCA`, `PLSSVD`, `PLSRegression`, `PLSCanonical`, `CCA`, `TSNE`, `Isomap`, `LocallyLinearEmbedding`, `MDS`.
 - Anomaly detection: `IsolationForest`, `LocalOutlierFactor`, `OneClassSVM`.
 - Calibration / meta-estimators: `CalibratedClassifierCV`, `VotingClassifier`, `VotingRegressor`, `StackingClassifier`, `StackingRegressor`, `BaggingClassifier`.
+- Gaussian process / isotonic: `GaussianProcessRegressor`, `GaussianProcessClassifier`, `IsotonicRegression`.
 - Multioutput: `MultiOutputClassifier`, `MultiOutputRegressor`, `ClassifierChain`, `RegressorChain`.
 - Boosting: `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor`.
 - Baselines: `DummyClassifier`, `DummyRegressor`.
-- Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`.
+- Neighbors / Bayes additions: `BallTree`, `KDTree`, `KNeighborsTransformer`, `NearestCentroid`, `NeighborhoodComponentsAnalysis`, `BernoulliNB`, `MultinomialNB`, `ComplementNB`, `CategoricalNB`.
+- Covariance additions: `EllipticEnvelope`, `GraphicalLasso`, `GraphicalLassoCV`.
+- Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `LabelBinarizer`, `MultiLabelBinarizer`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`, `FunctionTransformer`, `KernelCenterer`.
+- Feature extraction: `DictVectorizer`, `FeatureHasher`.
 - Composition: `Pipeline`, `ColumnTransformer`, `FeatureUnion`.
 - Feature selection: `VarianceThreshold`, `SelectKBest`, `SelectPercentile`, `SelectFromModel`, `RFE`, `RFECV`, `chi2`, `f_classif`, `f_regression`, `mutualInfoClassif`, `mutualInfoRegression`.
 - Model selection: `trainTestSplit`, `KFold`, `GroupKFold`, `GroupShuffleSplit`, `StratifiedKFold`, `StratifiedGroupKFold`, stratified/repeated splitters, `crossValScore`, `crossValidate`, `crossValPredict`, `learningCurve`, `validationCurve`, `GridSearchCV`, `RandomizedSearchCV`, `ParameterGrid`, `ParameterSampler`.
@@ -124,40 +128,16 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 
 ### Parity Coverage vs README
 
-Parity status is now aligned across runtime, parity matrix, and README surface.
+Parity status is aligned across runtime exports, matrix contracts, and docs coverage.
 
-Source of required surface: `docs/parity-matrix.json` (`173` total exports).
-
-| Area | Required | Documented in README | Missing in README |
-| --- | ---: | ---: | ---: |
-| Anomaly | 3 | 3 | 0 |
-| Baselines | 2 | 2 | 0 |
-| Calibration / Meta | 9 | 9 | 0 |
-| Clustering | 9 | 9 | 0 |
-| Composition | 3 | 3 | 0 |
-| Covariance | 4 | 4 | 0 |
-| Decomposition / Manifold | 20 | 20 | 0 |
-| Discriminant | 2 | 2 | 0 |
-| Feature selection | 16 | 16 | 0 |
-| Inspection | 3 | 3 | 0 |
-| Linear models | 11 | 11 | 0 |
-| Metrics | 20 | 20 | 0 |
-| Mixture | 2 | 2 | 0 |
-| Model selection | 20 | 20 | 0 |
-| Multioutput | 4 | 4 | 0 |
-| Neighbors / Bayes | 7 | 7 | 0 |
-| Neural nets | 2 | 2 | 0 |
-| Preprocessing | 17 | 17 | 0 |
-| SVM / Kernel | 5 | 5 | 0 |
-| Semi-supervised | 2 | 2 | 0 |
-| Tree / Ensemble | 12 | 12 | 0 |
-| Total | 173 | 173 | 0 |
+Source of required runtime surface: `docs/parity-matrix.json` (`209` total runtime exports).
 
 Tracked parity status (latest check):
-- API surface parity: `173 / 173` required exports (`100%`).
+- API surface parity: `209 / 209` required exports (`100%`).
 - API/class/interface contract parity: `0` failures (`100%` pass).
+- API docs coverage: `470 / 470` exported symbols referenced in `docs/api.md` (`100%`).
 - sklearn snapshot parity gate metrics: `34 / 34` pass (`100%`).
-- Full sklearn public-symbol coverage (non-strict inventory gate): `167 / 454` (`36.78%`).
+- Full sklearn public-symbol coverage (non-strict inventory gate): `203 / 454` (`44.71%`).
 
 Artifacts:
 - `bench/results/parity/parity-report-latest.md`
@@ -168,10 +148,10 @@ Artifacts:
 
 Commands:
 - Regenerate sklearn inventory: `bun run parity:inventory:generate`
+- Check runtime export + contract matrix parity: `bun run parity:matrix:check`
+- Check docs symbol coverage: `bun run docs:coverage:check`
 - Check full symbol coverage (report only): `bun run parity:full:check`
 - Enforce strict full-symbol gate: `PARITY_FULL_STRICT=1 bun run parity:full:check`
-
-If you want a raw required-vs-readme diff, it is generated from `docs/parity-matrix.json` and enforced in CI.
 
 Beyond the tracked matrix, remaining gaps to full scikit-learn-wide one-to-one behavior are mainly untracked modules and APIs, including:
 - Feature extraction families (for example text/image vectorizers and hashing/vectorization utilities).
