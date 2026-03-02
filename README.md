@@ -192,34 +192,34 @@ Dataset: `test_data/heart.csv` (1025 samples, 13 features, test fraction 0.2).
 
 ### Summary
 
-- Regression: fit `2.204x`, predict `2.430x` (MSE delta `6.362e-14`, R2 delta `-2.539e-13`)
-- Classification: fit `2.452x`, predict `2.601x` (accuracy delta `0.000e+0`, F1 delta `1.106e-3`)
-- DecisionTree (`js-fast`): fit `1.645x`, predict `4.438x`
-- RandomForest (`js-fast`): fit `6.395x`, predict `3.924x`
-- Tree backend matrix: DecisionTree `zig/js` fit `1.819x`, predict `0.617x`; RandomForest `zig/js` fit `2.650x`, predict `2.256x`
-- Snapshot generated at `2026-02-25T19:47:51.136Z`
+- Regression: fit `1.235x`, predict `1.977x` (MSE delta `6.363e-14`, R2 delta `-2.540e-13`)
+- Classification: fit `1.143x`, predict `2.870x` (accuracy delta `0.000e+0`, F1 delta `1.106e-3`)
+- DecisionTree (`js-fast`): fit `1.508x`, predict `5.484x`
+- RandomForest (`js-fast`): fit `2.610x`, predict `2.679x`
+- Tree backend matrix: DecisionTree `zig/js` fit `0.790x`, predict `0.435x`; RandomForest `zig/js` fit `1.164x`, predict `1.884x`
+- Snapshot generated at `2026-03-02T09:49:08.763Z`
 
 ### Regression
 
 | Implementation | Model | Fit median (ms) | Predict median (ms) | MSE | R2 |
 |---|---|---:|---:|---:|---:|
-| bun-scikit | StandardScaler + LinearRegression(normal) | 0.1763 | 0.0186 | 0.117545 | 0.529539 |
-| python-scikit-learn | StandardScaler + LinearRegression | 0.3886 | 0.0452 | 0.117545 | 0.529539 |
+| bun-scikit | StandardScaler + LinearRegression(normal) | 0.4384 | 0.0343 | 0.117545 | 0.529539 |
+| python-scikit-learn | StandardScaler + LinearRegression | 0.5416 | 0.0677 | 0.117545 | 0.529539 |
 
-Bun fit speedup vs scikit-learn: 2.204x
-Bun predict speedup vs scikit-learn: 2.430x
-MSE delta (bun - sklearn): 6.362e-14
-R2 delta (bun - sklearn): -2.539e-13
+Bun fit speedup vs scikit-learn: 1.235x
+Bun predict speedup vs scikit-learn: 1.977x
+MSE delta (bun - sklearn): 6.363e-14
+R2 delta (bun - sklearn): -2.540e-13
 
 ### Classification
 
 | Implementation | Model | Fit median (ms) | Predict median (ms) | Accuracy | F1 |
 |---|---|---:|---:|---:|---:|
-| bun-scikit | StandardScaler + LogisticRegression(gd,zig) | 0.5275 | 0.0320 | 0.863415 | 0.876106 |
-| python-scikit-learn | StandardScaler + LogisticRegression(lbfgs) | 1.2934 | 0.0833 | 0.863415 | 0.875000 |
+| bun-scikit | StandardScaler + LogisticRegression(gd,zig) | 1.5080 | 0.0408 | 0.863415 | 0.876106 |
+| python-scikit-learn | StandardScaler + LogisticRegression(lbfgs) | 1.7238 | 0.1170 | 0.863415 | 0.875000 |
 
-Bun fit speedup vs scikit-learn: 2.452x
-Bun predict speedup vs scikit-learn: 2.601x
+Bun fit speedup vs scikit-learn: 1.143x
+Bun predict speedup vs scikit-learn: 2.870x
 Accuracy delta (bun - sklearn): 0.000e+0
 F1 delta (bun - sklearn): 1.106e-3
 
@@ -227,38 +227,38 @@ F1 delta (bun - sklearn): 1.106e-3
 
 | Model | Implementation | Fit median (ms) | Predict median (ms) | Accuracy | F1 |
 |---|---|---:|---:|---:|---:|
-| DecisionTreeClassifier(maxDepth=8) [js-fast] | bun-scikit | 0.8338 | 0.0209 | 0.946341 | 0.948837 |
-| DecisionTreeClassifier | python-scikit-learn | 1.3712 | 0.0928 | 0.931707 | 0.933962 |
-| RandomForestClassifier(nEstimators=80,maxDepth=8) [js-fast] | bun-scikit | 31.2166 | 1.7649 | 0.990244 | 0.990566 |
-| RandomForestClassifier | python-scikit-learn | 199.6324 | 6.9251 | 0.995122 | 0.995261 |
+| DecisionTreeClassifier(maxDepth=8) [js-fast] | bun-scikit | 1.3074 | 0.0234 | 0.936585 | 0.937799 |
+| DecisionTreeClassifier | python-scikit-learn | 1.9711 | 0.1285 | 0.931707 | 0.933962 |
+| RandomForestClassifier(nEstimators=80,maxDepth=8) [js-fast] | bun-scikit | 41.0094 | 2.0022 | 0.995122 | 0.995261 |
+| RandomForestClassifier | python-scikit-learn | 107.0371 | 5.3645 | 0.995122 | 0.995261 |
 
-DecisionTree fit speedup vs scikit-learn: 1.645x
-DecisionTree predict speedup vs scikit-learn: 4.438x
-DecisionTree accuracy delta (bun - sklearn): 1.463e-2
-DecisionTree f1 delta (bun - sklearn): 1.487e-2
+DecisionTree fit speedup vs scikit-learn: 1.508x
+DecisionTree predict speedup vs scikit-learn: 5.484x
+DecisionTree accuracy delta (bun - sklearn): 4.878e-3
+DecisionTree f1 delta (bun - sklearn): 3.837e-3
 
-RandomForest fit speedup vs scikit-learn: 6.395x
-RandomForest predict speedup vs scikit-learn: 3.924x
-RandomForest accuracy delta (bun - sklearn): -4.878e-3
-RandomForest f1 delta (bun - sklearn): -4.695e-3
+RandomForest fit speedup vs scikit-learn: 2.610x
+RandomForest predict speedup vs scikit-learn: 2.679x
+RandomForest accuracy delta (bun - sklearn): 0.000e+0
+RandomForest f1 delta (bun - sklearn): 1.110e-16
 
 ### Tree Backend Modes (Bun vs Bun vs sklearn)
 
 | Model | Backend | Fit median (ms) | Predict median (ms) | Accuracy | F1 |
 |---|---|---:|---:|---:|---:|
-| DecisionTreeClassifier(maxDepth=8) | js-fast | 0.8338 | 0.0209 | 0.946341 | 0.948837 |
-| DecisionTreeClassifier(maxDepth=8) | zig-tree | 0.4583 | 0.0339 | 0.892683 | 0.899083 |
-| DecisionTreeClassifier | python-scikit-learn | 1.3712 | 0.0928 | 0.931707 | 0.933962 |
-| RandomForestClassifier(nEstimators=80,maxDepth=8) | js-fast | 31.2166 | 1.7649 | 0.990244 | 0.990566 |
-| RandomForestClassifier(nEstimators=80,maxDepth=8) | zig-tree | 11.7783 | 0.7824 | 0.995122 | 0.995261 |
-| RandomForestClassifier | python-scikit-learn | 199.6324 | 6.9251 | 0.995122 | 0.995261 |
+| DecisionTreeClassifier(maxDepth=8) | js-fast | 1.3074 | 0.0234 | 0.936585 | 0.937799 |
+| DecisionTreeClassifier(maxDepth=8) | zig-tree | 1.6545 | 0.0539 | 0.936585 | 0.937799 |
+| DecisionTreeClassifier | python-scikit-learn | 1.9711 | 0.1285 | 0.931707 | 0.933962 |
+| RandomForestClassifier(nEstimators=80,maxDepth=8) | js-fast | 41.0094 | 2.0022 | 0.995122 | 0.995261 |
+| RandomForestClassifier(nEstimators=80,maxDepth=8) | zig-tree | 35.2326 | 1.0628 | 1.000000 | 1.000000 |
+| RandomForestClassifier | python-scikit-learn | 107.0371 | 5.3645 | 0.995122 | 0.995261 |
 
-DecisionTree zig/js fit speedup: 1.819x
-DecisionTree zig/js predict speedup: 0.617x
-RandomForest zig/js fit speedup: 2.650x
-RandomForest zig/js predict speedup: 2.256x
+DecisionTree zig/js fit speedup: 0.790x
+DecisionTree zig/js predict speedup: 0.435x
+RandomForest zig/js fit speedup: 1.164x
+RandomForest zig/js predict speedup: 1.884x
 
-Snapshot generated at: 2026-02-25T19:47:51.136Z
+Snapshot generated at: 2026-03-02T09:49:08.763Z
 <!-- BENCHMARK_TABLE_END -->
 
 ## Documentation
