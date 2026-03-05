@@ -102,7 +102,7 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 - Composition: `Pipeline`, `ColumnTransformer`, `FeatureUnion`.
 - Feature selection: `VarianceThreshold`, `SelectKBest`, `SelectPercentile`, `SelectFromModel`, `RFE`, `RFECV`, `chi2`, `f_classif`, `f_regression`, `mutualInfoClassif`, `mutualInfoRegression`.
 - Model selection: `trainTestSplit`, `KFold`, `GroupKFold`, `GroupShuffleSplit`, `ShuffleSplit`, `StratifiedKFold`, `StratifiedGroupKFold`, `StratifiedShuffleSplit`, `RepeatedKFold`, `RepeatedStratifiedKFold`, `LeaveOneOut`, `LeavePOut`, `LeaveOneGroupOut`, `LeavePGroupsOut`, `PredefinedSplit`, `TimeSeriesSplit`, `crossValScore`, `crossValidate`, `crossValPredict`, `learningCurve`, `validationCurve`, `GridSearchCV`, `RandomizedSearchCV`, `ParameterGrid`, `ParameterSampler`.
-- Metrics: regression/classification metrics plus clustering metrics (`silhouetteScore`, `calinskiHarabaszScore`, `daviesBouldinScore`, `adjustedRandScore`).
+- Metrics: regression/classification metrics plus ranking and curve helpers (`auc`, `averagePrecisionScore`, `classLikelihoodRatios`) and clustering metrics (`silhouetteScore`, `calinskiHarabaszScore`, `daviesBouldinScore`, `adjustedRandScore`).
 - Inspection: `permutationImportance`, `partialDependence`, `permutationTestScore`.
 
 ## Scikit Parity Matrix

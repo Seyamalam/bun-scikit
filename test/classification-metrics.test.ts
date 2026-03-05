@@ -1,6 +1,9 @@
 import { expect, test } from "bun:test";
 import {
   accuracyScore,
+  auc,
+  averagePrecisionScore,
+  classLikelihoodRatios,
   classificationReport,
   confusionMatrix,
   f1Score,
@@ -32,8 +35,10 @@ test("advanced classification metrics compute expected values", () => {
     [1, 3],
   ]);
 
-  const auc = rocAucScore(yTrue, yProb);
-  expect(auc).toBeCloseTo(0.9375, 8);
+  const rocAuc = rocAucScore(yTrue, yProb);
+  expect(rocAuc).toBeCloseTo(0.9375, 8);
+  expect(averagePrecisionScore(yTrue, yProb)).toBeCloseTo(0.95, 8);
+  expect(auc([0, 0.5, 1], [0, 0.75, 1])).toBeCloseTo(0.625, 8);
 
   const ll = logLoss(yTrue, yProb);
   expect(ll).toBeCloseTo(0.3603290232, 8);
@@ -44,4 +49,9 @@ test("advanced classification metrics compute expected values", () => {
   expect(report.perLabel["1"].recall).toBeCloseTo(0.75, 8);
   expect(report.macroAvg.f1Score).toBeCloseTo(0.75, 8);
   expect(report.weightedAvg.f1Score).toBeCloseTo(0.75, 8);
+
+  expect(classLikelihoodRatios(yTrue, yPred)).toEqual({
+    positiveLikelihoodRatio: 3,
+    negativeLikelihoodRatio: 1 / 3,
+  });
 });

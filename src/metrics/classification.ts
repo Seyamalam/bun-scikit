@@ -132,6 +132,11 @@ export interface ClassificationReportResult {
   weightedAvg: ClassificationReportLabelMetrics;
 }
 
+export interface ClassLikelihoodRatiosResult {
+  positiveLikelihoodRatio: number;
+  negativeLikelihoodRatio: number;
+}
+
 export function accuracyScore(yTrue: number[] | Matrix, yPred: number[] | Matrix, sampleWeight?: Vector): number {
   if (Array.isArray(yTrue[0]) || Array.isArray(yPred[0])) {
     const trueMatrix = yTrue as Matrix;
@@ -341,6 +346,84 @@ export function rocAucScore(yTrue: number[], yScore: number[]): number {
   return u / (positiveCount * negativeCount);
 }
 
+export function auc(x: number[], y: number[]): number {
+  validateInputs(x, y);
+  if (x.length < 2) {
+    throw new Error("auc requires at least two points.");
+  }
+
+  let direction = 0;
+  for (let i = 1; i < x.length; i += 1) {
+    const delta = x[i] - x[i - 1];
+    if (delta === 0) {
+      continue;
+    }
+    const currentDirection = delta > 0 ? 1 : -1;
+    if (direction === 0) {
+      direction = currentDirection;
+    } else if (direction !== currentDirection) {
+      throw new Error("x must be monotonic increasing or decreasing.");
+    }
+  }
+
+  if (direction === 0) {
+    return 0;
+  }
+
+  let area = 0;
+  for (let i = 1; i < x.length; i += 1) {
+    area += (x[i] - x[i - 1]) * (y[i] + y[i - 1]) * 0.5;
+  }
+  return direction * area;
+}
+
+export function averagePrecisionScore(yTrue: number[], yScore: number[]): number {
+  validateInputs(yTrue, yScore);
+  validateBinaryTargets(yTrue);
+
+  let positiveCount = 0;
+  for (let i = 0; i < yTrue.length; i += 1) {
+    if (yTrue[i] === 1) {
+      positiveCount += 1;
+    }
+  }
+  if (positiveCount === 0) {
+    return 0;
+  }
+
+  const pairs = yScore.map((score, index) => ({ score, label: yTrue[index]! }));
+  pairs.sort((left, right) => right.score - left.score);
+
+  let truePositives = 0;
+  let falsePositives = 0;
+  let previousRecall = 0;
+  let total = 0;
+  let cursor = 0;
+
+  while (cursor < pairs.length) {
+    let groupEnd = cursor + 1;
+    while (groupEnd < pairs.length && pairs[groupEnd]!.score === pairs[cursor]!.score) {
+      groupEnd += 1;
+    }
+
+    for (let i = cursor; i < groupEnd; i += 1) {
+      if (pairs[i]!.label === 1) {
+        truePositives += 1;
+      } else {
+        falsePositives += 1;
+      }
+    }
+
+    const precision = truePositives / (truePositives + falsePositives);
+    const recall = truePositives / positiveCount;
+    total += (recall - previousRecall) * precision;
+    previousRecall = recall;
+    cursor = groupEnd;
+  }
+
+  return total;
+}
+
 export function classificationReport(
   yTrue: number[],
   yPred: number[],
@@ -516,4 +599,27 @@ export function brierScoreLoss(yTrue: number[], yPredProb: number[] | Matrix): n
     total += diff * diff;
   }
   return total / yTrue.length;
+}
+
+export function classLikelihoodRatios(
+  yTrue: number[],
+  yPred: number[],
+  positiveLabel = 1,
+): ClassLikelihoodRatiosResult {
+  const { tp, fp, fn, tn } = confusionCounts(yTrue, yPred, positiveLabel);
+  const sensitivityDenominator = tp + fn;
+  const specificityDenominator = tn + fp;
+
+  const sensitivity = sensitivityDenominator === 0 ? 0 : tp / sensitivityDenominator;
+  const specificity = specificityDenominator === 0 ? 0 : tn / specificityDenominator;
+
+  const positiveLikelihoodRatio =
+    specificity === 1 ? Number.POSITIVE_INFINITY : sensitivity / (1 - specificity);
+  const negativeLikelihoodRatio =
+    specificity === 0 ? Number.POSITIVE_INFINITY : (1 - sensitivity) / specificity;
+
+  return {
+    positiveLikelihoodRatio,
+    negativeLikelihoodRatio,
+  };
 }
