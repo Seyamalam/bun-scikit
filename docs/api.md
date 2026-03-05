@@ -678,6 +678,14 @@ Methods:
 - `averagePrecisionScore`
 - `classLikelihoodRatios`
 - `ClassLikelihoodRatiosResult`
+- `addDummyFeature`
+- `AddDummyFeatureOptions`
+- `binarize`
+- `BinarizeOptions`
+- `maxabsScale`
+- `minmaxScale`
+- `robustScale`
+- `scale`
 - `Birch`
 - `BirchOptions`
 - `KNeighborsRegressor`
@@ -851,6 +859,7 @@ Methods:
 `LeaveOneGroupOut`, `LeaveOneOut`, `LeavePGroupsOut`, `LeavePGroupsOutOptions`, `LeavePOut`, `LeavePOutOptions`, `PredefinedSplit`, `PredefinedSplitOptions`, `ShuffleSplit`, `ShuffleSplitOptions`, `TimeSeriesSplit`, `TimeSeriesSplitOptions`
 `RidgeClassifier`, `RidgeClassifierCV`, `RidgeClassifierCVOptions`, `RidgeClassifierOptions`
 `auc`, `averagePrecisionScore`, `classLikelihoodRatios`, `ClassLikelihoodRatiosResult`
+`addDummyFeature`, `AddDummyFeatureOptions`, `binarize`, `BinarizeOptions`, `maxabsScale`, `minmaxScale`, `robustScale`, `scale`
 
 ## Parity Batch API Additions
 

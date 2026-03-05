@@ -15,6 +15,7 @@ Deliver practical scikit-learn parity for Bun/TypeScript without stalling releas
 - Maintain shipped boosting parity baseline: `AdaBoostClassifier`, `GradientBoostingClassifier`, `GradientBoostingRegressor`, `HistGradientBoostingClassifier`, `HistGradientBoostingRegressor`.
 - Expand linear-model classifier parity with the `RidgeClassifier` family.
 - Expand classification metric parity with curve/ranking helpers and likelihood-ratio reporting.
+- Expand preprocessing parity with sklearn-style functional helpers layered over shipped transformers.
 - Maintain multiclass support baseline across linear, probabilistic, neighbor, tree/forest, and meta-ensemble classifiers.
 - Maintain multiclass native Zig tree/forest backend parity (no binary-only native restriction).
 - Expand model-selection splitter parity with classical CV splitters (`ShuffleSplit`, leave-one/leave-p-out variants, `PredefinedSplit`, `TimeSeriesSplit`).

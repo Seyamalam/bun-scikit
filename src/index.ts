@@ -26,6 +26,7 @@ export * from "./preprocessing/OrdinalEncoder";
 export * from "./preprocessing/QuantileTransformer";
 export * from "./preprocessing/PowerTransformer";
 export * from "./preprocessing/KBinsDiscretizer";
+export * from "./preprocessing/functional";
 export * from "./impute/IterativeImputer";
 export * from "./impute/MissingIndicator";
 

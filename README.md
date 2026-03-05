@@ -97,7 +97,7 @@ console.log("Accuracy:", accuracyScore(yCls, clf.predict(Xs)));
 - Baselines: `DummyClassifier`, `DummyRegressor`.
 - Neighbors / Bayes additions: `BallTree`, `KDTree`, `KNeighborsTransformer`, `NearestCentroid`, `NeighborhoodComponentsAnalysis`, `BernoulliNB`, `MultinomialNB`, `ComplementNB`, `CategoricalNB`.
 - Covariance additions: `EllipticEnvelope`, `GraphicalLasso`, `GraphicalLassoCV`.
-- Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `LabelBinarizer`, `MultiLabelBinarizer`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`, `FunctionTransformer`, `KernelCenterer`.
+- Preprocessing: `StandardScaler`, `MinMaxScaler`, `RobustScaler`, `MaxAbsScaler`, `Normalizer`, `Binarizer`, `LabelEncoder`, `LabelBinarizer`, `MultiLabelBinarizer`, `PolynomialFeatures`, `SimpleImputer`, `OneHotEncoder`, `FunctionTransformer`, `KernelCenterer`, plus functional helpers (`addDummyFeature`, `binarize`, `scale`, `minmaxScale`, `maxabsScale`, `robustScale`).
 - Feature extraction: `DictVectorizer`, `FeatureHasher`.
 - Composition: `Pipeline`, `ColumnTransformer`, `FeatureUnion`.
 - Feature selection: `VarianceThreshold`, `SelectKBest`, `SelectPercentile`, `SelectFromModel`, `RFE`, `RFECV`, `chi2`, `f_classif`, `f_regression`, `mutualInfoClassif`, `mutualInfoRegression`.
