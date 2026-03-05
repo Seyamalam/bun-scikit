@@ -42,6 +42,8 @@ export * from "./linear_model/Ridge";
 export * from "./linear_model/Lasso";
 export * from "./linear_model/ElasticNet";
 export * from "./linear_model/RidgeCV";
+export * from "./linear_model/RidgeClassifier";
+export * from "./linear_model/RidgeClassifierCV";
 export * from "./linear_model/LassoCV";
 export * from "./linear_model/ElasticNetCV";
 export * from "./linear_model/BayesianRidge";

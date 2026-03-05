@@ -5,6 +5,8 @@ import {
   Lasso,
   LassoCV,
   Ridge,
+  RidgeClassifier,
+  RidgeClassifierCV,
   RidgeCV,
 } from "../src";
 
@@ -50,4 +52,23 @@ test("RidgeCV/LassoCV/ElasticNetCV select hyperparameters and predict", () => {
   expect(ridgeCv.predict([[2.5]])[0]).toBeGreaterThan(2);
   expect(lassoCv.predict([[2.5]])[0]).toBeGreaterThan(2);
   expect(enCv.predict([[2.5]])[0]).toBeGreaterThan(2);
+});
+
+test("RidgeClassifier and RidgeClassifierCV classify a separable dataset", () => {
+  const X = [[-3], [-2], [-1], [1], [2], [3], [4], [5]];
+  const y = [0, 0, 0, 1, 1, 1, 1, 1];
+
+  const ridgeClassifier = new RidgeClassifier({ alpha: 1 }).fit(X, y);
+  const ridgeClassifierCv = new RidgeClassifierCV({
+    alphas: [0.01, 0.1, 1, 10],
+    cv: 3,
+    randomState: 7,
+  }).fit(X, y);
+
+  expect(ridgeClassifier.score(X, y)).toBeGreaterThan(0.99);
+  expect(ridgeClassifierCv.score(X, y)).toBeGreaterThan(0.99);
+  expect(ridgeClassifier.predict([[-0.5], [2.5]])).toEqual([0, 1]);
+  expect(ridgeClassifierCv.predict([[-0.5], [2.5]])).toEqual([0, 1]);
+  expect(ridgeClassifierCv.alpha_).toBeFinite();
+  expect(ridgeClassifierCv.cvScores_).toHaveLength(4);
 });
