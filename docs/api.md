@@ -652,6 +652,8 @@ Methods:
 - `RANSACRegressorOptions`
 - `SVC`
 - `SVCOptions`
+- `TweedieRegressor`
+- `TweedieRegressorOptions`
 - `SVR`
 - `SVROptions`
 - `StratifiedGroupKFold`
@@ -867,6 +869,7 @@ Methods:
 `addDummyFeature`, `AddDummyFeatureOptions`, `binarize`, `BinarizeOptions`, `maxabsScale`, `minmaxScale`, `robustScale`, `scale`
 `RadiusNeighborsTransformer`, `RadiusNeighborsTransformerMode`, `RadiusNeighborsTransformerOptions`
 `RANSACRegressor`, `RANSACRegressorOptions`
+`TweedieRegressor`, `TweedieRegressorOptions`
 
 ## Parity Batch API Additions
 

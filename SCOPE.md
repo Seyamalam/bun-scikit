@@ -18,6 +18,7 @@ Deliver practical scikit-learn parity for Bun/TypeScript without stalling releas
 - Expand preprocessing parity with sklearn-style functional helpers layered over shipped transformers.
 - Expand neighbor graph parity with radius-based graph transformers.
 - Expand robust linear-model parity with consensus-fit regression.
+- Expand generalized linear-model parity with Tweedie-family regression.
 - Maintain multiclass support baseline across linear, probabilistic, neighbor, tree/forest, and meta-ensemble classifiers.
 - Maintain multiclass native Zig tree/forest backend parity (no binary-only native restriction).
 - Expand model-selection splitter parity with classical CV splitters (`ShuffleSplit`, leave-one/leave-p-out variants, `PredefinedSplit`, `TimeSeriesSplit`).

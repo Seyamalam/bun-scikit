@@ -58,6 +58,7 @@ export * from "./linear_model/PoissonRegressor";
 export * from "./linear_model/GammaRegressor";
 export * from "./linear_model/QuantileRegressor";
 export * from "./linear_model/RANSACRegressor";
+export * from "./linear_model/TweedieRegressor";
 export * from "./linear_model/MultiTaskLasso";
 export * from "./linear_model/MultiTaskElasticNet";
 export * from "./linear_model/MultiTaskLassoCV";
