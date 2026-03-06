@@ -65,6 +65,19 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+## [0.1.26] - 2026-03-06
+
+### Added
+- Model-selection splitter parity additions: `ShuffleSplit`, `LeaveOneOut`, `LeavePOut`, `LeaveOneGroupOut`, `LeavePGroupsOut`, `PredefinedSplit`, and `TimeSeriesSplit`.
+- Linear-model parity additions: `RidgeClassifier`, `RidgeClassifierCV`, `RANSACRegressor`, and `TweedieRegressor`.
+- Neighbor graph parity addition: `RadiusNeighborsTransformer`.
+- sklearn-style preprocessing helper functions: `addDummyFeature`, `binarize`, `scale`, `minmaxScale`, `maxabsScale`, and `robustScale`.
+- Classification metric helpers: `auc`, `averagePrecisionScore`, and `classLikelihoodRatios`.
+
+### Changed
+- Full sklearn public-symbol coverage improved from `203/454` to `224/454` during this release increment.
+- README, API docs, scope tracking, and release notes were refreshed to reflect the new parity surface.
+
 ## [0.1.6] - 2026-02-25
 
 ### Added
