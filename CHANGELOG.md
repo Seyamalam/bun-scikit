@@ -9,7 +9,7 @@ and this project aims to follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 <!-- PARITY_AUTO_START -->
-- (auto) No new parity commits detected since project start.
+- Fix release parity and benchmark gates
 <!-- PARITY_AUTO_END -->
 - Full sklearn public API inventory + coverage tooling (`scripts/generate-sklearn-api-inventory.py`, `scripts/check-sklearn-full-parity.ts`) with CI/release-prep integration and parity bundle reporting.
 - Cross-decomposition estimator family: `PLSSVD`, `PLSRegression`, `PLSCanonical`, and `CCA`, including export wiring, params API parity, and dedicated tests.
