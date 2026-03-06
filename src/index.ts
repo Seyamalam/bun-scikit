@@ -69,6 +69,7 @@ export * from "./neighbors/NearestNeighbors";
 export * from "./neighbors/BallTree";
 export * from "./neighbors/KDTree";
 export * from "./neighbors/KNeighborsTransformer";
+export * from "./neighbors/RadiusNeighborsTransformer";
 export * from "./neighbors/NeighborhoodComponentsAnalysis";
 export * from "./neighbors/NearestCentroid";
 export * from "./neighbors/RadiusNeighborsClassifier";

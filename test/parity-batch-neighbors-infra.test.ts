@@ -6,6 +6,7 @@ import {
   KNeighborsTransformer,
   NearestCentroid,
   NeighborhoodComponentsAnalysis,
+  RadiusNeighborsTransformer,
 } from "../src";
 
 const X = [
@@ -46,6 +47,10 @@ test("KNeighborsTransformer, NCA, and NearestCentroid work on simple data", () =
   const graph = transformer.transform(X);
   expect(graph.length).toBe(X.length);
   expect(graph[0].length).toBe(X.length);
+
+  const radiusTransformer = new RadiusNeighborsTransformer({ radius: 0.5, mode: "connectivity" }).fit(X);
+  const radiusGraph = radiusTransformer.transform([[0, 0]]);
+  expect(radiusGraph).toEqual([[1, 1, 0, 0, 0, 0]]);
 
   const nca = new NeighborhoodComponentsAnalysis({ nComponents: 1, maxIter: 40, randomState: 7 }).fit(X, y);
   const embedded = nca.transform(X);

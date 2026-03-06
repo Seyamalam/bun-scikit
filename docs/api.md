@@ -645,6 +645,9 @@ Methods:
 - `RidgeClassifierCV`
 - `RidgeClassifierCVOptions`
 - `RidgeClassifierOptions`
+- `RadiusNeighborsTransformer`
+- `RadiusNeighborsTransformerMode`
+- `RadiusNeighborsTransformerOptions`
 - `SVC`
 - `SVCOptions`
 - `SVR`
@@ -860,6 +863,7 @@ Methods:
 `RidgeClassifier`, `RidgeClassifierCV`, `RidgeClassifierCVOptions`, `RidgeClassifierOptions`
 `auc`, `averagePrecisionScore`, `classLikelihoodRatios`, `ClassLikelihoodRatiosResult`
 `addDummyFeature`, `AddDummyFeatureOptions`, `binarize`, `BinarizeOptions`, `maxabsScale`, `minmaxScale`, `robustScale`, `scale`
+`RadiusNeighborsTransformer`, `RadiusNeighborsTransformerMode`, `RadiusNeighborsTransformerOptions`
 
 ## Parity Batch API Additions
 
