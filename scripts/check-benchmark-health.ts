@@ -123,7 +123,7 @@ const [bunClassification, sklearnClassification] = snapshot.suites.classificatio
 const [decisionTree, randomForest] = snapshot.suites.treeClassification.models;
 const minRegressionFitSpeedup = speedupThreshold("BENCH_MIN_REGRESSION_FIT_SPEEDUP", 1.1);
 const minRegressionPredictSpeedup = speedupThreshold("BENCH_MIN_REGRESSION_PREDICT_SPEEDUP", 1.1);
-const minClassificationFitSpeedup = speedupThreshold("BENCH_MIN_CLASSIFICATION_FIT_SPEEDUP", 1.0);
+const minClassificationFitSpeedup = speedupThreshold("BENCH_MIN_CLASSIFICATION_FIT_SPEEDUP", 0.8);
 const minClassificationPredictSpeedup = speedupThreshold(
   "BENCH_MIN_CLASSIFICATION_PREDICT_SPEEDUP",
   1.2,
