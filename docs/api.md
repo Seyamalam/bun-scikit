@@ -648,6 +648,8 @@ Methods:
 - `RadiusNeighborsTransformer`
 - `RadiusNeighborsTransformerMode`
 - `RadiusNeighborsTransformerOptions`
+- `RANSACRegressor`
+- `RANSACRegressorOptions`
 - `SVC`
 - `SVCOptions`
 - `SVR`
@@ -864,6 +866,7 @@ Methods:
 `auc`, `averagePrecisionScore`, `classLikelihoodRatios`, `ClassLikelihoodRatiosResult`
 `addDummyFeature`, `AddDummyFeatureOptions`, `binarize`, `BinarizeOptions`, `maxabsScale`, `minmaxScale`, `robustScale`, `scale`
 `RadiusNeighborsTransformer`, `RadiusNeighborsTransformerMode`, `RadiusNeighborsTransformerOptions`
+`RANSACRegressor`, `RANSACRegressorOptions`
 
 ## Parity Batch API Additions
 
