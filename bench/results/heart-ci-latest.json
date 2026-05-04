@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-27T11:03:43.950Z",
+  "generatedAt": "2026-05-04T11:05:20.400Z",
   "benchmarkConfig": {
     "iterations": 50,
     "warmup": 8
@@ -21,8 +21,8 @@
           "implementation": "bun-scikit",
           "model": "StandardScaler + LinearRegression(normal)",
           "iterations": 50,
-          "fitMsMedian": 0.28864349999999206,
-          "predictMsMedian": 0.03151199999999932,
+          "fitMsMedian": 0.3269810000000035,
+          "predictMsMedian": 0.03204949999998519,
           "mse": 0.11754528352716123,
           "r2": 0.5295389961686718,
           "environment": {
@@ -34,8 +34,8 @@
           "implementation": "python-scikit-learn",
           "model": "StandardScaler + LinearRegression",
           "iterations": 50,
-          "fitMsMedian": 0.5387705000003962,
-          "predictMsMedian": 0.0676269999928536,
+          "fitMsMedian": 0.6725515000027826,
+          "predictMsMedian": 0.08758850000845086,
           "mse": 0.1175452835270976,
           "r2": 0.5295389961689259,
           "dataset": {
@@ -55,8 +55,8 @@
         }
       ],
       "comparison": {
-        "fitSpeedupVsSklearn": 1.8665603070930439,
-        "predictSpeedupVsSklearn": 2.146071337676284,
+        "fitSpeedupVsSklearn": 2.0568519271846846,
+        "predictSpeedupVsSklearn": 2.732913150236083,
         "mseDeltaVsSklearn": 6.362965709882928e-14,
         "r2DeltaVsSklearn": -2.540190280342358e-13
       }
@@ -68,8 +68,8 @@
           "implementation": "bun-scikit",
           "model": "StandardScaler + LogisticRegression(gd,zig)",
           "iterations": 50,
-          "fitMsMedian": 1.5134915000000007,
-          "predictMsMedian": 0.04501849999999763,
+          "fitMsMedian": 1.5528714999999949,
+          "predictMsMedian": 0.04133199999999704,
           "accuracy": 0.8634146341463415,
           "f1": 0.8761061946902655,
           "environment": {
@@ -83,8 +83,8 @@
           "implementation": "python-scikit-learn",
           "model": "StandardScaler + LogisticRegression(lbfgs)",
           "iterations": 50,
-          "fitMsMedian": 1.753127499995344,
-          "predictMsMedian": 0.11623950000227978,
+          "fitMsMedian": 2.054790499997239,
+          "predictMsMedian": 0.1288610000003132,
           "accuracy": 0.8634146341463415,
           "f1": 0.875,
           "dataset": {
@@ -104,8 +104,8 @@
         }
       ],
       "comparison": {
-        "fitSpeedupVsSklearn": 1.1583332314686559,
-        "predictSpeedupVsSklearn": 2.5820384953360485,
+        "fitSpeedupVsSklearn": 1.3232199187101095,
+        "predictSpeedupVsSklearn": 3.117705409859732,
         "accuracyDeltaVsSklearn": 0,
         "f1DeltaVsSklearn": 0.0011061946902655162
       }
@@ -121,8 +121,8 @@
             "implementation": "bun-scikit",
             "model": "DecisionTreeClassifier(maxDepth=8) [js-fast]",
             "iterations": 50,
-            "fitMsMedian": 1.3368755000000192,
-            "predictMsMedian": 0.02631450000001223,
+            "fitMsMedian": 1.3393880000000138,
+            "predictMsMedian": 0.03110250000000292,
             "accuracy": 0.9365853658536586,
             "f1": 0.937799043062201,
             "environment": {
@@ -137,8 +137,8 @@
             "implementation": "python-scikit-learn",
             "model": "DecisionTreeClassifier",
             "iterations": 50,
-            "fitMsMedian": 1.971695500003534,
-            "predictMsMedian": 0.1295545000061793,
+            "fitMsMedian": 1.878556000001197,
+            "predictMsMedian": 0.13592900000958252,
             "accuracy": 0.9317073170731708,
             "f1": 0.9339622641509434,
             "environment": {
@@ -148,8 +148,8 @@
             }
           },
           "comparison": {
-            "fitSpeedupVsSklearn": 1.4748534923435321,
-            "predictSpeedupVsSklearn": 4.923312242532409,
+            "fitSpeedupVsSklearn": 1.4025480293993806,
+            "predictSpeedupVsSklearn": 4.370356081008593,
             "accuracyDeltaVsSklearn": 0.004878048780487809,
             "f1DeltaVsSklearn": 0.0038367789112575545
           }
@@ -162,8 +162,8 @@
             "implementation": "bun-scikit",
             "model": "RandomForestClassifier(nEstimators=80,maxDepth=8) [js-fast]",
             "iterations": 50,
-            "fitMsMedian": 40.39182149999988,
-            "predictMsMedian": 1.7459655000000112,
+            "fitMsMedian": 37.55637150000007,
+            "predictMsMedian": 1.7012844999999288,
             "accuracy": 0.9951219512195122,
             "f1": 0.9952606635071091,
             "environment": {
@@ -178,8 +178,8 @@
             "implementation": "python-scikit-learn",
             "model": "RandomForestClassifier",
             "iterations": 50,
-            "fitMsMedian": 106.90801899998803,
-            "predictMsMedian": 5.3604670000027,
+            "fitMsMedian": 111.81501699999785,
+            "predictMsMedian": 6.957432500001914,
             "accuracy": 0.9951219512195122,
             "f1": 0.995260663507109,
             "environment": {
@@ -189,8 +189,8 @@
             }
           },
           "comparison": {
-            "fitSpeedupVsSklearn": 2.6467739019887566,
-            "predictSpeedupVsSklearn": 3.070202131716042,
+            "fitSpeedupVsSklearn": 2.9772582529704086,
+            "predictSpeedupVsSklearn": 4.089517361735915,
             "accuracyDeltaVsSklearn": 0,
             "f1DeltaVsSklearn": 1.1102230246251565e-16
           }
@@ -209,8 +209,8 @@
             "implementation": "bun-scikit",
             "model": "DecisionTreeClassifier(maxDepth=8) [js-fast]",
             "iterations": 50,
-            "fitMsMedian": 1.3368755000000192,
-            "predictMsMedian": 0.02631450000001223,
+            "fitMsMedian": 1.3393880000000138,
+            "predictMsMedian": 0.03110250000000292,
             "accuracy": 0.9365853658536586,
             "f1": 0.937799043062201,
             "environment": {
@@ -225,8 +225,8 @@
             "implementation": "bun-scikit",
             "model": "DecisionTreeClassifier(maxDepth=8) [zig-tree]",
             "iterations": 50,
-            "fitMsMedian": 1.6155095000001438,
-            "predictMsMedian": 0.05371049999985189,
+            "fitMsMedian": 1.5568995000000996,
+            "predictMsMedian": 0.05584899999985282,
             "accuracy": 0.9365853658536586,
             "f1": 0.937799043062201,
             "environment": {
@@ -241,8 +241,8 @@
             "implementation": "python-scikit-learn",
             "model": "DecisionTreeClassifier",
             "iterations": 50,
-            "fitMsMedian": 1.971695500003534,
-            "predictMsMedian": 0.1295545000061793,
+            "fitMsMedian": 1.878556000001197,
+            "predictMsMedian": 0.13592900000958252,
             "accuracy": 0.9317073170731708,
             "f1": 0.9339622641509434,
             "environment": {
@@ -252,12 +252,12 @@
             }
           },
           "comparison": {
-            "zigFitSpeedupVsJs": 0.82752561962644,
-            "zigPredictSpeedupVsJs": 0.48993213617606973,
-            "jsFitSpeedupVsSklearn": 1.4748534923435321,
-            "jsPredictSpeedupVsSklearn": 4.923312242532409,
-            "zigFitSpeedupVsSklearn": 1.2204790501098004,
-            "zigPredictSpeedupVsSklearn": 2.4120888840456995
+            "zigFitSpeedupVsJs": 0.8602918813962803,
+            "zigPredictSpeedupVsJs": 0.5569034360522996,
+            "jsFitSpeedupVsSklearn": 1.4025480293993806,
+            "jsPredictSpeedupVsSklearn": 4.370356081008593,
+            "zigFitSpeedupVsSklearn": 1.2066006829606386,
+            "zigPredictSpeedupVsSklearn": 2.433866318285748
           }
         },
         {
@@ -268,8 +268,8 @@
             "implementation": "bun-scikit",
             "model": "RandomForestClassifier(nEstimators=80,maxDepth=8) [js-fast]",
             "iterations": 50,
-            "fitMsMedian": 40.39182149999988,
-            "predictMsMedian": 1.7459655000000112,
+            "fitMsMedian": 37.55637150000007,
+            "predictMsMedian": 1.7012844999999288,
             "accuracy": 0.9951219512195122,
             "f1": 0.9952606635071091,
             "environment": {
@@ -284,8 +284,8 @@
             "implementation": "bun-scikit",
             "model": "RandomForestClassifier(nEstimators=80,maxDepth=8) [zig-tree]",
             "iterations": 50,
-            "fitMsMedian": 34.803852000000006,
-            "predictMsMedian": 1.0200044999999136,
+            "fitMsMedian": 33.10385199999996,
+            "predictMsMedian": 0.9826159999997799,
             "accuracy": 1,
             "f1": 1,
             "environment": {
@@ -300,8 +300,8 @@
             "implementation": "python-scikit-learn",
             "model": "RandomForestClassifier",
             "iterations": 50,
-            "fitMsMedian": 106.90801899998803,
-            "predictMsMedian": 5.3604670000027,
+            "fitMsMedian": 111.81501699999785,
+            "predictMsMedian": 6.957432500001914,
             "accuracy": 0.9951219512195122,
             "f1": 0.995260663507109,
             "environment": {
@@ -311,12 +311,12 @@
             }
           },
           "comparison": {
-            "zigFitSpeedupVsJs": 1.1605560643114983,
-            "zigPredictSpeedupVsJs": 1.7117233306325208,
-            "jsFitSpeedupVsSklearn": 2.6467739019887566,
-            "jsPredictSpeedupVsSklearn": 3.070202131716042,
-            "zigFitSpeedupVsSklearn": 3.071729502814459,
-            "zigPredictSpeedupVsSklearn": 5.255336618616049
+            "zigFitSpeedupVsJs": 1.1345015528706481,
+            "zigPredictSpeedupVsJs": 1.7313828596321552,
+            "jsFitSpeedupVsSklearn": 2.9772582529704086,
+            "jsPredictSpeedupVsSklearn": 4.089517361735915,
+            "zigFitSpeedupVsSklearn": 3.377704111291882,
+            "zigPredictSpeedupVsSklearn": 7.080520264277676
           }
         }
       ]
