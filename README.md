@@ -192,22 +192,22 @@ Dataset: `test_data/heart.csv` (1025 samples, 13 features, test fraction 0.2).
 
 ### Summary
 
-- Regression: fit `2.698x`, predict `4.007x` (MSE delta `6.363e-14`, R2 delta `-2.540e-13`)
-- Classification: fit `1.812x`, predict `4.890x` (accuracy delta `0.000e+0`, F1 delta `1.106e-3`)
-- DecisionTree (`js-fast`): fit `1.619x`, predict `6.737x`
-- RandomForest (`js-fast`): fit `3.144x`, predict `3.584x`
-- Tree backend matrix: DecisionTree `zig/js` fit `0.781x`, predict `0.475x`; RandomForest `zig/js` fit `1.121x`, predict `2.129x`
-- Snapshot generated at `2026-06-15T11:07:55.139Z`
+- Regression: fit `3.204x`, predict `7.542x` (MSE delta `6.363e-14`, R2 delta `-2.540e-13`)
+- Classification: fit `1.702x`, predict `3.904x` (accuracy delta `0.000e+0`, F1 delta `1.106e-3`)
+- DecisionTree (`js-fast`): fit `1.718x`, predict `7.983x`
+- RandomForest (`js-fast`): fit `3.089x`, predict `4.315x`
+- Tree backend matrix: DecisionTree `zig/js` fit `0.738x`, predict `0.404x`; RandomForest `zig/js` fit `1.128x`, predict `1.753x`
+- Snapshot generated at `2026-06-22T10:58:36.662Z`
 
 ### Regression
 
 | Implementation | Model | Fit median (ms) | Predict median (ms) | MSE | R2 |
 |---|---|---:|---:|---:|---:|
-| bun-scikit | StandardScaler + LinearRegression(normal) | 0.2861 | 0.0290 | 0.117545 | 0.529539 |
-| python-scikit-learn | StandardScaler + LinearRegression | 0.7717 | 0.1162 | 0.117545 | 0.529539 |
+| bun-scikit | StandardScaler + LinearRegression(normal) | 0.2401 | 0.0156 | 0.117545 | 0.529539 |
+| python-scikit-learn | StandardScaler + LinearRegression | 0.7694 | 0.1177 | 0.117545 | 0.529539 |
 
-Bun fit speedup vs scikit-learn: 2.698x
-Bun predict speedup vs scikit-learn: 4.007x
+Bun fit speedup vs scikit-learn: 3.204x
+Bun predict speedup vs scikit-learn: 7.542x
 MSE delta (bun - sklearn): 6.363e-14
 R2 delta (bun - sklearn): -2.540e-13
 
@@ -215,11 +215,11 @@ R2 delta (bun - sklearn): -2.540e-13
 
 | Implementation | Model | Fit median (ms) | Predict median (ms) | Accuracy | F1 |
 |---|---|---:|---:|---:|---:|
-| bun-scikit | StandardScaler + LogisticRegression(gd,zig) | 1.5237 | 0.0413 | 0.863415 | 0.876106 |
-| python-scikit-learn | StandardScaler + LogisticRegression(lbfgs) | 2.7612 | 0.2018 | 0.863415 | 0.875000 |
+| bun-scikit | StandardScaler + LogisticRegression(gd,zig) | 1.6184 | 0.0517 | 0.863415 | 0.876106 |
+| python-scikit-learn | StandardScaler + LogisticRegression(lbfgs) | 2.7551 | 0.2020 | 0.863415 | 0.875000 |
 
-Bun fit speedup vs scikit-learn: 1.812x
-Bun predict speedup vs scikit-learn: 4.890x
+Bun fit speedup vs scikit-learn: 1.702x
+Bun predict speedup vs scikit-learn: 3.904x
 Accuracy delta (bun - sklearn): 0.000e+0
 F1 delta (bun - sklearn): 1.106e-3
 
@@ -227,18 +227,18 @@ F1 delta (bun - sklearn): 1.106e-3
 
 | Model | Implementation | Fit median (ms) | Predict median (ms) | Accuracy | F1 |
 |---|---|---:|---:|---:|---:|
-| DecisionTreeClassifier(maxDepth=8) [js-fast] | bun-scikit | 1.2235 | 0.0255 | 0.936585 | 0.937799 |
-| DecisionTreeClassifier | python-scikit-learn | 1.9807 | 0.1716 | 0.931707 | 0.933962 |
-| RandomForestClassifier(nEstimators=80,maxDepth=8) [js-fast] | bun-scikit | 37.6732 | 1.9435 | 0.995122 | 0.995261 |
-| RandomForestClassifier | python-scikit-learn | 118.4305 | 6.9652 | 0.995122 | 0.995261 |
+| DecisionTreeClassifier(maxDepth=8) [js-fast] | bun-scikit | 1.1476 | 0.0214 | 0.936585 | 0.937799 |
+| DecisionTreeClassifier | python-scikit-learn | 1.9713 | 0.1709 | 0.931707 | 0.933962 |
+| RandomForestClassifier(nEstimators=80,maxDepth=8) [js-fast] | bun-scikit | 37.5771 | 1.6305 | 0.995122 | 0.995261 |
+| RandomForestClassifier | python-scikit-learn | 116.0787 | 7.0357 | 0.995122 | 0.995261 |
 
-DecisionTree fit speedup vs scikit-learn: 1.619x
-DecisionTree predict speedup vs scikit-learn: 6.737x
+DecisionTree fit speedup vs scikit-learn: 1.718x
+DecisionTree predict speedup vs scikit-learn: 7.983x
 DecisionTree accuracy delta (bun - sklearn): 4.878e-3
 DecisionTree f1 delta (bun - sklearn): 3.837e-3
 
-RandomForest fit speedup vs scikit-learn: 3.144x
-RandomForest predict speedup vs scikit-learn: 3.584x
+RandomForest fit speedup vs scikit-learn: 3.089x
+RandomForest predict speedup vs scikit-learn: 4.315x
 RandomForest accuracy delta (bun - sklearn): 0.000e+0
 RandomForest f1 delta (bun - sklearn): 1.110e-16
 
@@ -246,19 +246,19 @@ RandomForest f1 delta (bun - sklearn): 1.110e-16
 
 | Model | Backend | Fit median (ms) | Predict median (ms) | Accuracy | F1 |
 |---|---|---:|---:|---:|---:|
-| DecisionTreeClassifier(maxDepth=8) | js-fast | 1.2235 | 0.0255 | 0.936585 | 0.937799 |
-| DecisionTreeClassifier(maxDepth=8) | zig-tree | 1.5669 | 0.0537 | 0.936585 | 0.937799 |
-| DecisionTreeClassifier | python-scikit-learn | 1.9807 | 0.1716 | 0.931707 | 0.933962 |
-| RandomForestClassifier(nEstimators=80,maxDepth=8) | js-fast | 37.6732 | 1.9435 | 0.995122 | 0.995261 |
-| RandomForestClassifier(nEstimators=80,maxDepth=8) | zig-tree | 33.6108 | 0.9130 | 1.000000 | 1.000000 |
-| RandomForestClassifier | python-scikit-learn | 118.4305 | 6.9652 | 0.995122 | 0.995261 |
+| DecisionTreeClassifier(maxDepth=8) | js-fast | 1.1476 | 0.0214 | 0.936585 | 0.937799 |
+| DecisionTreeClassifier(maxDepth=8) | zig-tree | 1.5558 | 0.0530 | 0.936585 | 0.937799 |
+| DecisionTreeClassifier | python-scikit-learn | 1.9713 | 0.1709 | 0.931707 | 0.933962 |
+| RandomForestClassifier(nEstimators=80,maxDepth=8) | js-fast | 37.5771 | 1.6305 | 0.995122 | 0.995261 |
+| RandomForestClassifier(nEstimators=80,maxDepth=8) | zig-tree | 33.3200 | 0.9300 | 1.000000 | 1.000000 |
+| RandomForestClassifier | python-scikit-learn | 116.0787 | 7.0357 | 0.995122 | 0.995261 |
 
-DecisionTree zig/js fit speedup: 0.781x
-DecisionTree zig/js predict speedup: 0.475x
-RandomForest zig/js fit speedup: 1.121x
-RandomForest zig/js predict speedup: 2.129x
+DecisionTree zig/js fit speedup: 0.738x
+DecisionTree zig/js predict speedup: 0.404x
+RandomForest zig/js fit speedup: 1.128x
+RandomForest zig/js predict speedup: 1.753x
 
-Snapshot generated at: 2026-06-15T11:07:55.139Z
+Snapshot generated at: 2026-06-22T10:58:36.662Z
 <!-- BENCHMARK_TABLE_END -->
 
 ## Documentation
